@@ -64,7 +64,7 @@ The neutron transmission calculation algorithm of neutron transmission
    :alt: Beer Lambert Law 1
    :align: center
 
-N\:sub:`i` : number of atoms per unit volume of element *i*,
+N :sub:`i` : number of atoms per unit volume of element *i*,
 
 *di* : effective thickness along the neutron path of element *i*,
 
