@@ -3,7 +3,6 @@ import os
 import numbers
 import re
 import numpy as np
-import periodictable as pt
 import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.constants import Avogadro
