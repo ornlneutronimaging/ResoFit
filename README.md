@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/ornlneutronimaging/ResoFit/branch/master/graph/badge.svg)](https://codecov.io/gh/ornlneutronimaging/ResoFit)
 [![Documentation Status](https://readthedocs.org/projects/resofit/badge/?version=latest)](http://resofit.readthedocs.io/en/latest/?badge=latest)
 
-# ImagingReso
+# ResoFit
 
 ### Abstract
 
@@ -26,13 +26,13 @@ Python packages used are: SciPy [2], NumPy [3], Matplotlib [4], Pandas [5] and P
 
 Neutron imaging is a powerful tool to characterize material non-destructively. And based on the unique resonance features, 
 it is feasible to identify elements and/or isotopes which resonance with incident neutrons. However, a dedicated tool 
-for resonance imaging is missing, and _ImagingReso_ we presented here could fill this gap.
+for resonance imaging is missing, and _ResoFit_ we presented here could fill this gap.
 
 ### Installation instructions
 
-Install _ImagingReso_ by typing the following command in Terminal:
+Install _ResoFit_ by typing the following command in Terminal:
 
-`pip install ImagingReso`
+`pip install ResoFit`
 
 or by typing the following command under downloaded directory in Terminal: 
 
