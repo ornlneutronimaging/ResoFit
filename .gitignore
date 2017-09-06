@@ -1,6 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
 *$py.class
 
 # C extensions
@@ -155,15 +154,11 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-__pycache__
 .ipynb*
-.coverage
 /cover/*
 # mac
-.cache
 
 # Packages
-*.egg
 *.egg-info
 dist
 build
@@ -174,5 +169,3 @@ var
 sdist
 MANIFEST
 
-# Unit test / coverage reports
-.coverage
