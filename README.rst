@@ -60,7 +60,7 @@ Calculation algorithm
 The neutron transmission calculation algorithm of neutron transmission
 *T*\ (*E*), is base on Beer-Lambert law [7]-[9]:
 
-*Nsub(i)* : number of atoms per unit volume of element *i*,
+*N:sub:`i`* : number of atoms per unit volume of element *i*,
 
 *di* : effective thickness along the neutron path of element *i*,
 
