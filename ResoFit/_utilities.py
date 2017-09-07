@@ -42,14 +42,14 @@ class Experiment(object):
         self.source_to_detector_m = source_to_detector_m
         self.delay_us = delay_us
         _file_path = os.path.abspath(os.path.dirname(__file__))
-
         # Spectra file
         self.path_spectra = os.path.join(_file_path, folder + '/' + spectra)
+        # Data file
+        self.path_data = os.path.join(_file_path, folder + '/' + data)
+
         spectra = pd.read_csv(self.path_spectra, sep='\t', header=None)
         self.x_s = np.array(spectra[0])
         self.OB_counts = np.array(spectra[1])
-        # Data file
-        self.path_data = os.path.join(_file_path, folder + '/' + data)
         data = pd.read_csv(self.path_data, sep='\t', header=None)
         if np.array(data[0])[:3] == [1, 2, 3, 4]:
             z = np.array(data[1]) / repeat

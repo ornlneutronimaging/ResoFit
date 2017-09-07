@@ -4,30 +4,43 @@ import os
 import pprint
 from ResoFit._utilities import Experiment
 
-class TestSpectra(unittest.TestCase):
+class TestInitialization(unittest.TestCase):
 
-    def test_filename(self):
+    def test_folder(self):
         '''assert given folder existence'''
-        _file_path = os.path.abspath(os.path.dirname(__file__))
-        folder = '/data'
-        path_full = _file_path+folder
-        _answer = os.path.isdir(path_full)
-        self.assertTrue(_answer)
-        folder = '/xyz'
-        path_full = _file_path+folder
-        _answer = os.path.isdir(path_full)
-        self.assertFalse(_answer)
+        folder = 'folder_not_exist'
+        data = 'all_thin.txt'
+        spectra = 'Image002_Spectra.txt'
+        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
 
-    def test_file(self):
+    def test_spectra_file(self):
+        '''assert given spectra file existence and format'''
         folder = 'data'
-        filename = 'Image002_Spectra.txt'
-        _answer = os.path.exists(folder + '/' + filename)
-        self.assertTrue(_answer)
-        filename = 'Image002_Spectr.txt'
-        _answer = os.path.exists(folder + '/' + filename)
-        self.assertFalse(_answer)
+        data = 'all_thin.txt'
+        spectra = 'file_not_exist.txt'
+        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+        spectra = 'Image002_Spectra.tt'
+        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
 
-    def test_txt(self):
+    def test_data_file(self):
+        '''assert given data file existence and format'''
         folder = 'data'
-        filename = 'Image002_Spectra.tt'
-        self.assertRaises(ValueError, Experiment, filename=filename, folder=folder)
+        data = 'file_not_exist.txt'
+        spectra = 'Image002_Spectra.txt'
+        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+        data = 'all_thin.tt'
+        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+
+    # def test_file(self):
+    #     folder = 'data'
+    #     filename = 'Image002_Spectra.txt'
+    #     _answer = os.path.exists(folder + '/' + filename)
+    #     self.assertTrue(_answer)
+    #     filename = 'Image002_Spectr.txt'
+    #     _answer = os.path.exists(folder + '/' + filename)
+    #     self.assertFalse(_answer)
+    #
+    # def test_txt(self):
+    #     folder = 'data'
+    #     filename = 'Image002_Spectra.tt'
+    #     self.assertRaises(ValueError, Experiment, filename=filename, folder=folder)

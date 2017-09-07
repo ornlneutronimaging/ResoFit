@@ -15,11 +15,18 @@ _energy_max = 100
 _energy_step = 0.001
 # Input sample name or names as str, case sensitive
 _layer_1 = 'Gd'
-_thickness_1 = 0.035 # mm
+_thickness_1 = 0.075 # mm
+m = 0.36 # gram
+l = 25
+w = 25
+h = 0.075
+mm3_to_cm3 = 0.001
+density = m/(l*w*h*mm3_to_cm3)
+_density_1 = density
 # _density_1 = 8 # g/cm3 deviated due to porosity
 
 o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
-o_reso.add_layer(formula=_layer_1, thickness=_thickness_1)
+o_reso.add_layer(formula=_layer_1, thickness=_thickness_1, density=_density_1)
 
 # Ideal
 simu_x_ev = o_reso.stack_sigma[_layer_1][_layer_1]['energy_eV']
@@ -53,6 +60,7 @@ exp_y = experiment.y - baseline
 exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
 exp_y_interp = exp_y_function(simu_x)
 print(exp_y_interp)
+
 
 # Fitting the peak positions
 source_to_detector_m = 16.12
