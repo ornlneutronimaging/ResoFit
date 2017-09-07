@@ -13,7 +13,7 @@ def read_file(filename):
 setup(
     name = "ResoFit",
     version = "0.0.1",
-    author = "Yuxuan (Shawn) Zhang",
+    author = "Yuxuan Zhang",
     author_email = "zhangy6@ornl.gov",
     packages = find_packages(exclude=['tests', 'notebooks']),
     test_suite = 'tests',
@@ -27,7 +27,7 @@ setup(
     dependency_links = [
     ],
     description = "resonance imaging fitting",
-    long_description = read_file('README.rst'),
+    long_description = read_file('README.md'),
     license = 'BSD',
     keywords = ['neutron','resonance','fitting','imaging'],
     url = "https://github.com/ornlneutronimaging/ResoFit.git",
