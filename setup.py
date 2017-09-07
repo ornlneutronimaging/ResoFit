@@ -20,7 +20,7 @@ setup(
     install_requires = [
         'numpy',
         'pandas',
-        'periodictable',
+        'ImagingReso',
         'pprint',
         'scipy',
     ],
