@@ -69,6 +69,11 @@ The neutron transmission calculation algorithm of neutron transmission
 .. math::
    T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum_{ i }^{  } { { N }_{ i }{ d }_{ i } } \sum_{ j }^{  } { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
 
+.. role:: raw-math(raw)
+    :format: latex html
+
+:raw-math:`$$ \frac{s}{\sqrt{N}} $$`
+
 
 *Ni* : number of atoms per unit volume of element *i*,
 
