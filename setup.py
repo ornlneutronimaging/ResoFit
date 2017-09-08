@@ -13,10 +13,11 @@ def read_file(filename):
 setup(
     name = "ResoFit",
     version = "0.0.1",
-    author = "Yuxuan Zhang",
-    author_email = "zhangy6@ornl.gov",
+    author="Yuxuan Zhang, Jean C. Bilheux",
+    author_email="zhangy6@ornl.gov, bilheuxjm@ornl.gov",
     packages = find_packages(exclude=['tests', 'notebooks']),
     test_suite = 'tests',
+
     install_requires = [
         'numpy',
         'pandas',
