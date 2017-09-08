@@ -27,7 +27,7 @@ setup(
     dependency_links = [
     ],
     description = "resonance imaging fitting",
-    long_description = read_file('README.md'),
+    long_description = read_file('README.rst'),
     license = 'BSD',
     keywords = ['neutron','resonance','fitting','imaging'],
     url = "https://github.com/ornlneutronimaging/ResoFit.git",
