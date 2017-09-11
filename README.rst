@@ -34,12 +34,12 @@ Neutron imaging is a powerful tool to characterize material
 non-destructively. And based on the unique resonance features, it is
 feasible to identify elements and/or isotopes which resonance with
 incident neutrons. However, a dedicated tool for resonance imaging is
-missing, and *ResoFit* we presented here could fill this gap.
+missing, and **ResoFit** we presented here could fill this gap.
 
 Installation instructions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Install *ResoFit* by typing the following command in Terminal:
+Install **ResoFit** by typing the following command in Terminal:
 
 ``pip install ResoFit``
 
@@ -66,7 +66,7 @@ The neutron transmission calculation algorithm of neutron transmission
     :height: 80px
     :alt: Beer-lambert law 1
 
-N\ :sub:`i` : number of atoms per unit volume of element *i*,
+*N\ :sub:`i`*: number of atoms per unit volume of element *i*,
 
 d\ :sub:`i` : effective thickness along the neutron path of element *i*,
 
