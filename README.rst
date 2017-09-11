@@ -66,14 +66,13 @@ The neutron transmission calculation algorithm of neutron transmission
     :height: 80px
     :alt: Beer-lambert law 1
 
-*Ni* : number of atoms per unit volume of element *i*,
+N\ :sub:`i` : number of atoms per unit volume of element *i*,
 
-*di* : effective thickness along the neutron path of element *i*,
+d\ :sub:`i` : effective thickness along the neutron path of element *i*,
 
-*σij(E)* : energy-dependent neutron total cross-section for the isotope
-*j* of element *i*,
+σ\ :sub:`ij` (E) : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
 
-*Aij* : abundance for the isotope *j* of element *i*.
+A\ :sub:`ij` : abundance for the isotope *j* of element *i*.
 
 For solid materials the number of atoms per unit volume can be
 calculated from:
@@ -84,13 +83,13 @@ calculated from:
     :height: 80px
     :alt: Beer-lambert law 2
 
-*NA* : Avogadro’s number,
+N\ :sub:`A` : Avogadro’s number,
 
-*Ci* : molar concentration of element *i*,
+C\ :sub:`i` : molar concentration of element *i*,
 
-*ρi* : density of the element *i*,
+ρ\ :sub:`i` : density of the element *i*,
 
-*mij* : atomic mass values for the isotope *j* of element *i*.
+m\ :sub:`ij` : atomic mass values for the isotope *j* of element *i*.
 
 Acknowledgements
 ~~~~~~~~~~~~~~~~
