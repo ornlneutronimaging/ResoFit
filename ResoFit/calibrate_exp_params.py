@@ -22,7 +22,7 @@ width = 25
 height = 0.075
 mm3_to_cm3 = 0.001
 density = mass/(length*width*height*mm3_to_cm3)
-_density_1 = density
+_density_1 = np.NaN
 # _density_1 = 8 # g/cm3 deviated due to porosity
 
 o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)

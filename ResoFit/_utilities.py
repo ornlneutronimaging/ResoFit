@@ -7,19 +7,37 @@ import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.constants import Avogadro
 from ImagingReso import _utilities
+from ImagingReso.resonance import Resonance
 import os
 
 
 class Simulation(object):
-    pass
+    _energy_min = np.NaN
+    _energy_max = np.NaN
+    _energy_step = np.NaN
+    # Input sample name or names as str, case sensitive
+    layer_1 = ''
+    thickness_1 = np.NaN  # mm
+
+    def __init__(self, layer_1, thickness_1, density_1=np.NaN, _energy_min=1e-5, _energy_max=1000, _energy_step=0.01):
+
+        o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
+        o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
+
+        # Ideal
+        self.simu_x_ev = o_reso.stack_sigma[layer_1][layer_1]['energy_eV']
+        sigma_b_ = o_reso.stack_sigma[layer_1][layer_1]['sigma_b']
+        self.simu_y_attenuation = o_reso.stack_signal[layer_1]['attenuation']
+        simu_x_angstrom = _utilities.ev_to_angstroms(simu_x_ev)
+
 
 class Experiment(object):
     folder = ''
     spectra = ''
     data = ''
-    delay_us = float
-    source_to_detector_m = float
-    repeat = int
+    delay_us = np.NaN
+    source_to_detector_m = np.NaN
+    repeat = np.NaN
 
     def __init__(self, spectra, data, folder='data', repeat=1, delay_us=0, source_to_detector_m=16.12,
                  angstrom=False, transmission=False):

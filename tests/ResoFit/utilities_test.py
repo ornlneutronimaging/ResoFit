@@ -4,7 +4,7 @@ import os
 import pprint
 from ResoFit._utilities import Experiment
 
-class TestInitialization(unittest.TestCase):
+class TestExperiment(unittest.TestCase):
 
     def test_folder(self):
         '''assert given folder existence'''
