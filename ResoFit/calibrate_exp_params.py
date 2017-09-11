@@ -16,12 +16,12 @@ _energy_step = 0.001
 # Input sample name or names as str, case sensitive
 _layer_1 = 'Gd'
 _thickness_1 = 0.075 # mm
-m = 0.36 # gram
-l = 25
-w = 25
-h = 0.075
+mass = 0.36 # gram
+length = 25
+width = 25
+height = 0.075
 mm3_to_cm3 = 0.001
-density = m/(l*w*h*mm3_to_cm3)
+density = mass/(length*width*height*mm3_to_cm3)
 _density_1 = density
 # _density_1 = 8 # g/cm3 deviated due to porosity
 
