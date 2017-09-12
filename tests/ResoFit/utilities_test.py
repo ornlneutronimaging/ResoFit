@@ -4,6 +4,14 @@ import os
 import pprint
 from ResoFit._utilities import Experiment
 
+
+class TestSimulation(unittest.TestCase):
+
+
+
+
+    pass
+
 class TestExperiment(unittest.TestCase):
 
     def test_folder(self):

@@ -5,6 +5,7 @@ from ImagingReso.resonance import Resonance
 from ImagingReso._utilities import ev_to_angstroms
 import pprint
 from ResoFit._utilities import Experiment
+from ResoFit._utilities import Simulation
 import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
@@ -29,25 +30,21 @@ o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_
 o_reso.add_layer(formula=_layer_1, thickness=_thickness_1, density=_density_1)
 
 # Ideal
-simu_x_ev = o_reso.stack_sigma[_layer_1][_layer_1]['energy_eV']
-sigma_b_ = o_reso.stack_sigma[_layer_1][_layer_1]['sigma_b']
-simu_y_attenuation = o_reso.stack_signal[_layer_1]['attenuation']
-simu_x_angstrom = ev_to_angstroms(simu_x_ev)
+simulation = Simulation(layer_1=_layer_1, thickness_1=_thickness_1, density_1=np.NaN, _energy_min=_energy_min, _energy_max=_energy_min, _energy_step=_energy_step)
+simu_x = simulation.x()
+simu_y = simulation.y()
 
-# simu_x = simu_x_angstrom
-simu_x = simu_x_ev
-
-ideal_y_index = pku.indexes(simu_y_attenuation, thres=0.15, min_dist=10)#, thres=0.1, min_dist=50)
-ideal_x_index = pku.interpolate(simu_x, simu_y_attenuation, ind=ideal_y_index)
+ideal_y_index = pku.indexes(simu_y, thres=0.15, min_dist=10)#, thres=0.1, min_dist=50)
+ideal_x_index = pku.interpolate(simu_x, simu_y, ind=ideal_y_index)
 print('x_ideal_peak: ', ideal_x_index)
-plt.plot(simu_x, simu_y_attenuation, 'b.', label=_layer_1+'_ideal')
-plt.plot(simu_x[ideal_y_index], simu_y_attenuation[ideal_y_index], 'bo', label='peak_ideal')
+plt.plot(simu_x, simu_y, 'b.', label=_layer_1+'_ideal')
+plt.plot(simu_x[ideal_y_index], simu_y[ideal_y_index], 'bo', label='peak_ideal')
 
 # Experiment
-experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5, angstrom=False)
-exp_x = experiment.x
-baseline = pku.baseline(experiment.y)
-exp_y = experiment.y - baseline
+experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5)
+exp_x = experiment.x()
+baseline = pku.baseline(experiment.y())
+exp_y = experiment.y() - baseline
 
 # exp_y_index = pku.indexes(exp_y, thres=0.05/max(exp_y), min_dist=7)
 # exp_x_index = pku.interpolate(exp_x, exp_y, ind=exp_y_index)
@@ -70,7 +67,7 @@ params.add('source_to_detector_m', value=source_to_detector_m)
 params.add('delay_us', value=delay_us)
 
 
-def residual(simu_x, simu_y_attenuation, params):
+def residual(simu_x, simu_y, params):
     source_to_detector_m = params['source_to_detector_m']
     experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5, source_to_detector_m=source_to_detector_m, delay_us=delay_us)
     exp_x = experiment.x
@@ -78,7 +75,7 @@ def residual(simu_x, simu_y_attenuation, params):
     exp_y = experiment.y - baseline
     exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
     exp_y_interp = exp_y_function(simu_x)
-    chi = exp_y_interp - simu_y_attenuation
+    chi = exp_y_interp - simu_y
     return chi**2
 
 
@@ -98,7 +95,7 @@ plt.show()
 # df['Exp_y'] = y_data_array
 # df2 = pd.DataFrame()
 # df2['Ideal_x'] = simu_x
-# df2['Ideal_y'] = simu_y_attenuation
+# df2['Ideal_y'] = simu_y
 # x_gap = _fit_functions.peak_x_gap(params, ideal_x_index, y_data_array)
 # print('x_gap:', x_gap)
 
