@@ -4,6 +4,7 @@ import pandas as pd
 from ImagingReso import _utilities
 from ImagingReso.resonance import Resonance
 import os
+import pprint
 
 
 class Simulation(object):
@@ -20,13 +21,19 @@ class Simulation(object):
         o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
         o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
         self.layers.append(layer_1)
-        self.o_reso = o_reso
+        self.stack = o_reso.stack
+        self.stack_sigma = o_reso.stack_sigma
+        self.stack_signal = o_reso.stack_signal
+        self.total_signal = o_reso.total_signal
 
     def add_layer(self, layer_added, thickness, density=np.NaN):
         o_reso = self.o_reso
         o_reso.add_layer(formula=layer_added, thickness=thickness, density=density)
         self.layers.append(layer_added)
-        self.o_reso = o_reso
+        self.stack = o_reso.stack
+        self.stack_sigma = o_reso.stack_sigma
+        self.stack_signal = o_reso.stack_signal
+        self.total_signal = o_reso.total_signal
 
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list=[]):
         # Check if layer exist
@@ -43,21 +50,40 @@ class Simulation(object):
             raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
         o_reso = self.o_reso
         o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
-        self.o_reso = o_reso
+        self.stack = o_reso.stack
+        self.stack_sigma = o_reso.stack_sigma
+        self.stack_signal = o_reso.stack_signal
+        self.total_signal = o_reso.total_signal
 
-    def x(self, layer_name, element_name, angstrom=False):
-        o_reso = self.o_reso
-        _x = o_reso.stack_sigma[layer_name][element_name]['energy_eV']
+    def x(self, angstrom=False):
+        _x = self.total_signal['energy_eV']
+        pprint.pprint(self.total_signal)
         if angstrom is True:
             _x = _utilities.ev_to_angstroms(_x)
+        # pprint.pprint(o_reso.stack_sigma)
+        # pprint.pprint(o_reso)
         return _x
 
-    def y(self, layer_name, element_name, transmission=False):
-        o_reso = self.o_reso
+    def y(self, transmission=False):
         if transmission is True:
-            _y = o_reso.stack_signal[layer_name][element_name]['attenuation']
+            _y = self.total_signal['attenuation']
         else:
-            _y = o_reso.stack_signal[layer_name][element_name]['transmission']
+            _y = self.total_signal['transmission']
+        return _y
+
+    def x_(self, layer, angstrom=False):
+        _x = self.stack_signal[layer]['energy_eV']
+        if angstrom is True:
+            _x = _utilities.ev_to_angstroms(_x)
+        # pprint.pprint(o_reso.stack_sigma)
+        # pprint.pprint(o_reso)
+        return _x
+
+    def y_(self, layer, transmission=False):
+        if transmission is True:
+            _y = self.stack_signal[layer]['attenuation']
+        else:
+            _y = self.stack_signal[layer]['transmission']
         return _y
 
 
@@ -107,11 +133,11 @@ class Experiment(object):
         source_to_detector_m = self.source_to_detector_m
         if angstrom is True:
             x = _utilities.s_to_angstroms(x_in_s,
-                                          delay_us=delay_us,
+                                          offset_us=delay_us,
                                           source_to_detector_m=source_to_detector_m)
         else:
             x = _utilities.s_to_ev(x_in_s,
-                                   delay_us=delay_us,
+                                   offset_us=delay_us,
                                    source_to_detector_m=source_to_detector_m)
         return x
 

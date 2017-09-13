@@ -26,13 +26,15 @@ density = mass/(length*width*height*mm3_to_cm3)
 _density_1 = np.NaN
 # _density_1 = 8 # g/cm3 deviated due to porosity
 
-o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
-o_reso.add_layer(formula=_layer_1, thickness=_thickness_1, density=_density_1)
+# o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
+# o_reso.add_layer(formula=_layer_1, thickness=_thickness_1, density=_density_1)
 
 # Ideal
 simulation = Simulation(layer_1=_layer_1, thickness_1=_thickness_1, density_1=np.NaN, _energy_min=_energy_min, _energy_max=_energy_min, _energy_step=_energy_step)
 simu_x = simulation.x()
 simu_y = simulation.y()
+print(simu_x)
+print(simu_y)
 
 ideal_y_index = pku.indexes(simu_y, thres=0.15, min_dist=10)#, thres=0.1, min_dist=50)
 ideal_x_index = pku.interpolate(simu_x, simu_y, ind=ideal_y_index)
