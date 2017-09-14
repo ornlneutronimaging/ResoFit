@@ -1,20 +1,7 @@
-import unittest
-import numpy as np
-import os
-import pprint
-from ResoFit._utilities import Experiment
+from unittest import TestCase
+from ResoFit.experiment import Experiment
 
-
-class TestSimulation(unittest.TestCase):
-
-    # def
-
-
-
-
-    pass
-
-class TestExperiment(unittest.TestCase):
+class TestExperiment(TestCase):
 
     def test_folder(self):
         '''assert given folder existence'''
@@ -41,16 +28,11 @@ class TestExperiment(unittest.TestCase):
         data = 'all_thin.tt'
         self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
 
-    # def test_file(self):
-    #     folder = 'data'
-    #     filename = 'Image002_Spectra.txt'
-    #     _answer = os.path.exists(folder + '/' + filename)
-    #     self.assertTrue(_answer)
-    #     filename = 'Image002_Spectr.txt'
-    #     _answer = os.path.exists(folder + '/' + filename)
-    #     self.assertFalse(_answer)
+    # def test_x(self):
+    #     self.fail()
     #
-    # def test_txt(self):
-    #     folder = 'data'
-    #     filename = 'Image002_Spectra.tt'
-    #     self.assertRaises(ValueError, Experiment, filename=filename, folder=folder)
+    # def test_ob_y(self):
+    #     self.fail()
+    #
+    # def test_y(self):
+    #     self.fail()
