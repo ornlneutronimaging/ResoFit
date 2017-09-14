@@ -12,13 +12,13 @@ _energy_max = 100
 _energy_step = 0.001
 # Input sample name or names as str, case sensitive
 _layer_1 = 'Gd'
-_thickness_1 = 0.075 # mm
-mass = 0.36 # gram
+_thickness_1 = 0.075  # mm
+mass = 0.36  # gram
 length = 25
 width = 25
 height = 0.075
 mm3_to_cm3 = 0.001
-density = mass/(length*width*height*mm3_to_cm3)
+density = mass / (length * width * height * mm3_to_cm3)
 _density_1 = np.NaN
 
 # Ideal
@@ -31,11 +31,10 @@ simulation = Simulation(layer_1=_layer_1,
 simu_x = simulation.x()
 simu_y = simulation.y()
 
-
-ideal_y_index = pku.indexes(simu_y, thres=0.15, min_dist=10)#, thres=0.1, min_dist=50)
+ideal_y_index = pku.indexes(simu_y, thres=0.15, min_dist=10)  # , thres=0.1, min_dist=50)
 ideal_x_index = pku.interpolate(simu_x, simu_y, ind=ideal_y_index)
 print('x_ideal_peak: ', ideal_x_index)
-plt.plot(simu_x, simu_y, 'b.', label=_layer_1+'_ideal')
+plt.plot(simu_x, simu_y, 'b.', label=_layer_1 + '_ideal')
 plt.plot(simu_x[ideal_y_index], simu_y[ideal_y_index], 'bo', label='peak_ideal')
 
 # Experiment
@@ -56,7 +55,6 @@ exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
 exp_y_interp = exp_y_function(simu_x)
 print(exp_y_interp)
 
-
 # Fitting the peak positions
 source_to_detector_m = 16.12
 delay_us = 0
@@ -65,16 +63,17 @@ params.add('source_to_detector_m', value=source_to_detector_m)
 params.add('delay_us', value=delay_us)
 
 
-def residual(simu_x, simu_y, params):
-    source_to_detector_m = params['source_to_detector_m']
-    experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5, source_to_detector_m=source_to_detector_m, delay_us=delay_us)
-    exp_x = experiment.x
-    baseline = pku.baseline(experiment.y)
-    exp_y = experiment.y - baseline
-    exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
-    exp_y_interp = exp_y_function(simu_x)
-    chi = exp_y_interp - simu_y
-    return chi**2
+# def residual(simu_x, simu_y, params):
+#     source_to_detector_m = params['source_to_detector_m']
+#     experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5,
+#                             source_to_detector_m=source_to_detector_m, delay_us=delay_us)
+#     exp_x = experiment.x
+#     baseline = pku.baseline(experiment.y)
+#     exp_y = experiment.y - baseline
+#     exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
+#     exp_y_interp = exp_y_function(simu_x)
+#     chi = exp_y_interp - simu_y
+#     return chi ** 2
 
 
 plt.plot(simu_x, exp_y_interp, 'r.', label='data')

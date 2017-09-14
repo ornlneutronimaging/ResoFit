@@ -11,12 +11,13 @@ class Experiment(object):
     # folder = ''
     # spectra = ''
     # data = ''
-    delay_us = np.NaN
+    offset_us = np.NaN
     source_to_detector_m = np.NaN
     repeat = np.int
+
     # why need to define these outside __init__
 
-    def __init__(self, spectra, data, folder='data', repeat=1, delay_us=0, source_to_detector_m=16.12):
+    def __init__(self, spectra, data, folder='data', repeat=1, offset_us=0, source_to_detector_m=16.12):
         _file_path = os.path.abspath(os.path.dirname(__file__))
         _folder_path = os.path.join(_file_path, folder)
         if os.path.isdir(_folder_path) is False:
@@ -42,36 +43,67 @@ class Experiment(object):
             raise ValueError("Repeat value must be an integer >= 1 !")
 
         self.source_to_detector_m = source_to_detector_m
-        self.delay_us = delay_us
+        self.offset_us = offset_us
         self.repeat = repeat
+        self.x_exp = None
+        self.y_exp = None
+        self.params_exp = None
+        # self.energy_min = _energy_min
+        # self.energy_max = _energy_max
+        self.spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
+        self.data = pd.read_csv(self.data_path, sep='\t', header=None)
 
-    def x(self, angstrom=False):
-        spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
-        x_in_s = np.array(spectra[0])
-        y_in_counts = np.array(spectra[1])
-        delay_us = self.delay_us
+    def x_raw(self, angstrom=False):
+        offset_us = self.offset_us
         source_to_detector_m = self.source_to_detector_m
+        x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
+                                       offset_us=offset_us,
+                                       source_to_detector_m=source_to_detector_m)
         if angstrom is True:
-            x = _utilities.s_to_angstroms(x_in_s,
-                                          offset_us=delay_us,
-                                          source_to_detector_m=source_to_detector_m)
-        else:
-            x = _utilities.s_to_ev(x_in_s,
-                                   offset_us=delay_us,
-                                   source_to_detector_m=source_to_detector_m)
-        return x
+            x_exp_raw = _utilities.ev_to_angstroms(x_exp_raw)
+        return x_exp_raw
 
-    def ob_y(self):
-        spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
-        y_in_counts = np.array(spectra[1])
-        return y_in_counts
-
-    def y(self, transmission=False):
-        data = pd.read_csv(self.data_path, sep='\t', header=None)
-        if np.array(data[0])[:3] == [1, 2, 3, 4]:
-            y = np.array(data[1]) / self.repeat
+    def y_raw(self, transmission=False):
+        if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
+            y_exp_raw = np.array(self.data[1]) / self.repeat
         else:
-            y = np.array(data[0]) / self.repeat
+            y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
-            y = 1 - y
-        return y
+            y_exp_raw = 1 - y_exp_raw
+        return y_exp_raw
+
+    def x_scaled(self, energy_min, energy_max, energy_step, angstrom=False):
+        offset_us = self.offset_us
+        source_to_detector_m = self.source_to_detector_m
+        x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
+                                       offset_us=offset_us,
+                                       source_to_detector_m=source_to_detector_m)
+        if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
+            y_exp_raw = np.array(self.data[1]) / self.repeat
+        else:
+            y_exp_raw = np.array(self.data[0]) / self.repeat
+
+        df = pd.DataFrame(y_exp_raw, x_exp_raw)
+
+        nbr_point = (energy_max - energy_min) / energy_step
+        x_axis = np.linspace(energy_min, energy_max, nbr_point)
+        y_axis_function = interp1d(x=df['E_eV'], y=df['Sig_b'], kind='linear')
+        y_axis = y_axis_function(x_axis)
+
+
+        if angstrom is True:
+            x_exp_raw = _utilities.ev_to_angstroms(x_in_s)
+        if transmission is False:
+
+
+        pass
+
+    def y_scaled(self, transmission=False):
+        if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
+            y_exp_raw = np.array(self.data[1]) / self.repeat
+        else:
+            y_exp_raw = np.array(self.data[0]) / self.repeat
+        if transmission is False:
+            y_exp_raw = 1 - y_exp_raw
+        return y_exp_raw
+

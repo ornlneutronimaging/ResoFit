@@ -8,18 +8,18 @@ from lmfit import Parameters
 
 
 class Simulation(object):
-    _energy_min = np.NaN
-    _energy_max = np.NaN
-    _energy_step = np.NaN
+    energy_min = np.NaN
+    energy_max = np.NaN
+    energy_step = np.NaN
     # Input sample name or names as str, case sensitive
     layer_1 = ''
     thickness_1 = np.NaN  # mm
     layers = []
 
     def __init__(self, layer_1, thickness_1, density_1=np.NaN,
-                 _energy_min=1e-5, _energy_max=1000, _energy_step=0.01):
+                 energy_min=1e-5, energy_max=1000, energy_step=0.01):
 
-        self.o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
+        self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
         self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
         self.layers.append(layer_1)
         self._x = None
