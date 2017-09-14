@@ -24,6 +24,7 @@ setup(
         'ImagingReso',
         'pprint',
         'scipy',
+        'lmfit',
     ],
     dependency_links = [
     ],
