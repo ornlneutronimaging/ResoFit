@@ -154,14 +154,12 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-.ipynb*
 /cover/*
 # mac
 
 # Packages
 *.egg-info
 dist
-build
 eggs
 parts
 bin
