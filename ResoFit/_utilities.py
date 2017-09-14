@@ -4,6 +4,7 @@ import pandas as pd
 from ImagingReso import _utilities
 from ImagingReso.resonance import Resonance
 import os
+from lmfit import Parameters
 
 
 class Simulation(object):
@@ -21,6 +22,8 @@ class Simulation(object):
         self.o_reso = Resonance(energy_min=_energy_min, energy_max=_energy_max, energy_step=_energy_step)
         self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
         self.layers.append(layer_1)
+        self._x = None
+        self._y = None
 
     def add_layer(self, layer_to_add, layer_thickness, layer_density=np.NaN):
         self.o_reso.add_layer(formula=layer_to_add,
@@ -43,10 +46,10 @@ class Simulation(object):
         self.o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
 
     def x(self, angstrom=False):
-        _x = self.o_reso.total_signal['energy_eV']
+        self._x = self.o_reso.total_signal['energy_eV']
         if angstrom is True:
-            _x = _utilities.ev_to_angstroms(_x)
-        return _x
+            self._x = _utilities.ev_to_angstroms(_x)
+        return self._x
 
     def y(self, transmission=False):
         if transmission is True:
@@ -117,11 +120,11 @@ class Experiment(object):
         source_to_detector_m = self.source_to_detector_m
         if angstrom is True:
             x = _utilities.s_to_angstroms(x_in_s,
-                                          delay_us=delay_us,
+                                          offset_us=delay_us,
                                           source_to_detector_m=source_to_detector_m)
         else:
             x = _utilities.s_to_ev(x_in_s,
-                                   delay_us=delay_us,
+                                   offset_us=delay_us,
                                    source_to_detector_m=source_to_detector_m)
         return x
 
@@ -141,8 +144,15 @@ class Experiment(object):
         return y
 
 
-class Calibrate(object):
+class Calibrate(Experiment):
+
+    
 
     pass
 
+
+class Fit(object):
+    # def __int__(self, layer_list):
+
+    pass
 
