@@ -25,6 +25,7 @@ setup(
         'pprint',
         'scipy',
         'lmfit',
+        'peakutils',
     ],
     dependency_links = [
     ],

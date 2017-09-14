@@ -28,6 +28,7 @@ install:
   - pip install codecov
   - pip install ImagingReso
   - pip install lmfit
+  - pip install peakutils
   - python setup.py install
 
 script:

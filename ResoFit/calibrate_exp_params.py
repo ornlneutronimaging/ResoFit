@@ -1,12 +1,8 @@
 import matplotlib.pyplot as plt
 import peakutils as pku
 from lmfit import Parameters
-from ImagingReso.resonance import Resonance
-from ImagingReso._utilities import ev_to_angstroms
-import pprint
 from ResoFit._utilities import Experiment
 from ResoFit._utilities import Simulation
-import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
 
