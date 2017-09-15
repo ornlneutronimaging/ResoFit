@@ -15,7 +15,6 @@ class Calibrate(Experiment):
 
         _source_to_detector_m = self.params_exp['source_to_detector_m']
         _offset_us = self.params_exp['offset_us']
-
         experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5,
                                 source_to_detector_m=_source_to_detector_m, offset_us=_offset_us)
         exp_x, exp_y = experiment.xy_scaled(energy_min, energy_max, energy_step)
