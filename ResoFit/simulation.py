@@ -89,22 +89,19 @@ class Simulation(object):
         df = pd.DataFrame(_x, index=None)
         df.rename(columns={0: _x_tag}, inplace=True)
         df[_y_tag] = _y
-        # print(df.head())
         df.to_csv(filename)
 
-
-
-        # def x_layer(self, layer, angstrom=False):
-        #     _x = self.o_reso.total_signal[layer]['energy_eV']
-        #     if angstrom is True:
-        #         _x = _utilities.ev_to_angstroms(_x)
-        #     # pprint.pprint(o_reso.stack_sigma)
-        #     # pprint.pprint(o_reso)
-        #     return _x
-        #
-        # def y_layer(self, layer, transmission=False):
-        #     if transmission is True:
-        #         _y = self.o_reso.total_signal[layer]['transmission']
-        #     else:
-        #         _y = self.o_reso.stack_signal[layer]['attenuation']
-        #     return _y
+    # def x_layer(self, layer, angstrom=False):
+    #     _x = self.o_reso.total_signal[layer]['energy_eV']
+    #     if angstrom is True:
+    #         _x = _utilities.ev_to_angstroms(_x)
+    #     # pprint.pprint(o_reso.stack_sigma)
+    #     # pprint.pprint(o_reso)
+    #     return _x
+    #
+    # def y_layer(self, layer, transmission=False):
+    #     if transmission is True:
+    #         _y = self.o_reso.total_signal[layer]['transmission']
+    #     else:
+    #         _y = self.o_reso.stack_signal[layer]['attenuation']
+    #     return _y
