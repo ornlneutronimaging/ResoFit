@@ -5,6 +5,7 @@ from ImagingReso import _utilities
 from ImagingReso.resonance import Resonance
 import os
 from lmfit import Parameters
+from scipy.interpolate import interp1d
 
 
 class Experiment(object):
@@ -45,11 +46,7 @@ class Experiment(object):
         self.source_to_detector_m = source_to_detector_m
         self.offset_us = offset_us
         self.repeat = repeat
-        self.x_exp = None
-        self.y_exp = None
         self.params_exp = None
-        # self.energy_min = _energy_min
-        # self.energy_max = _energy_max
         self.spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
         self.data = pd.read_csv(self.data_path, sep='\t', header=None)
 
@@ -72,7 +69,7 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
         return y_exp_raw
 
-    def x_scaled(self, energy_min, energy_max, energy_step, angstrom=False):
+    def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False):
         offset_us = self.offset_us
         source_to_detector_m = self.source_to_detector_m
         x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
@@ -82,28 +79,24 @@ class Experiment(object):
             y_exp_raw = np.array(self.data[1]) / self.repeat
         else:
             y_exp_raw = np.array(self.data[0]) / self.repeat
-
-        df = pd.DataFrame(y_exp_raw, x_exp_raw)
-
-        nbr_point = (energy_max - energy_min) / energy_step
-        x_axis = np.linspace(energy_min, energy_max, nbr_point)
-        y_axis_function = interp1d(x=df['E_eV'], y=df['Sig_b'], kind='linear')
-        y_axis = y_axis_function(x_axis)
-
-
-        if angstrom is True:
-            x_exp_raw = _utilities.ev_to_angstroms(x_in_s)
-        if transmission is False:
-
-
-        pass
-
-    def y_scaled(self, transmission=False):
-        if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
-            y_exp_raw = np.array(self.data[1]) / self.repeat
-        else:
-            y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
-        return y_exp_raw
+
+        nbr_point = (energy_max - energy_min) / energy_step
+        x_interp = np.linspace(energy_min, energy_max, nbr_point)
+        y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
+        y_interp = y_interp_function(x_interp)
+
+        if angstrom is True:
+            x_interp = _utilities.ev_to_angstroms(x_interp)
+        return x_interp, y_interp
+
+    # def y_scaled(self, transmission=False):
+    #     if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
+    #         y_exp_raw = np.array(self.data[1]) / self.repeat
+    #     else:
+    #         y_exp_raw = np.array(self.data[0]) / self.repeat
+    #     if transmission is False:
+    #         y_exp_raw = 1 - y_exp_raw
+    #     return y_exp_raw
 

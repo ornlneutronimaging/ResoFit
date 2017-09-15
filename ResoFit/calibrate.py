@@ -18,11 +18,8 @@ class Calibrate(Experiment):
 
         experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5,
                                 source_to_detector_m=_source_to_detector_m, offset_us=_offset_us)
-        exp_x = experiment.x
-        baseline = pku.baseline(experiment.y)
-        exp_y = experiment.y - baseline
-        exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
-        exp_y_interp = exp_y_function(simu_x)
+        exp_x, exp_y = experiment.xy_scaled(energy_min, energy_max, energy_step)
+        baseline = pku.baseline(exp_y)
+        exp_y = exp_y - baseline
         chi = exp_y_interp - simu_y
         return chi ** 2
-

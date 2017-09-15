@@ -7,9 +7,9 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 # Global parameters
-_energy_min = 7
-_energy_max = 100
-_energy_step = 0.001
+energy_min = 7
+energy_max = 100
+energy_step = 0.001
 # Input sample name or names as str, case sensitive
 _layer_1 = 'Gd'
 _thickness_1 = 0.075  # mm
@@ -25,9 +25,9 @@ _density_1 = np.NaN
 simulation = Simulation(layer_1=_layer_1,
                         thickness_1=_thickness_1,
                         density_1=np.NaN,
-                        _energy_min=_energy_min,
-                        _energy_max=_energy_max,
-                        _energy_step=_energy_step)
+                        energy_min=energy_min,
+                        energy_max=energy_max,
+                        energy_step=energy_step)
 simu_x = simulation.x()
 simu_y = simulation.y()
 
@@ -81,7 +81,7 @@ plt.plot(simu_x, exp_y_interp, 'r.', label='data')
 plt.title('Peak estimation')
 
 plt.ylim(-0.01, 1.01)
-plt.xlim(0, _energy_max)
+plt.xlim(0, energy_max)
 plt.legend(loc='best')
 plt.show()
 
