@@ -7,7 +7,7 @@ from ResoFit.experiment import Experiment
 
 class Calibrate(Experiment):
 
-    def offset_us(self):
+    def offset_us(self, energy_min=1e-5, energy_max=1000, energy_step=0.01):
 
         self.params_exp = Parameters()
         self.params_exp.add('source_to_detector_m', value=self.source_to_detector_m)
