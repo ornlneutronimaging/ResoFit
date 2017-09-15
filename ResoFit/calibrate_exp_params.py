@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import peakutils as pku
 from lmfit import Parameters
-from ResoFit._utilities import Experiment
-from ResoFit._utilities import Simulation
+from ResoFit.experiment import Experiment
+from ResoFit.simulation import Simulation
 import numpy as np
 from scipy.interpolate import interp1d
 
