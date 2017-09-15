@@ -4,7 +4,6 @@ from lmfit import Parameters
 from ResoFit._utilities import Experiment
 from ResoFit._utilities import Simulation
 import numpy as np
-from scipy.interpolate import interp1d
 
 # Global parameters
 energy_min = 7
