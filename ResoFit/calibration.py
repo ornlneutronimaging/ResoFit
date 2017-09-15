@@ -5,6 +5,7 @@ from scipy.interpolate import interp1d
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 import numpy as np
+from lmfit import minimize
 
 
 class Calibration(Experiment):
@@ -31,3 +32,9 @@ class Calibration(Experiment):
                                       source_to_detector_m=source_to_detector_m)
         chi = y_exp - self.y_simu
         return sum(chi ** 2)
+
+    def exp_params(self, params_exp):
+
+        out = minimize(self.cost(params_exp), params_exp, method='leastsq')
+
+        return out

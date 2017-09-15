@@ -64,14 +64,16 @@ calibration = Calibration(data='all_thin.txt',
                           energy_max=energy_max,
                           energy_step=energy_step,
                           repeat=5)
-cost = calibration.cost(params)
-print(cost)
+# cost = calibration.cost(params)
+# print(cost)
+out = calibration.exp_params(params)
+print(out)
 
 plt.title('Peak estimation')
 plt.ylim(-0.01, 1.01)
 plt.xlim(0, energy_max)
 plt.legend(loc='best')
-plt.show()
+# plt.show()
 
 #
 # df = pd.DataFrame()
