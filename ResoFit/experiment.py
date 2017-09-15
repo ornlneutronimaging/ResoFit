@@ -19,7 +19,7 @@ class Experiment(object):
 
     # why need to define these outside __init__
 
-    def __init__(self, spectra, data, folder='data', repeat=1, offset_us=0, source_to_detector_m=16.12):
+    def __init__(self, spectra, data, repeat=1, folder='data'):
         _file_path = os.path.abspath(os.path.dirname(__file__))
         _folder_path = os.path.join(_file_path, folder)
         if os.path.isdir(_folder_path) is False:
@@ -44,16 +44,15 @@ class Experiment(object):
         if repeat < 1:
             raise ValueError("Repeat value must be an integer >= 1 !")
 
-        self.source_to_detector_m = source_to_detector_m
-        self.offset_us = offset_us
+        self.source_to_detector_m = 0.
+        self.offset_us = 16.12
         self.repeat = repeat
-        self.params_exp = None
         self.spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
         self.data = pd.read_csv(self.data_path, sep='\t', header=None)
 
-    def x_raw(self, angstrom=False):
-        offset_us = self.offset_us
-        source_to_detector_m = self.source_to_detector_m
+    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=16.12):
+        self.offset_us = offset_us
+        self.source_to_detector_m = source_to_detector_m
         x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
                                        offset_us=offset_us,
                                        source_to_detector_m=source_to_detector_m)
@@ -70,9 +69,10 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
         return y_exp_raw
 
-    def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False):
-        offset_us = self.offset_us
-        source_to_detector_m = self.source_to_detector_m
+    def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,
+                  offset_us=0, source_to_detector_m=16.12):
+        self.offset_us = offset_us
+        self.source_to_detector_m = source_to_detector_m
         x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
                                        offset_us=offset_us,
                                        source_to_detector_m=source_to_detector_m)
@@ -87,8 +87,8 @@ class Experiment(object):
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
-        baseline = pku.baseline(y_interp)
-        y_interp = y_interp - baseline
+        # baseline = pku.baseline(y_interp)
+        # y_interp = y_interp - baseline
 
         if angstrom is True:
             x_interp = _utilities.ev_to_angstroms(x_interp)
