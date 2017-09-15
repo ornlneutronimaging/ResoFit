@@ -20,5 +20,5 @@ class Calibrate(Experiment):
         exp_x, exp_y = experiment.xy_scaled(energy_min, energy_max, energy_step)
         baseline = pku.baseline(exp_y)
         exp_y = exp_y - baseline
-        chi = exp_y_interp - simu_y
+        chi = exp_y_interp - simu_
         return chi ** 2
