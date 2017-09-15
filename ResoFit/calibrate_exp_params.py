@@ -12,7 +12,7 @@ energy_max = 100
 energy_step = 0.001
 # Input sample name or names as str, case sensitive
 _layer_1 = 'Gd'
-_thickness_1 = 0.025  # mm
+_thickness_1 = 0.05  # mm
 mass = 0.36  # gram
 length = 25
 width = 25
@@ -72,7 +72,6 @@ plt.ylim(-0.01, 1.01)
 plt.xlim(0, energy_max)
 plt.legend(loc='best')
 plt.show()
-
 
 #
 # df = pd.DataFrame()

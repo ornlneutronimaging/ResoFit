@@ -66,19 +66,45 @@ class Simulation(object):
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
 
+    def to_csv(self, filename='simulation.csv', angstrom=False, transmission=False):
+        """
+        Output x and y values to .csv file
+        :param filename:
+        :param angstrom:
+        :param transmission:
+        :return: .csv file
+        """
+        _x = self.o_reso.total_signal['energy_eV']
+        _x_tag = 'x (eV)'
+        if angstrom is True:
+            _x = _utilities.ev_to_angstroms(_x)
+            _x_tag = 'x (\u212B)'
+        if transmission is True:
+            _y = self.o_reso.total_signal['transmission']
+            _y_tag = 'y (transmission)'
+        else:
+            _y = self.o_reso.total_signal['attenuation']
+            _y_tag = 'y (attenuation)'
+
+        df = pd.DataFrame(_x, index=None)
+        df.rename(columns={0: _x_tag}, inplace=True)
+        df[_y_tag] = _y
+        # print(df.head())
+        df.to_csv(filename)
 
 
-    # def x_layer(self, layer, angstrom=False):
-    #     _x = self.o_reso.total_signal[layer]['energy_eV']
-    #     if angstrom is True:
-    #         _x = _utilities.ev_to_angstroms(_x)
-    #     # pprint.pprint(o_reso.stack_sigma)
-    #     # pprint.pprint(o_reso)
-    #     return _x
-    #
-    # def y_layer(self, layer, transmission=False):
-    #     if transmission is True:
-    #         _y = self.o_reso.total_signal[layer]['transmission']
-    #     else:
-    #         _y = self.o_reso.stack_signal[layer]['attenuation']
-    #     return _y
+
+        # def x_layer(self, layer, angstrom=False):
+        #     _x = self.o_reso.total_signal[layer]['energy_eV']
+        #     if angstrom is True:
+        #         _x = _utilities.ev_to_angstroms(_x)
+        #     # pprint.pprint(o_reso.stack_sigma)
+        #     # pprint.pprint(o_reso)
+        #     return _x
+        #
+        # def y_layer(self, layer, transmission=False):
+        #     if transmission is True:
+        #         _y = self.o_reso.total_signal[layer]['transmission']
+        #     else:
+        #         _y = self.o_reso.stack_signal[layer]['attenuation']
+        #     return _y
