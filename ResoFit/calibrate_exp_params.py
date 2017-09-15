@@ -39,9 +39,9 @@ plt.plot(simu_x[ideal_y_index], simu_y[ideal_y_index], 'bo', label='peak_ideal')
 
 # Experiment
 experiment = Experiment(data='all_thin.txt', spectra='Image002_Spectra.txt', repeat=5)
-exp_x = experiment.x()
-baseline = pku.baseline(experiment.y())
-exp_y = experiment.y() - baseline
+exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
+                                    energy_max=energy_max,
+                                    energy_step=energy_step)
 
 # exp_y_index = pku.indexes(exp_y, thres=0.05/max(exp_y), min_dist=7)
 # exp_x_index = pku.interpolate(exp_x, exp_y, ind=exp_y_index)
@@ -51,9 +51,6 @@ exp_y = experiment.y() - baseline
 # print('Equal size: ', equal_size_boo)
 
 # Unifying the ideal & experimental range
-exp_y_function = interp1d(x=exp_x, y=exp_y, kind='cubic')
-exp_y_interp = exp_y_function(simu_x)
-print(exp_y_interp)
 
 # Fitting the peak positions
 source_to_detector_m = 16.12
@@ -61,7 +58,6 @@ delay_us = 0
 params = Parameters()
 params.add('source_to_detector_m', value=source_to_detector_m)
 params.add('delay_us', value=delay_us)
-
 
 # def residual(simu_x, simu_y, params):
 #     source_to_detector_m = params['source_to_detector_m']
@@ -76,7 +72,7 @@ params.add('delay_us', value=delay_us)
 #     return chi ** 2
 
 
-plt.plot(simu_x, exp_y_interp, 'r.', label='data')
+plt.plot(exp_x, exp_y, 'r.', label='data')
 # plt.plot(exp_x[exp_y_index], exp_y[exp_y_index], 'go', label='peak_exp')
 plt.title('Peak estimation')
 

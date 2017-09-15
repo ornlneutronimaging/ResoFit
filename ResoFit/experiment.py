@@ -6,6 +6,7 @@ from ImagingReso.resonance import Resonance
 import os
 from lmfit import Parameters
 from scipy.interpolate import interp1d
+import peakutils as pku
 
 
 class Experiment(object):
@@ -86,6 +87,8 @@ class Experiment(object):
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
+        baseline = pku.baseline(y_interp)
+        y_interp = y_interp - baseline
 
         if angstrom is True:
             x_interp = _utilities.ev_to_angstroms(x_interp)
