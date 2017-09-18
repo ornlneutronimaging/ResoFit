@@ -6,27 +6,27 @@ class TestExperiment(TestCase):
     def test_folder(self):
         """assert given folder existence"""
         folder = 'folder_not_exist'
-        data = 'all_thin.txt'
-        spectra = 'Image002_Spectra.txt'
-        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+        data_file = 'all_thin.txt'
+        spectra_file = 'Image002_spectra_file.txt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
     def test_spectra_file(self):
-        """assert given spectra file existence and format"""
-        folder = 'data'
-        data = 'all_thin.txt'
-        spectra = 'file_not_exist.txt'
-        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
-        spectra = 'Image002_Spectra.tt'
-        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+        """assert given spectra_file file existence and format"""
+        folder = 'data_file'
+        data_file = 'all_thin.txt'
+        spectra_file = 'file_not_exist.txt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        spectra_file = 'Image002_spectra_file.tt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
     def test_data_file(self):
-        """assert given data file existence and format"""
-        folder = 'data'
-        data = 'file_not_exist.txt'
-        spectra = 'Image002_Spectra.txt'
-        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
-        data = 'all_thin.tt'
-        self.assertRaises(ValueError, Experiment, data=data, spectra=spectra, folder=folder)
+        """assert given data_file file existence and format"""
+        folder = 'data_file'
+        data_file = 'file_not_exist.txt'
+        spectra_file = 'Image002_spectra_file.txt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        data_file = 'all_thin.tt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
         # def test_x(self):
         #     self.fail()
