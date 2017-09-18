@@ -21,8 +21,9 @@ class Calibration(Experiment):
         self.repeat = repeat
 
     def cost(self, params_exp):
-        source_to_detector_m = params_exp['source_to_detector_m']
-        offset_us = params_exp['offset_us']
+        parvals = params_exp.valuesdict()
+        source_to_detector_m = parvals['source_to_detector_m']
+        offset_us = parvals['offset_us']
         x_exp, y_exp = self.xy_scaled(energy_min=self.energy_min,
                                       energy_max=self.energy_max,
                                       energy_step=self.energy_step,

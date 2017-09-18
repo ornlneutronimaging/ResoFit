@@ -6,37 +6,32 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 import numpy as np
 from lmfit import minimize
+from ResoFit._utilities import peak_y_gap
 
 
 class Calibration(Simulation):
-    def __init__(self, spectra, data, layer_1, thickness_1, energy_min, energy_max, energy_step=0.01,
-                 repeat=1, density_1=np.NaN, folder='data'):
+    def __init__(self, spectra, data, layer_1, thickness_1, density_1=np.NaN,
+                 energy_min=1e-5, energy_max=1000, energy_step=0.01,
+                 repeat=1, folder='data'):
         super().__init__(layer_1, thickness_1, density_1, energy_min, energy_max, energy_step)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
         self.experiment = Experiment(spectra=spectra, data=data, repeat=repeat, folder=folder)
         self.repeat = repeat
+        self.data = data
+        self.spectra = spectra
 
-    def cost(self, params_exp):
-        x_simu, y_simu = self.x, self.y
-        source_to_detector_m = params_exp['source_to_detector_m']
-        offset_us = params_exp['offset_us']
-        x_exp, y_exp = self.experiment.xy_scaled(energy_min=self.energy_min,
-                                                 energy_max=self.energy_max,
-                                                 energy_step=self.energy_step,
-                                                 angstrom=False,
-                                                 transmission=False,
-                                                 offset_us=offset_us,
-                                                 source_to_detector_m=source_to_detector_m)
-        # print(x_simu - x_exp)
-        # if x_exp != x_simu:
-        #     raise ValueError('Energy range and/or energy step entered need to be identical for both simulation and experiment.')
-
-        chi = y_exp - y_simu
-        return sum(chi ** 2)
-
-    # def exp_params(self, params_exp):
-    #     out = minimize(self.cost(params_exp), params_exp, method='leastsq')
-    #
-    #     return out
+    def get_exp_params(self, params_init):
+        simu_x = self.x
+        simu_y = self.y,
+        energy_min = self.energy_min
+        energy_max = self.energy_max
+        energy_step = self.energy_step
+        data = self.data
+        spectra = self.spectra
+        repeat = self.repeat
+        out = minimize(peak_y_gap(params_init, simu_x, simu_y, energy_min, energy_max, energy_step, data, spectra, repeat),
+                       params_init, method='leastsq',
+                       args=(simu_x, simu_y, energy_min, energy_max, energy_step, data, spectra, repeat))
+        print(out)
