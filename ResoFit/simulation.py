@@ -12,7 +12,6 @@ class Simulation(object):
     energy_max = np.NaN
     energy_step = np.NaN
     # Input sample name or names as str, case sensitive
-    layer_1 = ''
     thickness_1 = np.NaN  # mm
     layers = []
 
@@ -21,17 +20,18 @@ class Simulation(object):
 
         self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
         self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
+        self.layer_1 = layer_1
         self.layers.append(layer_1)
-        self.x = self.o_reso.total_signal['energy_eV']
-        self.y = self.o_reso.total_signal['attenuation']
+        self.simu_x = self.o_reso.total_signal['energy_eV']
+        self.simu_y = self.o_reso.total_signal['attenuation']
 
     def add_layer(self, layer_to_add, layer_thickness, layer_density=np.NaN):
         self.o_reso.add_layer(formula=layer_to_add,
                               thickness=layer_thickness,
                               density=layer_density)
         self.layers.append(layer_to_add)
-        self.x = self.o_reso.total_signal['energy_eV']
-        self.y = self.o_reso.total_signal['attenuation']
+        self.simu_x = self.o_reso.total_signal['energy_eV']
+        self.simu_y = self.o_reso.total_signal['attenuation']
 
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list=[]):
         # Check if layer exist
@@ -46,8 +46,8 @@ class Simulation(object):
         if element not in _elements:
             raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
         self.o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
-        self.x = self.o_reso.total_signal['energy_eV']
-        self.y = self.o_reso.total_signal['attenuation']
+        self.simu_x = self.o_reso.total_signal['energy_eV']
+        self.simu_y = self.o_reso.total_signal['attenuation']
 
     def x_angstrom(self):
         _x = _utilities.ev_to_angstroms(self.o_reso.total_signal['energy_eV'])
@@ -92,17 +92,17 @@ class Simulation(object):
         df[_y_tag] = _y
         df.to_csv(filename)
 
-    # def x_layer(self, layer, angstrom=False):
-    #     _x = self.o_reso.total_signal[layer]['energy_eV']
-    #     if angstrom is True:
-    #         _x = _utilities.ev_to_angstroms(_x)
-    #     # pprint.pprint(o_reso.stack_sigma)
-    #     # pprint.pprint(o_reso)
-    #     return _x
-    #
-    # def y_layer(self, layer, transmission=False):
-    #     if transmission is True:
-    #         _y = self.o_reso.total_signal[layer]['transmission']
-    #     else:
-    #         _y = self.o_reso.stack_signal[layer]['attenuation']
-    #     return _y
+        # def x_layer(self, layer, angstrom=False):
+        #     _x = self.o_reso.total_signal[layer]['energy_eV']
+        #     if angstrom is True:
+        #         _x = _utilities.ev_to_angstroms(_x)
+        #     # pprint.pprint(o_reso.stack_sigma)
+        #     # pprint.pprint(o_reso)
+        #     return _x
+        #
+        # def y_layer(self, layer, transmission=False):
+        #     if transmission is True:
+        #         _y = self.o_reso.total_signal[layer]['transmission']
+        #     else:
+        #         _y = self.o_reso.stack_signal[layer]['attenuation']
+        #     return _y

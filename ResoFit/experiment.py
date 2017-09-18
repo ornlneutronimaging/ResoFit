@@ -19,22 +19,22 @@ class Experiment(object):
 
     # why need to define these outside __init__
 
-    def __init__(self, spectra, data, repeat=1, folder='data'):
+    def __init__(self, spectra_file, data_file, repeat=1, folder='data'):
         _file_path = os.path.abspath(os.path.dirname(__file__))
         _folder_path = os.path.join(_file_path, folder)
         if os.path.isdir(_folder_path) is False:
             raise ValueError('Folder specified does not exist')
         # Spectra file
-        self.spectra_path = os.path.join(_folder_path, spectra)
+        self.spectra_path = os.path.join(_folder_path, spectra_file)
         if os.path.exists(self.spectra_path) is False:
-            raise ValueError("Can not find spectra file '{}' in '/{}' folder".format(spectra, folder))
+            raise ValueError("Can not find spectra file '{}' in '/{}' folder".format(spectra_file, folder))
         path_to_spectra, spectra_format = os.path.splitext(self.spectra_path)
         if spectra_format not in ['.txt', '.csv']:
             raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
         # Data file
-        self.data_path = os.path.join(_folder_path, data)
+        self.data_path = os.path.join(_folder_path, data_file)
         if os.path.exists(self.data_path) is False:
-            raise ValueError("Can not find data file '{}' in '/{}' folder".format(data, folder))
+            raise ValueError("Can not find data file '{}' in '/{}' folder".format(data_file, folder))
         path_to_data, date_format = os.path.splitext(self.data_path)
         if date_format not in ['.txt', '.csv']:
             raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
