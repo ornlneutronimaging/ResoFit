@@ -3,8 +3,10 @@ import peakutils as pku
 from lmfit import Parameters
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
-from ResoFit.calibration import Calibration
+from ResoFit.calibration_simu import Calibration
 import numpy as np
+from lmfit import minimize
+
 
 # Global parameters
 energy_min = 7
@@ -64,16 +66,17 @@ calibration = Calibration(data='all_thin.txt',
                           energy_max=energy_max,
                           energy_step=energy_step,
                           repeat=5)
-# cost = calibration.cost(params)
-# print(cost)
-out = calibration.exp_params(params)
+cost = calibration.cost(params)
+print(cost)
+out = minimize(calibration.cost, params=params, method='leastsq')
+# out = calibration.exp_params(params)
 print(out)
 
 plt.title('Peak estimation')
 plt.ylim(-0.01, 1.01)
 plt.xlim(0, energy_max)
 plt.legend(loc='best')
-# plt.show()
+plt.show()
 
 #
 # df = pd.DataFrame()
