@@ -27,11 +27,11 @@ class Calibration(Simulation):
         self.exp_x_raw_calibrated = None
         self.exp_y_raw_calibrated = None
 
-    def get_exp_params(self, params_init):
+    def calibrate(self, params_calibrate):
         simu_x = self.simu_x
         simu_y = self.simu_y,
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
-        self.calibrate_result = minimize(y_gap_for_calibration, params_init, method='leastsq',
+        self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.data_file, self.spectra_file, self.repeat))
@@ -48,10 +48,25 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self):
-        plt.plot(self.simu_x, self.simu_y, 'b.', label=self.layer_1 + '_ideal', markersize=1)
+    def plot_after(self):
+        plt.plot(self.simu_x, self.simu_y,
+                 'b.', label=self.layer_1 + '_ideal', markersize=1)
 
-        plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'r.', label=self.layer_1 + '_exp', markersize=1)
+        plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
+                 'r.', label=self.layer_1 + '_exp', markersize=1)
+
+        plt.title('Calibration result')
+        plt.ylim(-0.01, 1.01)
+        plt.xlim(0, self.energy_max)
+        plt.legend(loc='best')
+        plt.show()
+
+    def plot_before(self):
+        plt.plot(self.simu_x, self.simu_y,
+                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+
+        plt.plot(self.experiment.x_raw(), self.experiment.y_raw(),
+                 'r.', label=self.layer_1 + '_exp_before_calibration', markersize=1)
 
         plt.title('Calibration result')
         plt.ylim(-0.01, 1.01)
