@@ -48,6 +48,19 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
+    def plot_before(self):
+        plt.plot(self.simu_x, self.simu_y,
+                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+
+        plt.plot(self.experiment.x_raw(), self.experiment.y_raw(),
+                 'r.', label=self.layer_1 + '_exp', markersize=1)
+
+        plt.title('Before Calibration')
+        plt.ylim(-0.01, 1.01)
+        plt.xlim(0, self.energy_max)
+        plt.legend(loc='best')
+        plt.show()
+        
     def plot_after(self):
         plt.plot(self.simu_x, self.simu_y,
                  'b.', label=self.layer_1 + '_ideal', markersize=1)
@@ -55,21 +68,9 @@ class Calibration(Simulation):
         plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
-        plt.title('Calibration result')
+        plt.title('After Calibration')
         plt.ylim(-0.01, 1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
 
-    def plot_before(self):
-        plt.plot(self.simu_x, self.simu_y,
-                 'b.', label=self.layer_1 + '_ideal', markersize=1)
-
-        plt.plot(self.experiment.x_raw(), self.experiment.y_raw(),
-                 'r.', label=self.layer_1 + '_exp_before_calibration', markersize=1)
-
-        plt.title('Calibration result')
-        plt.ylim(-0.01, 1.01)
-        plt.xlim(0, self.energy_max)
-        plt.legend(loc='best')
-        plt.show()

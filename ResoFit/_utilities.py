@@ -6,9 +6,11 @@ from ImagingReso.resonance import Resonance
 import os
 from lmfit import Parameters
 from ResoFit.experiment import Experiment
+from ResoFit.simulation import Simulation
 
 
-def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, data_file, spectra_file, repeat=1):
+def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, data_file, spectra_file,
+                          repeat=1):
     # Unpack Parameters:
     parvals = params.valuesdict()
     source_to_detector_m = parvals['source_to_detector_m']
@@ -27,7 +29,14 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     return gap
 
 
-def y_gap_for_fitting(params, simu_x, simu_y, energy_min, energy_max, energy_step, data_file, spectra_file, repeat=1):
+def y_gap_for_fitting(params, exp_x, exp_y, layer, energy_min, energy_max, energy_step):
+    parvals = params.valuesdict()
+    density = parvals['density']
+    thickness = parvals['thickness']
+    simulation = Simulation(layer_1=layer,
+                            density_1=density,
+                            thickness_1=thickness,
+                            energy_min=energy_min,
+                            energy_max=energy_max,
+                            energy_step=energy_step)
     pass
-
-
