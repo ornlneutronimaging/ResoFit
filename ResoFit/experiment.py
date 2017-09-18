@@ -50,7 +50,7 @@ class Experiment(object):
         self.spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
         self.data = pd.read_csv(self.data_path, sep='\t', header=None)
 
-    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=16.12):
+    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15.12):
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
         x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds

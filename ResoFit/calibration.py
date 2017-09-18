@@ -13,10 +13,11 @@ class Calibration(Simulation):
     def __init__(self, spectra_file, data_file, layer_1, thickness_1, density_1=np.NaN,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  repeat=1, folder='data'):
-        super().__init__(layer_1, thickness_1, density_1, energy_min, energy_max, energy_step)
+        super().__init__(energy_min, energy_max, energy_step)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
+        self.add_layer(layer=layer_1, layer_thickness=thickness_1, layer_density=density_1)
         self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, repeat=repeat, folder=folder)
         self.repeat = repeat
         self.data_file = data_file
@@ -26,6 +27,7 @@ class Calibration(Simulation):
         self.calibrate_result = None
         self.exp_x_raw_calibrated = None
         self.exp_y_raw_calibrated = None
+        self.layer_1 = layer_1
 
     def calibrate(self, params_calibrate):
         simu_x = self.simu_x
@@ -60,7 +62,7 @@ class Calibration(Simulation):
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
-        
+
     def plot_after(self):
         plt.plot(self.simu_x, self.simu_y,
                  'b.', label=self.layer_1 + '_ideal', markersize=1)

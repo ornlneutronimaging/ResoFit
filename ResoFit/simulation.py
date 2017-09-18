@@ -13,23 +13,24 @@ class Simulation(object):
     energy_step = np.NaN
     # Input sample name or names as str, case sensitive
     thickness_1 = np.NaN  # mm
-    layers = []
 
-    def __init__(self, layer_1, thickness_1, density_1=np.NaN,
-                 energy_min=1e-5, energy_max=1000, energy_step=0.01):
+    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01):
 
         self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
-        self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
-        self.layer_1 = layer_1
-        self.layers.append(layer_1)
-        self.simu_x = self.o_reso.total_signal['energy_eV']
-        self.simu_y = self.o_reso.total_signal['attenuation']
+        # self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
+        # self.layer_1 = layer_1
+        # self.layers.append(layer_1)
+        # self.simu_x = self.o_reso.total_signal['energy_eV']
+        # self.simu_y = self.o_reso.total_signal['attenuation']
+        self.simu_x = None
+        self.simu_y = None
+        self.layers = []
 
-    def add_layer(self, layer_to_add, layer_thickness, layer_density=np.NaN):
-        self.o_reso.add_layer(formula=layer_to_add,
+    def add_layer(self, layer, layer_thickness, layer_density=np.NaN):
+        self.o_reso.add_layer(formula=layer,
                               thickness=layer_thickness,
                               density=layer_density)
-        self.layers.append(layer_to_add)
+        self.layers.append(layer)
         self.simu_x = self.o_reso.total_signal['energy_eV']
         self.simu_y = self.o_reso.total_signal['attenuation']
 
