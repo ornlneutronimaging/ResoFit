@@ -50,7 +50,7 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot_before_calib(self):
+    def plot_before(self):
         plt.plot(self.simu_x, self.simu_y,
                  'b.', label=self.layer_1 + '_ideal', markersize=1)
 
@@ -63,7 +63,7 @@ class Calibration(Simulation):
         plt.legend(loc='best')
         plt.show()
 
-    def plot_after_calib(self):
+    def plot_after(self):
         plt.plot(self.simu_x, self.simu_y,
                  'b.', label=self.layer_1 + '_ideal', markersize=1)
 

@@ -28,7 +28,7 @@ spectra_file = 'Image002_Spectra.txt'
 
 repeat = 5
 source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.788  # 0#2.7120797253959119#2.7355447625559037
+offset_us = 3  # 0#2.7120797253959119#2.7355447625559037
 
 # Fitting the peak positions
 params_calibrate = Parameters()
@@ -43,7 +43,8 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=5)
+                          repeat=5,
+                          folder='aaa')
 
 calibrate_result = calibration.calibrate(params_calibrate=params_calibrate)
 calibration.plot_before()
@@ -59,5 +60,6 @@ fit = FitResonance(spectra_file=spectra_file, data_file=data_file, repeat=repeat
                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
                    energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
 fit.fit(params_fit=params_fit)
+fit.molar_conc(_layer_1)
 fit.plot_before()
 fit.plot_after()

@@ -8,6 +8,7 @@ import numpy as np
 from lmfit import minimize
 from ResoFit._utilities import y_gap_for_calibration
 from ResoFit._utilities import y_gap_for_fitting
+import re
 
 
 class FitResonance(Experiment):
@@ -52,6 +53,26 @@ class FitResonance(Experiment):
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
 
         return self.fit_result
+
+    def molar_conc(self, element):
+        layer = self.layer
+        # Check if element exist
+        _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)
+        _elements = []
+        for _element in _formula:
+            _single_element = list(_element)[0]
+            _elements.append(_single_element)
+        if element not in _elements:
+            raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
+        # convert fitted elemental density to molar concentration
+        simulation = Simulation(energy_min=self.energy_min,
+                                energy_max=self.energy_max,
+                                energy_step=self.energy_step)
+        simulation.add_layer(layer=self.layer, layer_thickness=self.layer_thickness, layer_density=self.layer_density)
+        molar_mass = simulation.o_reso.stack[layer][element]['molar_mass']['value']
+        molar_conc = self.fitted_density/molar_mass
+        print('Molar conc. of element {} in layer {} is: {} (mol/cm3)'.format(element, layer, molar_conc))
+        return molar_conc
 
     def plot_before(self):
         simulation = Simulation(energy_min=self.energy_min,

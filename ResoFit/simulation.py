@@ -37,8 +37,8 @@ class Simulation(object):
         # Check if layer exist
         if layer not in self.layers:
             raise ValueError('Layer {} does not exist.'.format(layer))
-        _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)
         # Check if element exist
+        _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)
         _elements = []
         for _element in _formula:
             _single_element = list(_element)[0]

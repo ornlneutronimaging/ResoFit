@@ -23,7 +23,7 @@ class Experiment(object):
         _file_path = os.path.abspath(os.path.dirname(__file__))
         _folder_path = os.path.join(_file_path, folder)
         if os.path.isdir(_folder_path) is False:
-            raise ValueError('Folder specified does not exist')
+            raise ValueError("Folder '{}' specified does not exist".format(folder))
         # Spectra file
         self.spectra_path = os.path.join(_folder_path, spectra_file)
         if os.path.exists(self.spectra_path) is False:
