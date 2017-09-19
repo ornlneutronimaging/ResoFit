@@ -13,7 +13,7 @@ from ResoFit._utilities import y_gap_for_fitting
 class FitResonance(Experiment):
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
-                 layer, layer_thickness=0.1, layer_density=np.NaN,
+                 layer, layer_thickness=0.2, layer_density=np.NaN,
                  folder='data', repeat=1,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01):
         super().__init__(spectra_file, data_file, repeat, folder)
