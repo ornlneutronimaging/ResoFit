@@ -15,7 +15,6 @@ class TestExperiment(unittest.TestCase):
         folder = 'data'
         data_file = 'all_thin.txt'
         spectra_file = 'Image002_spectra_file.txt'
-
         # spectra_file = 'file_does_not_exist.txt'
         self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
@@ -23,8 +22,6 @@ class TestExperiment(unittest.TestCase):
         """assert given spectra_file file existence and format"""
         folder = 'data'
         data_file = 'all_thin.txt'
-        spectra_file = 'Image002_spectra_file.txt'
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
         spectra_file = 'Image002_spectra_file.tt'
         self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
