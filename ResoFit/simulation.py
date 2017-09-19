@@ -12,7 +12,6 @@ class Simulation(object):
     energy_max = np.NaN
     energy_step = np.NaN
     # Input sample name or names as str, case sensitive
-    thickness_1 = np.NaN  # mm
 
     def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01):
 

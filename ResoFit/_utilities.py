@@ -29,15 +29,14 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     return gap
 
 
-def y_gap_for_fitting(params, exp_x, exp_y, layer, energy_min, energy_max, energy_step):
+def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer, energy_min, energy_max, energy_step):
     parvals = params.valuesdict()
-    density = parvals['density']
-    thickness = parvals['thickness']
+    layer_density = parvals['density']
+    layer_thickness = parvals['thickness']
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
                             energy_step=energy_step)
-    simulation.add_layer(layer=layer, layer_thickness=layer_thickness)
-
+    simulation.add_layer(layer=layer, layer_thickness=layer_thickness, layer_density=layer_density)
     simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
-    gap = (exp_y - simu_y) ** 2
+    gap = (exp_y_interp - simu_y) ** 2
     return gap

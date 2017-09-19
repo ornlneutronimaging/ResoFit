@@ -31,7 +31,7 @@ class Calibration(Simulation):
 
     def calibrate(self, params_calibrate):
         simu_x = self.simu_x
-        simu_y = self.simu_y,
+        simu_y = self.simu_y
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
         self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,

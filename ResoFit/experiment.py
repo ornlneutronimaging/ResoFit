@@ -13,9 +13,9 @@ class Experiment(object):
     # folder = ''
     # spectra = ''
     # data = ''
-    offset_us = np.NaN
-    source_to_detector_m = np.NaN
-    repeat = np.int
+    # offset_us = np.NaN
+    # source_to_detector_m = np.NaN
+    # repeat = np.int
 
     # why need to define these outside __init__
 
@@ -44,8 +44,8 @@ class Experiment(object):
         if repeat < 1:
             raise ValueError("Repeat value must be an integer >= 1 !")
 
-        self.source_to_detector_m = 0.
-        self.offset_us = 16.12
+        self.source_to_detector_m = np.NaN
+        self.offset_us = np.NaN
         self.repeat = repeat
         self.spectra = pd.read_csv(self.spectra_path, sep='\t', header=None)
         self.data = pd.read_csv(self.data_path, sep='\t', header=None)
@@ -70,7 +70,7 @@ class Experiment(object):
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,
-                  offset_us=0, source_to_detector_m=16.12):
+                  offset_us=0, source_to_detector_m=15.12):
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
         x_exp_raw = _utilities.s_to_ev(self.spectra[0],  # x in seconds
@@ -93,13 +93,4 @@ class Experiment(object):
         if angstrom is True:
             x_interp = _utilities.ev_to_angstroms(x_interp)
         return x_interp, y_interp
-
-    # def y_scaled(self, transmission=False):
-    #     if np.array(self.data[0])[:3] == [1, 2, 3, 4]:
-    #         y_exp_raw = np.array(self.data[1]) / self.repeat
-    #     else:
-    #         y_exp_raw = np.array(self.data[0]) / self.repeat
-    #     if transmission is False:
-    #         y_exp_raw = 1 - y_exp_raw
-    #     return y_exp_raw
 
