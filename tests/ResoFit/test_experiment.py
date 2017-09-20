@@ -53,6 +53,11 @@ class TestExperiment(unittest.TestCase):
         self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
     # def test_y_raw(self):
+    #     folder = self.folder
+    #     data_file = self.data_file
+    #     spectra_file = self.spectra_file + '.pdf'
+    #     self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+    #
     #     pass
 
 
