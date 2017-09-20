@@ -56,11 +56,4 @@ class TestExperiment(unittest.TestCase):
     #     pass
 
 
-        # def test_x(self):
-        #     self.fail()
-        #
-        # def test_ob_y(self):
-        #     self.fail()
-        #
-        # def test_y(self):
-        #     self.fail()
+
