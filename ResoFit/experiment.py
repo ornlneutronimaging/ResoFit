@@ -25,19 +25,21 @@ class Experiment(object):
         if os.path.isdir(_folder_path) is False:
             raise ValueError("Folder '{}' specified does not exist".format(folder))
         # Spectra file
+        spectra_format = spectra_file[-4:]
+        if spectra_format not in ['.txt', '.csv']:
+            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
         self.spectra_path = os.path.join(_folder_path, spectra_file)
         if os.path.exists(self.spectra_path) is False:
             raise ValueError("Can not find spectra file '{}' in '/{}' folder".format(spectra_file, folder))
-        path_to_spectra, spectra_format = os.path.splitext(self.spectra_path)
-        if spectra_format not in ['.txt', '.csv']:
-            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
+
         # Data file
+        date_format = data_file[-4:]
+        if date_format not in ['.txt', '.csv']:
+            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
         self.data_path = os.path.join(_folder_path, data_file)
         if os.path.exists(self.data_path) is False:
             raise ValueError("Can not find data file '{}' in '/{}' folder".format(data_file, folder))
-        path_to_data, date_format = os.path.splitext(self.data_path)
-        if date_format not in ['.txt', '.csv']:
-            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
+
         # Force repeat be an int >=1
         if isinstance(repeat, int) is False:
             raise ValueError("Repeat value must be an integer!")

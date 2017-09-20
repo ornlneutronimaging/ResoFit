@@ -19,6 +19,7 @@ mm3_to_cm3 = 0.001
 density = mass / (length * width * height * mm3_to_cm3)
 
 _density_1 = np.NaN
+folder = 'data'
 data_file = 'all_thin.txt'
 spectra_file = 'Image002_Spectra.txt'
 
@@ -39,7 +40,8 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=repeat)
+                          repeat=repeat,
+                          folder=folder)
 
 calibrate_result = calibration.calibrate(params_calibrate=params_calibrate)
 calibration.plot_before()
