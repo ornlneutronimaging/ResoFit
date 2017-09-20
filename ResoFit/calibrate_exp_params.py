@@ -39,7 +39,7 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=5)
+                          repeat=repeat)
 
 calibrate_result = calibration.calibrate(params_calibrate=params_calibrate)
 calibration.plot_before()
