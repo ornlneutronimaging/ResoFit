@@ -7,16 +7,13 @@ Abstract
 ~~~~~~~~
 
 Here we present an open-source Python library which focuses on
-simulating the neutron resonance signal for neutron imaging
-measurements. In this package, by defining the sample information such
-as density, thickness in the neutron path and isotopic ratios of the
-elemental composition of the material, one can plot of expected
-resonance peaks for a selected neutron energy range. Various sample
+fitting the neutron resonance signal for neutron imaging
+measurements. In this package, by defining the sample information
+such as elements and thickness in the neutron path, one can extract
+elemental/isotopic information of the sample. Various sample
 types such as layers of single elements (Ag, Co, etc. in solid form),
-chemical compounds (UO\ :sub:`2`, Gd\ :sub:`2`\O\ :sub:`3`, etc.), or even multiple layers of both
-types. Major plotting features include display of the
-transmission/attenuation in wavelength/energy/time scale, show/hide
-elemental and isotopic contributions in the total resonance signal.
+chemical compounds (UO\ :sub:`2`, Gd\ :sub:`2`\O\ :sub:`3`, etc.),
+or even multiple layers of both types.
 
 The energy dependent cross-section data used in this library are from
 `National Nuclear Data Center <http://www.nndc.bnl.gov/>`__, a published
@@ -25,16 +22,17 @@ online database. `Evaluated Nuclear Data File
 supported and more evaluated databases will be added in future.
 
 Python packages used are: SciPy [2], NumPy [3], Matplotlib [4], Pandas
-[5] and Periodictable [6].
+[5] lmfit [6] and ImagingReso [7].
 
 Statement of need
 ~~~~~~~~~~~~~~~~~
 
 Neutron imaging is a powerful tool to characterize material
-non-destructively. And based on the unique resonance features, it is
-feasible to identify elements and/or isotopes which resonance with
-incident neutrons. However, a dedicated tool for resonance imaging is
-missing, and **ResoFit** we presented here could fill this gap.
+non-destructively. And based on the unique resonance features,
+it is feasible to identify elements and/or isotopes resonance with
+incident neutrons. However, a dedicated user-friendly fitting tool
+for resonance imaging is missing, and **ResoFit** we presented here
+could fill this gap.
 
 Installation instructions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,6 +64,8 @@ The neutron transmission calculation algorithm of neutron transmission
     :height: 80px
     :alt: Beer-lambert law 1
 
+.. math:: $$T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]$$
+
 N\ :sub:`i` : number of atoms per unit volume of element *i*,
 
 d\ :sub:`i` : effective thickness along the neutron path of element *i*,
@@ -82,6 +82,8 @@ calculated from:
     :align: center
     :height: 80px
     :alt: Beer-lambert law 2
+
+.. math:: $${N_i} = {N_A}{C_i} = \frac{{{N_A}{\rho _i}}}{{\sum\nolimits_j {{m_{ij}}{A_{ij}}} }}$$
 
 N\ :sub:`A` : Avogadro’s number,
 
