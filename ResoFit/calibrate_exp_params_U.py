@@ -9,7 +9,7 @@ energy_min = 7
 energy_max = 150
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
-_layer_1 = 'Gd'
+_layer_1 = 'U'
 _thickness_1 = 0.15  # mm
 mass = 0.36  # gram
 length = 25
@@ -20,17 +20,17 @@ density = mass / (length * width * height * mm3_to_cm3)
 
 _density_1 = np.NaN
 folder = 'data'
-data_file = 'all_thin.txt'
+data_file = 'Values.txt'
 spectra_file = 'Image002_Spectra.txt'
 
-repeat = 5
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 3  # 0#2.7120797253959119#2.7355447625559037
+repeat = 1
+source_to_detector_m = 16  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 params_calibrate = Parameters()
-params_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=True, min=15)
-params_calibrate.add('offset_us', value=offset_us, vary=True, min=0)
+params_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=True)
+params_calibrate.add('offset_us', value=offset_us, vary=True)
 
 calibration = Calibration(data_file=data_file,
                           spectra_file=spectra_file,
