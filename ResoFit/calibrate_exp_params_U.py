@@ -20,7 +20,7 @@ density = mass / (length * width * height * mm3_to_cm3)
 
 _density_1 = np.NaN
 folder = 'data'
-data_file = 'Values.txt'
+data_file = 'values_no_xy.txt'
 spectra_file = 'Image002_Spectra.txt'
 
 repeat = 1

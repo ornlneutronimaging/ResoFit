@@ -55,13 +55,13 @@ class Experiment(object):
         self.repeat = repeat
 
         # Error loading data and spectra
-        if self.spectra[0][0] is str:
+        if type(self.spectra[0][0]) is str:
             if self.spectra[0][0].islower() or self.spectra[0][0].isupper() is True:
                 raise ValueError("Remove the axis descriptions in '{}' before loading ".format(spectra_file))
             else:
                 raise ValueError("The file '{}' columns must be separated with '\t' or ',' ".format(spectra_file))
 
-        if self.data[0][0] is str:
+        if type(self.data[0][0]) is str:
             if self.data[0][0].islower() or self.data[0][0].isupper() is True:
                 raise ValueError("Remove the axis descriptions in '{}' before loading ".format(data_file))
             else:
