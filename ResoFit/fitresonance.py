@@ -37,9 +37,20 @@ class FitResonance(Experiment):
         self.fitted_density = None
         self.fitted_thickness = None
 
-    def fit(self, params_fit):
+    def fit(self, thickness, density, vary='density'):
         exp_x_interp = self.exp_x_interp
         exp_y_interp = self.exp_y_interp
+
+        thickness_vary_tag = False
+        density_vary_tag = True
+        if vary == 'thickness':
+            thickness_vary_tag = True
+            density_vary_tag = False
+        if vary == 'all':
+            thickness_vary_tag = True
+        params_fit = Parameters()
+        params_fit.add('thickness', value=thickness, vary=thickness_vary_tag, min=0)
+        params_fit.add('density', value=density, vary=density_vary_tag, min=0)
 
         # Use lmfit to obtain 'density' to minimize 'y_gap_for_fitting'
         self.fit_result = minimize(y_gap_for_fitting, params_fit, method='leastsq',

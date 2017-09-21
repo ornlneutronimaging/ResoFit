@@ -27,11 +27,23 @@ class Calibration(Simulation):
         self.calibrate_result = None
         self.exp_x_raw_calibrated = None
         self.exp_y_raw_calibrated = None
+        self.exp_x_interp_calibrated = None
+        self.exp_y_interp_calibrated = None
         self.layer_1 = layer_1
 
-    def calibrate(self, params_calibrate):
+    def calibrate(self, source_to_detector_m, offset_us, vary='all'):
         simu_x = self.simu_x
         simu_y = self.simu_y
+
+        source_to_detector_vary_tag = True
+        offset_vary_tag = True
+        if vary == 'source_to_detector':
+            offset_vary_tag = False
+        if vary == 'offset':
+            source_to_detector_vary_tag = False
+        params_calibrate = Parameters()
+        params_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=source_to_detector_vary_tag)
+        params_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
         self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
@@ -47,6 +59,13 @@ class Calibration(Simulation):
                                                           offset_us=self.calibrated_offset_us,
                                                           source_to_detector_m=self.calibrated_source_to_detector_m)
         self.exp_y_raw_calibrated = self.experiment.y_raw(transmission=False)
+
+        self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
+            energy_min=self.energy_min,
+            energy_max=self.energy_max,
+            energy_step=self.energy_step,
+            offset_us=self.calibrated_offset_us,
+            source_to_detector_m=self.calibrated_source_to_detector_m)
 
         return self.calibrate_result
 
@@ -76,3 +95,15 @@ class Calibration(Simulation):
         plt.legend(loc='best')
         plt.show()
 
+    def plot_after_interp(self):
+        plt.plot(self.simu_x, self.simu_y,
+                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+
+        plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
+                 'r.', label=self.layer_1 + '_exp', markersize=1)
+
+        plt.title('After Calibration')
+        plt.ylim(-0.01, 1.01)
+        plt.xlim(0, self.energy_max)
+        plt.legend(loc='best')
+        plt.show()
