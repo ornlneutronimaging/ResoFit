@@ -6,9 +6,8 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 import numpy as np
 from lmfit import minimize
-from ResoFit._utilities import y_gap_for_calibration
-from ResoFit._utilities import y_gap_for_fitting
 import re
+from ResoFit._gap_functions import y_gap_for_fitting
 
 
 class FitResonance(Experiment):
@@ -70,7 +69,7 @@ class FitResonance(Experiment):
                                 energy_step=self.energy_step)
         simulation.add_layer(layer=self.layer, layer_thickness=self.layer_thickness, layer_density=self.layer_density)
         molar_mass = simulation.o_reso.stack[layer][element]['molar_mass']['value']
-        molar_conc = self.fitted_density/molar_mass
+        molar_conc = self.fitted_density / molar_mass
         print('Molar conc. of element {} in layer {} is: {} (mol/cm3)'.format(element, layer, molar_conc))
         return molar_conc
 
@@ -83,7 +82,8 @@ class FitResonance(Experiment):
         plt.plot(simu_x, simu_y,
                  'b.', label=self.layer + '_ideal', markersize=1)
 
-        plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us, source_to_detector_m=self.source_to_detector_m),
+        plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
+                            source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False),
                  'r.', label=self.layer + '_exp', markersize=1)
 

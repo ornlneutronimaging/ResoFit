@@ -1,10 +1,9 @@
 import re
 import numpy as np
 import pandas as pd
-from ImagingReso import _utilities
+import ImagingReso._utilities as reso_utils
 from ImagingReso.resonance import Resonance
-import os
-from lmfit import Parameters
+
 
 
 class Simulation(object):
@@ -50,7 +49,7 @@ class Simulation(object):
         self.simu_y = self.o_reso.total_signal['attenuation']
 
     def x_angstrom(self):
-        _x = _utilities.ev_to_angstroms(self.o_reso.total_signal['energy_eV'])
+        _x = reso_utils.ev_to_angstroms(self.o_reso.total_signal['energy_eV'])
         return _x
 
     def y_transmission(self):
@@ -60,7 +59,7 @@ class Simulation(object):
     def xy_simu(self, angstrom=False, transmission=False):
         _x = self.o_reso.total_signal['energy_eV']
         if angstrom is True:
-            _x = _utilities.ev_to_angstroms(_x)
+            _x = reso_utils.ev_to_angstroms(_x)
         if transmission is True:
             _y = self.o_reso.total_signal['transmission']
         else:
@@ -78,7 +77,7 @@ class Simulation(object):
         _x = self.o_reso.total_signal['energy_eV']
         _x_tag = 'x (eV)'
         if angstrom is True:
-            _x = _utilities.ev_to_angstroms(_x)
+            _x = reso_utils.ev_to_angstroms(_x)
             _x_tag = 'x (\u212B)'
         if transmission is True:
             _y = self.o_reso.total_signal['transmission']

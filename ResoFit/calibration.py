@@ -6,7 +6,7 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 import numpy as np
 from lmfit import minimize
-from ResoFit._utilities import y_gap_for_calibration
+from ResoFit._gap_functions import y_gap_for_calibration
 
 
 class Calibration(Simulation):
