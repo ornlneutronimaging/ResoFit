@@ -59,13 +59,13 @@ class Experiment(object):
             if self.spectra[0][0].islower() or self.spectra[0][0].isupper() is True:
                 raise ValueError("Remove the axis descriptions in '{}' before loading ".format(spectra_file))
             else:
-                raise ValueError("The file '{}' columns must be separated with '\t' or ',' ".format(spectra_file))
+                raise ValueError("The file '{}' columns must be separated with 'tab' or ',' ".format(spectra_file))
 
         if type(self.data[0][0]) is str:
             if self.data[0][0].islower() or self.data[0][0].isupper() is True:
                 raise ValueError("Remove the axis descriptions in '{}' before loading ".format(data_file))
             else:
-                raise ValueError("The file '{}' columns must be separated with '\t' or ',' ".format(data_file))
+                raise ValueError("The file '{}' columns must be separated with 'tab' or ',' ".format(data_file))
 
     def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15):
         self.offset_us = offset_us
