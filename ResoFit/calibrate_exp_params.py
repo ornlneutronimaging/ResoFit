@@ -1,4 +1,3 @@
-from lmfit import Parameters
 from ResoFit.calibration import Calibration
 from ResoFit.fitresonance import FitResonance
 import numpy as np
@@ -18,7 +17,6 @@ height = 0.075
 mm3_to_cm3 = 0.001
 density = 7.68 #mass / (length * width * height * mm3_to_cm3)
 
-_density_1 = np.NaN
 folder = 'data'
 data_file = 'all_thin.txt'
 spectra_file = 'Image002_Spectra.txt'
@@ -39,7 +37,9 @@ calibration = Calibration(data_file=data_file,
                           repeat=repeat,
                           folder=folder)
 
-calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m, offset_us=offset_us)
+calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
+                                         offset_us=offset_us,
+                                         vary='source_to_detector')
 calibration.plot_before()
 calibration.plot_after()
 # calibration.plot_after_interp()
