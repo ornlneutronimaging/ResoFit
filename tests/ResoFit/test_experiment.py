@@ -9,7 +9,7 @@ class TestExperiment(unittest.TestCase):
     def setUp(self):
         _file_path = os.path.dirname(__file__)
         self.folder = os.path.abspath(os.path.join(_file_path, '../../ResoFit/data/_mock_data_for_test'))
-        self.data = os.path.join(self.folder, '_data_unit_test.txt')
+        self.data_file = os.path.join(self.folder, '_data_unit_test.txt')
         self.spectra_file = os.path.join(self.folder, '_spectra_unit_test.txt')
 
     #folder = 'data/_mock_data_for_test'
