@@ -1,20 +1,16 @@
 import unittest
 import os
-
+import numpy as np
 from ResoFit.experiment import Experiment
 
 
 class TestExperiment(unittest.TestCase):
-
     def setUp(self):
         _file_path = os.path.dirname(__file__)
         self.folder = os.path.abspath(os.path.join(_file_path, '../../ResoFit/data/_mock_data_for_test'))
         self.data_file = os.path.join(self.folder, '_data_unit_test.txt')
         self.spectra_file = os.path.join(self.folder, '_spectra_unit_test.txt')
 
-    #folder = 'data/_mock_data_for_test'
-    #data_file = '_data_unit_test.txt'
-    # spectra_file = '_spectra_unit_test.txt'
     energy_min = 7
     energy_max = 8
     energy_step = 0.01
@@ -108,8 +104,42 @@ class TestExperiment(unittest.TestCase):
                                                   offset_us=0,
                                                   source_to_detector_m=15)
 
-        self.assertAlmostEqual(x_interp[1]-x_interp[0], self.energy_step, delta=self.energy_step/1000)
+        self.assertAlmostEqual(x_interp[1] - x_interp[0], self.energy_step, delta=self.energy_step / 1000)
 
+    def test_x_raw(self):
+        # _file_path = os.path.join(self.folder, '_data_xy_unit_test.txt')
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        _x_returned = experiment.x_raw(angstrom=False, offset_us=0., source_to_detector_m=15)
+        _x_expected = np.array([5.825324e+00,
+                                5.821177e+00,
+                                5.817034e+00,
+                                5.812896e+00])
+        self.assertAlmostEqual(_x_returned[-1], _x_expected[-1], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-2], _x_expected[-2], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-3], _x_expected[-3], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-4], _x_expected[-4], delta=0.000001)
+        _x_returned = experiment.x_raw(angstrom=True, offset_us=0., source_to_detector_m=15)
+        _x_expected = np.array([0.118490,
+                                0.118532,
+                                0.118575,
+                                0.118617])
+        self.assertAlmostEqual(_x_returned[-1], _x_expected[-1], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-2], _x_expected[-2], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-3], _x_expected[-3], delta=0.000001)
+        self.assertAlmostEqual(_x_returned[-4], _x_expected[-4], delta=0.000001)
 
-        # def test_y_raw(self):
-        #     pass
+    def test_y_raw(self):
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        _y_returned = experiment.y_raw(transmission=True)
+        _y_expected = np.array([ 1.003423,  1.008694,  1.008373,  1.004356,  1.008168,  1.016091])
+        self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-3], _y_expected[-3], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-4], _y_expected[-4], delta=0.000001)
+        _y_returned = experiment.y_raw(transmission=False)
+        _y_expected = np.array([-0.003423, -0.008694, -0.008373, -0.004356, -0.008168, -0.016091])
+        self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-3], _y_expected[-3], delta=0.000001)
+        self.assertAlmostEqual(_y_returned[-4], _y_expected[-4], delta=0.000001)
+

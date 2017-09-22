@@ -77,11 +77,11 @@ class Experiment(object):
         """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
-        x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
-                                       offset_us=offset_us,
-                                       source_to_detector_m=source_to_detector_m)
+        x_exp_raw = np.array(reso_utils.s_to_ev(self.spectra[0],  # x in seconds
+                                                offset_us=offset_us,
+                                                source_to_detector_m=source_to_detector_m))
         if angstrom is True:
-            x_exp_raw = reso_utils.ev_to_angstroms(x_exp_raw)
+            x_exp_raw = np.array(reso_utils.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
 
     def y_raw(self, transmission=False):
