@@ -15,8 +15,8 @@ class TestLoad(TestCase):
              1.019222,
              1.015934,
              1.012372]
-        df_expected = pd.DataFrame(x, index=None)
-        df_expected[1] = y
+        df_expected = pd.DataFrame(y, index=None)
+        df_expected.insert(0, x)
         df = load_txt_csv('ResoFit/data/_data_xy_unit_test.txt')
 
         self.assertEqual(df, df_expected)
