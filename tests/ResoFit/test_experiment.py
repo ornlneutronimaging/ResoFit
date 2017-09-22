@@ -65,10 +65,28 @@ class TestExperiment(unittest.TestCase):
 
         self.assertEqual(_dict_returned, _dict_expected)
 
-    def test_loaded_data(self):
+    def test_loaded_data_sep(self):
         folder = self.folder
         data_file = '_data_sep_unit_test.txt'
         spectra_file = self.spectra_file
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+
+    def test_loaded_data_str(self):
+        folder = self.folder
+        data_file = '_data_str_unit_test.txt'
+        spectra_file = self.spectra_file
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+
+    def test_loaded_spectra_sep(self):
+        folder = self.folder
+        data_file = self.spectra_file
+        spectra_file = '_data_sep_unit_test.txt'
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+
+    def test_loaded_spectra_str(self):
+        folder = self.folder
+        data_file = self.spectra_file
+        spectra_file = '_data_str_unit_test.txt'
         self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
     def test_xy_scaled(self):
