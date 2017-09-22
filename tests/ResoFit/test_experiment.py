@@ -3,7 +3,7 @@ from ResoFit.experiment import Experiment
 
 
 class TestExperiment(unittest.TestCase):
-    folder = 'data'
+    folder = 'data/_mock_data_for_test'
     data_file = '_data_unit_test.txt'
     spectra_file = '_spectra_unit_test.txt'
     energy_min = 7
@@ -56,7 +56,15 @@ class TestExperiment(unittest.TestCase):
         self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file,
                           folder=folder)
 
-    def test_data_loaded(self):
+    def test_load_txt_csv(self):
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        _dict_expected = {0: [1, 2, 3, 4, 5, 6],
+                          1: [1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091]}
+        _dict_returned = experiment.data.to_dict('list')
+
+        self.assertEqual(_dict_returned, _dict_expected)
+
+    def test_loaded_data(self):
         folder = self.folder
         data_file = '_data_sep_unit_test.txt'
         spectra_file = self.spectra_file
@@ -72,7 +80,7 @@ class TestExperiment(unittest.TestCase):
                                                   offset_us=0,
                                                   source_to_detector_m=15)
 
-        self.assertAlmostEqual(x_interp[1]-x_interp[0], self.energy_step, delta=self.energy_step)
+        self.assertAlmostEqual(x_interp[1]-x_interp[0], self.energy_step, delta=self.energy_step/1000)
 
 
         # def test_y_raw(self):
