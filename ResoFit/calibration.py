@@ -32,8 +32,8 @@ class Calibration(Simulation):
         self.layer_1 = layer_1
 
     def calibrate(self, source_to_detector_m, offset_us, vary='all'):
-        if vary not in ['all', 'source_to_detector', 'offset']:
-            raise ValueError("'vary=' can only be one of ['all', 'source_to_detector', 'offset']")
+        if vary not in ['source_to_detector', 'offset', 'all']:
+            raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all']")
         simu_x = self.simu_x
         simu_y = self.simu_y
 

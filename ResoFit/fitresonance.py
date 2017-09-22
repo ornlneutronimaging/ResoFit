@@ -38,6 +38,8 @@ class FitResonance(Experiment):
         self.fitted_thickness = None
 
     def fit(self, thickness, density, vary='density'):
+        if vary not in ['density', 'thickness', 'all']:
+            raise ValueError("'vary=' can only be one of ['density', 'thickness', 'all']")
         exp_x_interp = self.exp_x_interp
         exp_y_interp = self.exp_y_interp
 
