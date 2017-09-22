@@ -68,6 +68,13 @@ class Experiment(object):
                 raise ValueError("The file '{}' columns must be separated with 'tab' or ',' ".format(data_file))
 
     def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15):
+        """
+        Get the 'x' in eV or angstrom with experimental parameters
+        :param angstrom: bool to switch between eV and angstrom
+        :param offset_us: offset_us for the actual measurement
+        :param source_to_detector_m: detector position for the actual measurement
+        :return: array
+        """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
         x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
@@ -78,6 +85,11 @@ class Experiment(object):
         return x_exp_raw
 
     def y_raw(self, transmission=False):
+        """
+        Get the 'y' in eV or angstrom with experimental parameters
+        :param transmission: bool to switch between transmission and attenuation
+        :return: array
+        """
         if list(self.data[0][:4]) == [1, 2, 3, 4]:
             y_exp_raw = np.array(self.data[1]) / self.repeat
         else:
@@ -88,6 +100,17 @@ class Experiment(object):
 
     def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,
                   offset_us=0, source_to_detector_m=15):
+        """
+        Get interpolated x & y within the scaled range same as simulation
+        :param energy_min:
+        :param energy_max:
+        :param energy_step:
+        :param angstrom:
+        :param transmission:
+        :param offset_us:
+        :param source_to_detector_m:
+        :return:
+        """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
         x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
@@ -100,7 +123,7 @@ class Experiment(object):
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
 
-        nbr_point = (energy_max - energy_min) / energy_step
+        nbr_point = (energy_max - energy_min) / energy_step + 1
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
