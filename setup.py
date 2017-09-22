@@ -17,7 +17,7 @@ setup(
     author="Yuxuan Zhang, Jean C. Bilheux",
     author_email="zhangy6@ornl.gov, bilheuxjm@ornl.gov",
     packages=find_packages(exclude=['tests', 'notebooks']),
-    package_data={'ResoFit': ['data/*']},
+    package_data={'ResoFit': ['data/_mock_data_for_test/*']},
     include_package_data=True,
     test_suite='tests',
 
