@@ -23,6 +23,8 @@ Welcome to ResoFit's documentation!
 
    introduction
    tutorial
+   acknowledgement
+   references
 
 Indices and tables
 ==================
