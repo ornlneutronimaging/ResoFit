@@ -123,7 +123,7 @@ class Experiment(object):
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
 
-        nbr_point = (energy_max - energy_min) / energy_step + 1
+        nbr_point = (energy_max - energy_min) / energy_step# + 1
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
