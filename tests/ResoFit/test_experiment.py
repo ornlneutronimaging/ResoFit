@@ -72,7 +72,7 @@ class TestExperiment(unittest.TestCase):
                                                   offset_us=0,
                                                   source_to_detector_m=15)
 
-        self.assertAlmostEqual(x_interp[1]-x_interp[0], self.energy_step, delta=self.energy_step/1000)
+        self.assertAlmostEqual(x_interp[1]-x_interp[0], self.energy_step, delta=self.energy_step)
 
 
         # def test_y_raw(self):
