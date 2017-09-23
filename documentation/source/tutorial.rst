@@ -1,409 +1,290 @@
-********
-Tutorial
-********
-
-In a first time, you need to install the library
-
-$ pip install ImagingReso
-
-then you need to import it
-
->>> import ImagingReso
-
-Initialization
-##############
-
-we first define our stack of elements. Each layer of the stack can be a single element, or a compound and
-is defined by a dictionary  where the
-thickness is defined in mm, the density in g/cm3 and the ratio is the stochiometric coefficient of each element. 
-
-example:
---------
-
->>> _stack = {'CoAg': {'elements': ['Co','Ag'],
-                       'stoichiometric_ratio': [1,1],
-                       'thickness': {'value': 0.025,
-                                     'units': 'mm'},
-                       'density': {'value': 0.5,
-                                   'units': 'g/cm3'},
-                       },
-              'U': {'elements': ['U'],
-                    'stoichiometric_ratio': [1],
-                    'thickness': {'value': 0.3,
-                                  'units': 'mm'},
-                    'density': {'value': np.NaN,
-                                'units': 'g/cm3'},
-                   },
-             }
-         
-Then you can now initialize the object as followed, in this case we use a energy range of 0 to 300 eV with 
-10 eV of energy step.
-
-As noted that if the density is omitted, the program will use the stochiometri_ratio and theoretical density of each element to 
-estimage the density of the compound (layer), and changing the isotope density, or isotopic coefficient will affect the layer/compound density. 
-But if you provide the density, this value won't be affected by any other changes. If you provide the density, we suppose that you 
-know what you are doing and that you know your component enough to make sure its density value should not be changed.
-
->>> o_reso = ImagingReso.Resonance(stack = _stack, energy_min=0.001, energy_max=300, energy_step=10)
-
-It is also possible to define the layers (stack) one by one using their formula as demonstrated here
-
->>> o_reso = ImagingReso.Resonance(energy_min=0.001, energy_max=300, energy_step=10)
->>> stack1 = 'CoAg'
->>> thickness1 = 0.025 #mm
->>> density1 = 0.5 #g/cm3
->>> o_reso.add_layer(formula=stack1, thickness=thickness1, density=density1)
->>> stack2 = 'U'
->>> thcikness2 = 0.3
->>> o_reso.add_layer(formula=stack2, thcikness=thickness2)
-
-**All the parameters defined can be checked as followed**
-
-The list of stack displays the input information, but also reported the list of isotopes, mass, etc, for
-the elements you defined, for each layer.
-
->>> import pprint
->>> pprint.pprint(o_reso.slack)
-{'CoAg': {'Ag': {'density': {'units': 'g/cm3', 'value': 10.5},
-                 'isotopes': {'density': {'units': 'g/cm3',
-                                          'value': [10.406250187729098,
-                                                    10.600899412431097]},
-                              'file_names': ['Ag-107.csv', 'Ag-109.csv'],
-                              'isotopic_ratio': [0.51839, 0.48161000000000004],
-                              'list': ['107-Ag', '109-Ag'],
-                              'mass': {'units': 'g/mol',
-                                       'value': [106.905093, 108.904756]}},
-                 'molar_mass': {'units': 'g/mol', 'value': 107.8682}},
-          'Co': {'density': {'units': 'g/cm3', 'value': 8.9},
-                 'isotopes': {'density': {'units': 'g/cm3',
-                                          'value': [8.749367803547068,
-                                                    8.900000030203689]},
-                              'file_names': ['Co-58.csv', 'Co-59.csv'],
-                              'isotopic_ratio': [0.0, 1.0],
-                              'list': ['58-Co', '59-Co'],
-                              'mass': {'units': 'g/mol',
-                                       'value': [57.9357576, 58.9332002]}},
-                 'molar_mass': {'units': 'g/mol', 'value': 58.9332}},
-          'atoms_per_cm3': {'Ag': 1.8051829472054791e+21,
-                            'Co': 1.8051829472054791e+21},
-          'density': {'units': 'g/cm3', 'value': 0.5},
-          'elements': ['Co', 'Ag'],
-          'stoichiometric_ratio': [1, 1],
-          'thickness': {'units': 'mm', 'value': 0.025}},
- 'U': {'U': {'density': {'units': 'g/cm3', 'value': 18.95},
-             'isotopes': {'density': {'units': 'g/cm3',
-                                      'value': [18.552792392319066,
-                                                18.632509467526443,
-                                                18.712358690988417,
-                                                18.951741325328925]},
-                          'file_names': ['U-233.csv',
-                                         'U-234.csv',
-                                         'U-235.csv',
-                                         'U-238.csv'],
-                          'isotopic_ratio': [0.0,
-                                             5.4999999999999995e-05,
-                                             0.0072,
-                                             0.992745],
-                          'list': ['233-U', '234-U', '235-U', '238-U'],
-                          'mass': {'units': 'g/mol',
-                                   'value': [233.039628,
-                                             234.0409456,
-                                             235.0439231,
-                                             238.0507826]}},
-             'molar_mass': {'units': 'g/mol', 'value': 238.02891}},
-       'atoms_per_cm3': {'U': 4.7943575106128917e+22},
-       'density': {'units': 'g/cm3', 'value': 18.949999999999999},
-       'elements': ['U'],
-       'stoichiometric_ratio': [1],
-       'thickness': {'units': 'mm', 'value': 0.3}}}       
-
-or you can also simply print the object
-
->>> print(o_reso)
-{
-    "CoAg": {
-        "elements": [
-            "Co",
-            "Ag"
-        ],
-        "stoichiometric_ratio": [
-            1,
-            1
-        ],
-   ...
-}
-
-or using only the object name
-
->>> o_reso
-{
-    "CoAg": {
-        "elements": [
-            "Co",
-            "Ag"
-        ],
-        "stoichiometric_ratio": [
-            1,
-            1
-        ],
-   ...
-}
-
-The energy range defined
-
->>> print("Energy min {} eV".format(o_reso.energy_min))
-Energy min 0.001 eV
->>> print("Energy max {} eV".format(o_reso.energy_max))
-Energy max 300 eV
->>> print("Energy step {} eV".format(o_reso.energy_step))
-Energy step 10 eV
-
-During the initialization process, the following things take place behind the scene
-- the number of atoms per cm3 of each element is calculated
-- the density of each layer (if not provided is estimated)
-- the arrays of Sigma (barns) vs Energy for each isotope is retrieved
-
->>> pprint.pprint(o_reso.stack_sigma)
-{'CoAg': {'Ag': {'107-Ag': {'energy_eV': array([  1.00000000e-05,   1.03401821e+01,   2.06803541e+01,
-         ...
-         2.79184656e+02,   2.89524828e+02,   2.99865000e+02]),
-                            'sigma_b': array([ 1938.91      ,     6.69765395,     6.9742027 ,     5.28153402,
-         ...
-         4.73100823,     4.11286   ])},
-                 '109-Ag': {'energy_eV': array([  1.00000000e-05,   1.03446648e+01,   2.06893197e+01,
-         ...
-         2.79305690e+02,   2.89650345e+02,   2.99995000e+02]),
-                            'sigma_b': array([  4.51167000e+03,   1.19932847e+01,   5.51138934e+00,
-         ...
-         4.32864623e+00,   1.19208304e+01,   5.41247000e+00])},
-                 'energy_ev': array([  1.00000000e-05,   1.03424234e+01,   2.06848369e+01,
-         ...
-         2.79245173e+02,   2.89587587e+02,   2.99930000e+02]),
-                 'sigma': array([ 3177.9769436 ,     9.24808268,     6.26969716,    64.29044465,
-         ...
-         8.19369849,     4.73876517])},
-         
-         ...
-         
-          }}}
-
-Modify Isotopic Ratio
-#####################
-
-Let's presume that the U layer of our sample does not have the default isotopic_ratio reported
-
-```
-U-233 -> 0
-U-234 -> 5.5e-5
-U-235 -> 0.007
-U-238 -> 0.99
-```
-
-but instead
-
-```
-U-233 -> 0
-U-234 -> 0
-U-235 -> 0.15
-U-238 -> 085
-```
-
-Display current isotopic ratio
-------------------------------
-
-It's possible to display the current list of isotopic ratio
-
-To display the entire list
-
->>> pprint.pprint(o_reso.get_isotopic_ratio())
-{'CoAg': {'Ag': {'107-Ag': 0.51839, '109-Ag': 0.48161000000000004},
-          'Co': {'58-Co': 0.0, '59-Co': 1.0}},
- 'U': {'U': {'233-U': 0.0,
-             '234-U': 5.4999999999999995e-05,
-             '235-U': 0.0072,
-             '238-U': 0.992745}}}
-             
-From there, it's possible to narrow down the search to the compound and element we are looking for
-
->>> pprint.pprint(o_reso.get_isotopic_ratio(compound='U', element='U'))  
-{'233-U': 0.0,
- '234-U': 5.4999999999999995e-05,
- '235-U': 0.0072,
- '238-U': 0.992745}
- 
-if compound is composed of only 1 element, **element** paremeter can be omitted
->>> pprint.pprint(o_reso.get_isotopic_ratio(compound='U'))
-{'233-U': 0.0,
- '234-U': 5.4999999999999995e-05,
- '235-U': 0.0072,
- '238-U': 0.992745}
- 
-Define new set of isotopic ratio
---------------------------------
-
-Let's presume our new set of 'U' ratio is
-
->>> new_list_ratio = [0.2, 0.3, 0.4, 0.1]
-
-Let's define the new stochiomettric ratio
-
->>> o_reso.set_isotopic_ratio(compound='U', list_ratio=new_list_ratio)
->>> pprint.pprint(o_reso.stack)
-{'CoAg': {'Ag': {'density': {'units': 'g/cm3', 'value': 10.5},
-                 'isotopes': {'density': {'units': 'g/cm3',
-                                          'value': [10.406250187729098,
-                                                    10.600899412431097]},
-                              'file_names': ['Ag-107.csv', 'Ag-109.csv'],
-                              'isotopic_ratio': [0.51839, 0.48161000000000004],
-                              'list': ['107-Ag', '109-Ag'],
-                              'mass': {'units': 'g/mol',
-                                       'value': [106.905093, 108.904756]}},
-                 'molar_mass': {'units': 'g/mol', 'value': 107.8682}},
-          'Co': {'density': {'units': 'g/cm3', 'value': 8.9},
-                 'isotopes': {'density': {'units': 'g/cm3',
-                                          'value': [8.749367803547068,
-                                                    8.900000030203689]},
-                              'file_names': ['Co-58.csv', 'Co-59.csv'],
-                              'isotopic_ratio': [0.0, 1.0],
-                              'list': ['58-Co', '59-Co'],
-                              'mass': {'units': 'g/mol',
-                                       'value': [57.9357576, 58.9332002]}},
-                 'molar_mass': {'units': 'g/mol', 'value': 58.9332}},
-          'atoms_per_cm3': {'Ag': 1.8051829472054791e+21,
-                            'Co': 1.8051829472054791e+21},
-          'density': {'units': 'g/cm3', 'value': 0.5},
-          'elements': ['Co', 'Ag'],
-          'stoichiometric_ratio': [1, 1],
-          'thickness': {'units': 'mm', 'value': 0.025}},
- 'U': {'U': {'density': {'units': 'g/cm3', 'value': 18.680428927650006},
-             'isotopes': {'density': {'units': 'g/cm3',
-                                      'value': [18.552792392319066,
-                                                18.632509467526443,
-                                                18.712358690988417,
-                                                18.951741325328925]},
-                          'file_names': ['U-233.csv',
-                                         'U-234.csv',
-                                         'U-235.csv',
-                                         'U-238.csv'],
-                          'isotopic_ratio': [0.2, 0.3, 0.4, 0.1],
-                          'list': ['233-U', '234-U', '235-U', '238-U'],
-                          'mass': {'units': 'g/mol',
-                                   'value': [233.039628,
-                                             234.0409456,
-                                             235.0439231,
-                                             238.0507826]}},
-             'molar_mass': {'units': 'g/mol', 'value': 234.64285678}},
-       'atoms_per_cm3': {'U': 4.7943575106128917e+22},
-       'density': {'units': 'g/cm3', 'value': 18.949999999999999},
-       'elements': ['U'],
-       'stoichiometric_ratio': [1],
-       'thickness': {'units': 'mm', 'value': 0.3}}}
-       
-As you can see, the **density** and **molar_mass** values of the *U* compound/element have been updated.
-
-Let's assume that the **Ag** element is not perfect and has some voids that changes its density to 8.5 (instead of 10.5). 
-We need to change this value. 
-
-First, we can have the current density value for this element
-
->>> print(o_reso.get_density(compound='CoAg', element='Co'))
-10.5
-
-or of all the compounds
-
->>> pprint.pprint(o_reso.get_density())
-{'CoAg': {'Ag': 10.5, 'Co': 8.9}, 'U': {'U': 18.680428927650006}}
-
-Retrieve the Transmission and Attenuation signals
--------------------------------------------------
-
-Those arrays for each Compound, element and isotopes are calculated during initialization of the object, but also 
-every time one of the parameters is modified, such as density, stochiometric coefficient.
-
-Those arrays are store in the **stack_signal** dictionary
-
->>> pprint.pprint(o_reso.stack_signal)
-{'CoAg': {'Ag': {'107-Ag': {'attenuation': array([  8.71204643e-03,   3.02257699e-05,   3.14737842e-05,
-        ...
-         2.29850072e-05,   2.13506105e-05,   1.85609896e-05]),
-                            'energy_eV': array([  1.00000000e-05,   1.03401821e+01,   2.06803541e+01,
-         ...
-         2.79184656e+02,   2.89524828e+02,   2.99865000e+02]),
-                            'transmission': array([ 0.99128795,  0.99996977,  0.99996853,  0.99997616,  0.99823286,
-         ...
-         0.99997299,  0.99997427,  0.99997701,  0.99997865,  0.99998144])},
-                 '109-Ag': {'attenuation': array([  2.01550894e-02,   5.41237178e-05,   2.48723558e-05,
-         ...
-         1.95348051e-05,   5.37967523e-05,   2.44259480e-05]),
-         ...
-         ...
-         }}}}
-         
-You can retrieve any of those arrays, transmission, attenuation and Energy (eV) (x-axis) arrays as followed
-
-for the compound CoAg
-
->>> transmission_CoAg = o_reso.stack_signal['CoAg']['transmission']
->>> energy_CoAg = o_reso.stack_signal['CoAg']['energy_eV']
-
-for the element Ag
-
->>> transmission_CoAg_Ag = o_reso.stack_signal['CoAg']['Ag']['transmission']
->>> energy_CoAg_Ag = o_reso.stack_signal['CoAg']['Ag']['energy_eV']
-
-or for the isotope 107-Ag
-
->>> transmission_CoAg_Ag_107Ag = o_reso.stack_signal['CoAg']['Ag']['107-Ag']['transmission']
->>> energy_CoAg_Ag_107Ag = o_reso.stack_signal['CoAg']['Ag']['107-Ag']['energy_eV']
-
-In case you prefer having the x_axis in *Angstroms* instead of *eV*
->>> x_axis_ev = energy_CoAg_Ag_107Ag
->>> lambda_CoAg_Ag_107Ag = o_reso.convert_x_axis(array=x_axis_ev, from_units='ev', to_units='angstroms')
-
-
-Display Transmission and Attenuation
-####################################
-
-Here are the flags available for the final plot (in bold, the default values)
-
- - transmission: True or False. If False, the attenuation signal is plotted
- - x_axis: 'energy' or 'lambda'
- - mixed: True or False. Display the total signal
- - all_layers: True or False. Dislay the signal of each compound/layer
- - all_elements: True or False. Display the signal of each element
- - all_isotopes: True or False. Display the signal of each isotope
- - items_to_plot: Array that defines what to plot. You need to define the path to the compound/element/isotope you want to see.
-
-example:
-
-if we want to display the Co element of the CoAg Compound
-
->>> items_to_plot = [['CoAg','Co']]
-
-if we want also to display the 107-Ag isotope of the element Al of compound CoAg
-
->>> items_to_plot = [['CoAg', 'Co'],['CoAg','Ag','107-Ag']]
-
-So here are a few examples of plot commands
-
->>> o_reso.plot(x_axis='lambda', all_layers=True)
->>> o_reso.plot(transmission=False, items_to_plot= [['CoAg', 'Co'],['CoAg','Ag','107-Ag']])
->>> o_reso.plot(items_to_plot=[['CoAg','Co']])
-
-.. image:: _static/plot1.png
-    :align: center
-    :alt: typical attenuation plot
-    
-x-axis unit convertor
-#####################
-
-This library also provides a energy/lambda/time_of_flight convertor, used here to change the x-axis of the plot.
-
->>> energy_ev = o_reso.stack_signal['CoAg']['Ag']['107-Ag']['energy_eV']
->>> energy_angstroms = o_reso.convert_x_axis(array=energy_ev, from_units='ev', to_units='angstroms')
-
-to convert to time_of_flight, 2 parameters must be provide, the detector_offset (in s, if any) and the distance source to detector (in m)
-
->>> delay_us = 2.99   #microS
->>> source_to_detector_m = 15.1 #meters
->>> energy_tof = o_reso.convert_x_axis(array=energy_ev, from_units='ev', to_units='s', delay_us=delay_us, source_to_detector_m=source_to_detector_m)
+
+.. code:: ipython3
+
+    import os
+    import sys
+    root_folder = os.path.dirname(os.getcwd())
+    sys.path.append(root_folder)
+    import ResoFit
+    from ResoFit.calibration import Calibration
+    from ResoFit.fitresonance import FitResonance
+    import numpy as np
+
+**Global paramters** - min energy of **7 eV** (has to be greater than
+**1 x 10-5 eV**) - max energy of **150 eV** (has to be less than **3000
+eV**) - energy steps to interpolate database: **0.1 eV**
+
+.. code:: ipython3
+
+    # Global parameters
+    energy_min = 7
+    energy_max = 150
+    energy_step = 0.01
+
+**File locations for calibriation and resonance fitting**
+
+-  \*/data (directory to locate the file)
+-  data\_file (YOUR\_DATA\_FILE.txt or .csv)
+-  spectra\_file (YOUR\_SPECTRA\_FILE.txt or .csv)
+
+.. code:: ipython3
+
+    folder = 'data'
+    data_file = 'all_thin.txt'
+    spectra_file = 'Image002_Spectra.txt'
+
+**Sample info**
+
+-  **Gd** foil
+-  **thickness** neutron path within the sample in (**mm**)
+-  **density** sample density in (**g/cm3**), if omitted, pure solid
+   density will be used in fitting
+-  **repeat** : reptition number if the data is summed of multiple runs
+   (**default: 1**)
+
+.. code:: ipython3
+
+    layer_1 = 'Gd'
+    thickness_1 = 0.15  # mm
+    density_1 = np.NaN #g/cm^3 (if omitted, pure solid density will be used in fitting)
+    repeat = 5 
+
+**Estimated intrumetal parameters**
+
+-  input estimated **source to detector distance** (**m**)
+-  input estimated possible **time offset** in spectra file (**us**)
+
+.. code:: ipython3
+
+    source_to_detector_m = 16.
+    offset_us = 0
+
+**Calibration initialization**
+
+-  Pass all the parameters definded above into the Calibration()
+
+.. code:: ipython3
+
+    calibration = Calibration(data_file=data_file,
+                              spectra_file=spectra_file,
+                              layer_1=layer_1,
+                              thickness_1=thickness_1,
+                              density_1=np.NaN,
+                              energy_min=energy_min,
+                              energy_max=energy_max,
+                              energy_step=energy_step,
+                              repeat=repeat,
+                              folder=folder)
+
+**Equations for (time<->wavelength<->energy) conversions**
+
+.. math:: E = \frac{{81.787}}{{{\lambda ^2}}}
+
+*E* : energy in meV,
+
+*λ* : wavelength in (Å).
+
+.. math:: \lambda  = 0.3956\frac{{{t_{record}} + {t_{offset}}}}{L}
+
+*trecord* : recorded time in (µs),
+
+*toffset* : recorded time offset in (µs),
+
+*L* : source to detector distance in (cm).
+
+**Calibrate instrument parameters** - using **source\_to\_detector\_m**
+or **offset\_us** or **both** to minimize the difference between the
+measured resonance signals and the simulated resonance signals from
+*ImagingReso* within the range specified in **global parameters** -
+**vary** can be one of **['source\_to\_detector', 'offset', 'all']**
+(default is **'all'**) - fitting parameters are displayed
+
+.. code:: ipython3
+
+    calibration.calibrate(source_to_detector_m=source_to_detector_m,
+                          offset_us=offset_us,
+                          vary='all')
+
+
+.. parsed-literal::
+
+    Name                     Value      Min      Max   Stderr     Vary     Expr Brute_Step
+    offset_us                2.784     -inf      inf  0.06226     True     None     None
+    source_to_detector_m     16.45     -inf      inf 0.005113     True     None     None
+
+
+
+
+.. parsed-literal::
+
+    <lmfit.minimizer.MinimizerResult at 0x1129bf278>
+
+
+
+**Retrieve calibrated instrument parameters**
+
+.. code:: ipython3
+
+    calibration.calibrated_offset_us
+
+
+
+
+.. parsed-literal::
+
+    2.7844490583292183
+
+
+
+.. code:: ipython3
+
+    calibration.calibrated_source_to_detector_m
+
+
+
+
+.. parsed-literal::
+
+    16.452438260036192
+
+
+
+**Plot calibration result**
+
+-  using the best fitted **source\_to\_detector\_m** and **offset\_us**
+   to show the calibrated resonance signals from measured data and the
+   expected resonance positions from *ImagingReso*
+-  measured data before and after is ploted with raw data points instead
+   of interpolated data points. However, the interpolated data was used
+   during the calibration step above.
+
+.. code:: ipython3
+
+    calibration.plot_before()
+    calibration.plot_after()
+
+
+
+.. image:: output_18_0.png
+
+
+
+.. image:: output_18_1.png
+
+
+**Resonance Fitting**
+
+**Fitting initialization**
+
+-  Pass all the parameters definded and calibrated into the
+   FitResonance()
+
+.. code:: ipython3
+
+    fit = FitResonance(spectra_file=spectra_file,
+                       data_file=data_file,
+                       layer=layer_1,
+                       repeat=repeat,
+                       energy_min=energy_min,
+                       energy_max=energy_max,
+                       energy_step=energy_step,
+                       calibrated_offset_us=calibration.calibrated_offset_us,
+                       calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m)
+
+**Fitting equations** - Beer-Lambert Law:
+
+.. math:: T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
+
+*Ni* : number of atoms per unit volume of element *i*,
+
+*di* : effective thickness along the neutron path of element \ *i*,
+
+*σij*\ (E) : energy-dependent neutron total cross-section for the
+isotope *j* of element *i*,
+
+*Aij* : abundance for the isotope *j* of element *i*.
+
+.. math:: {N_i} = {N_A}{C_i} = \frac{{{N_A}{\rho _i}}}{{\sum\nolimits_j {{m_{ij}}{A_{ij}}} }}
+
+*NA* : Avogadro’s number,
+
+*Ci* : molar concentration of element \ *i*,
+
+*ρi* : density of the element *i*,
+
+*mij* : atomic mass values for the isotope *j* of element *i*.
+
+**How to fit the resonance signals**
+
+-  using **thickness** (mm) or **density** (g/cm3) to minimize the
+   difference between the measured resonance signals and the simulated
+   resonance signals from *ImagingReso* within the range specified in
+   **global parameters**
+-  **vary** can be one of **['thickness', 'density']** (default is
+   **'density'**)
+-  fitting parameters are displayed
+
+.. code:: ipython3
+
+    fit.fit(thickness=thickness_1, density=density_1, vary='density')
+
+
+.. parsed-literal::
+
+    Name          Value      Min      Max   Stderr     Vary     Expr Brute_Step
+    density       3.695        0      inf  0.04374     True     None     None
+    thickness      0.15        0      inf        0    False     None     None
+
+
+
+
+.. parsed-literal::
+
+    <lmfit.minimizer.MinimizerResult at 0x11210c198>
+
+
+
+**Output fitted density in terms of molar concentration**
+
+-  unit: mol/cm3
+
+.. code:: ipython3
+
+    fit.molar_conc(layer_1)
+
+
+.. parsed-literal::
+
+    Molar conc. of element Gd in layer Gd is: 0.02350014075607628 (mol/cm3)
+
+
+
+
+.. parsed-literal::
+
+    0.023500140756076281
+
+
+
+**Plot fitting result**
+
+-  using the best fitted **density** to show the measured resonance
+   signals and the fitted resonance signals from *ImagingReso*
+-  measured data before and after is ploted with raw data points instead
+   of interpolated data points. However, the interpolated data was used
+   during the fitting step above.
+
+.. code:: ipython3
+
+    fit.plot_before()
+    fit.plot_after()
+
+
+
+.. image:: output_28_0.png
+
+
+
+.. image:: output_28_1.png
+
+
