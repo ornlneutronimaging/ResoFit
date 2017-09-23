@@ -8,6 +8,7 @@ import numpy as np
 from lmfit import minimize
 import re
 from ResoFit._gap_functions import y_gap_for_fitting
+import periodictable as pt
 
 
 class FitResonance(Experiment):
@@ -42,7 +43,8 @@ class FitResonance(Experiment):
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'all']")
         exp_x_interp = self.exp_x_interp
         exp_y_interp = self.exp_y_interp
-
+        if density is np.NaN:
+            density = pt.elements.isotope(self.layer).density
         thickness_vary_tag = False
         density_vary_tag = True
         if vary == 'thickness':
