@@ -20,7 +20,6 @@ class TestSimulation(unittest.TestCase):
         _simu_y_returned = simulation.simu_y
         _simu_x_expected = np.array([7., 8., 9., 10.])
         _simu_y_expected = np.array([0.03699373, 0.00936537, 0.00854215, 0.00726004])
-        print("_simu_x_returned: {}".format(_simu_x_returned))
         self.assertAlmostEqual(_simu_x_returned[0], _simu_x_expected[0], delta=0.000001)
         self.assertAlmostEqual(_simu_x_returned[1], _simu_x_expected[1], delta=0.000001)
         self.assertAlmostEqual(_simu_x_returned[2], _simu_x_expected[2], delta=0.000001)
