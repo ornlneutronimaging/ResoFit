@@ -18,10 +18,10 @@ mm3_to_cm3 = 0.001
 density = np.NaN #mass / (length * width * height * mm3_to_cm3)
 
 folder = 'data'
-data_file = 'all_thin.txt'
+data_file = 'all_thick_div.txt'
 spectra_file = 'Image002_Spectra.txt'
 
-repeat = 5
+repeat = 1
 source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
 offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
 
@@ -54,7 +54,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    energy_step=energy_step,
                    calibrated_offset_us=calibration.calibrated_offset_us,
                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m)
-fit.fit(thickness=thickness_1, density=density, vary='density')
+fit.fit(thickness=thickness_1, density=density, vary='thickness')
 fit.molar_conc(layer_1)
 fit.plot_before()
 fit.plot_after()

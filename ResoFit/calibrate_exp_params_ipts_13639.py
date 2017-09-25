@@ -20,22 +20,24 @@ mm3_to_cm3 = 0.001
 density = np.NaN  # mass / (length * width * height * mm3_to_cm3)
 
 folder = 'data'
-data_file = 'W.csv'
+data_file = 'Ag.csv'
 spectra_file = 'spectra.csv'
 
 repeat = 5
-source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
-offset_us = -2  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.12  # 16#16.445359069030175#16.447496101100739
+offset_us = 12  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 experiment = Experiment(data_file=data_file,
                         spectra_file=spectra_file,
                         repeat=repeat,
                         folder=folder)
-exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
-                                    energy_max=energy_max,
-                                    energy_step=energy_step,
-                                    offset_us=offset_us,
-                                    source_to_detector_m=source_to_detector_m)
-plt.plot(exp_x, exp_y)
+# exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
+#                                     energy_max=energy_max,
+#                                     energy_step=energy_step,
+#                                     offset_us=offset_us,
+#                                     source_to_detector_m=source_to_detector_m)
+
+exp_x_sliced, exp_y_sliced = experiment.xy_sliced(450, 2000, baseline=False)
+plt.plot(exp_y_sliced)
 plt.show()
