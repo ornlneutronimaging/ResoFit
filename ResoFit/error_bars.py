@@ -10,20 +10,21 @@ energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layer_1 = 'Gd'
 thickness_1 = 0.15  # mm
-mass = 0.36  # gram
-length = 25
-width = 25
-height = 0.075
-mm3_to_cm3 = 0.001
-density = np.NaN #mass / (length * width * height * mm3_to_cm3)
+# mass = 0.36  # gram
+# length = 25
+# width = 25
+# height = 0.075
+# mm3_to_cm3 = 0.001
+# mass / (length * width * height * mm3_to_cm3)
+density = np.NaN
 
 folder = 'data'
 data_file = 'all_thin.txt'
 spectra_file = 'Image002_Spectra.txt'
 
 repeat = 5
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.445359069030175  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.7120797253959119 #2 # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -40,8 +41,8 @@ calibration = Calibration(data_file=data_file,
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='all')
-calibration.plot_before()
-calibration.plot_after()
+# calibration.plot_before()
+# calibration.plot_after()
 # calibration.plot_after_interp()
 
 # Fit the peak height
@@ -52,9 +53,10 @@ fit = FitResonance(spectra_file=spectra_file,
                    energy_min=energy_min,
                    energy_max=energy_max,
                    energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m)
-fit.fit(thickness=thickness_1, density=density, vary='density')
+                   calibrated_offset_us=offset_us,
+                   calibrated_source_to_detector_m=source_to_detector_m)
+fit_result = fit.fit(thickness=thickness_1, density=density, vary='density')
+pprint.pprint(fit_result.__dict__)
 fit.molar_conc(layer_1)
-fit.plot_before()
+# fit.plot_before()
 fit.plot_after()

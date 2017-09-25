@@ -96,6 +96,8 @@ class Experiment(object):
             y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
+        # baseline = pku.baseline(y_exp_raw)
+        # y_exp_raw = y_exp_raw - baseline
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,

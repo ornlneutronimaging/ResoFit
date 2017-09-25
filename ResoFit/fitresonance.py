@@ -12,6 +12,11 @@ import periodictable as pt
 
 
 class FitResonance(Experiment):
+    fit_result = None
+    fitted_density = None
+    fitted_thickness = None
+    fitted_residual = None
+
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
                  layer, layer_thickness=0.2, layer_density=np.NaN,
@@ -23,6 +28,9 @@ class FitResonance(Experiment):
         self.energy_step = energy_step
         self.calibrated_offset_us = calibrated_offset_us
         self.calibrated_source_to_detector_m = calibrated_source_to_detector_m
+        self.layer = layer
+        self.layer_thickness = layer_thickness
+        self.layer_density = layer_density
         # self.add_layer(layer=layer_list[0], layer_thickness=thickness_list[0], density)
         self.exp_x_interp, self.exp_y_interp = self.xy_scaled(energy_min=self.energy_min,
                                                               energy_max=self.energy_max,
@@ -30,13 +38,6 @@ class FitResonance(Experiment):
                                                               angstrom=False, transmission=False,
                                                               offset_us=self.calibrated_offset_us,
                                                               source_to_detector_m=self.calibrated_source_to_detector_m)
-        self.layer = layer
-        self.layer_thickness = layer_thickness
-        self.layer_density = layer_density
-
-        self.fit_result = None
-        self.fitted_density = None
-        self.fitted_thickness = None
 
     def fit(self, thickness, density, vary='density'):
         if vary not in ['density', 'thickness', 'all']:
@@ -65,6 +66,8 @@ class FitResonance(Experiment):
         # Save the fitted 'density' or 'thickness' in FitResonance class
         self.fitted_density = self.fit_result.__dict__['params'].valuesdict()['density']
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
+        self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
+        self.fitted_residual = self.fit_result.__dict__['residual']
 
         return self.fit_result
 
@@ -121,6 +124,10 @@ class FitResonance(Experiment):
                             source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False),
                  'r.', label=self.layer + '_exp', markersize=1)
+
+        plt.plot(simu_x,
+                 self.fitted_residual,
+                 'g-', label=self.layer + 'Diff.')
 
         plt.title('Best fit')
         plt.ylim(-0.01, 1.01)
