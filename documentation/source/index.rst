@@ -22,7 +22,7 @@ Welcome to ResoFit's documentation!
    :caption: Contents:
 
    introduction
-   tutorial.ipynb
+   tutorial
    acknowledgement
    references
 
