@@ -135,3 +135,17 @@ class Experiment(object):
         if angstrom is True:
             x_interp = reso_utils.ev_to_angstroms(x_interp)
         return x_interp, y_interp
+
+    def xy_sliced(self, slice_start, slice_end, baseline=True):
+        x_exp_raw_sliced = self.spectra[0][slice_start:slice_end]
+        if list(self.data[0][:4]) == [1, 2, 3, 4]:
+            y_exp_raw_sliced = np.array(self.data[1]) / self.repeat
+        else:
+            y_exp_raw_sliced = np.array(self.data[0]) / self.repeat
+
+        y_exp_raw_sliced = 1 - y_exp_raw_sliced[slice_start:slice_end]#/2.574063196
+        if baseline is True:
+            baseline = pku.baseline(y_exp_raw_sliced)
+            y_exp_raw_sliced = y_exp_raw_sliced - baseline
+
+        return x_exp_raw_sliced, y_exp_raw_sliced
