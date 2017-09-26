@@ -22,7 +22,7 @@ online database. `Evaluated Nuclear Data File
 supported and more evaluated databases will be added in future.
 
 Python packages used are: SciPy [2], NumPy [3], Matplotlib [4], Pandas
-[5] Periodictable [6], lmfit[7] and ImagingReso [8].
+[5] Periodictable [6], lmfit [7] and ImagingReso [8].
 
 Statement of need
 ~~~~~~~~~~~~~~~~~
@@ -133,7 +133,7 @@ S. Caldwell, A. Polloreno, stonebig, P.A. Brodtkorb, N. Earl, colgan,
 R. Clarken, K. Anagnostopoulos, B. Gamari, A. Almarza, lmfit/lmfit-py 0.9.7,
 (2017). doi:10.5281/zenodo.802298.
 
-[8]
+[8] Y. Zhang and J. C. Bilheux, "ImagingReso".
 
 [9] M. Ooi et al., “Neutron Resonance Imaging of a Au-In-Cd Alloy for
 the JSNS,” Physics Procedia, vol. 43, pp. 337–342, 2013.

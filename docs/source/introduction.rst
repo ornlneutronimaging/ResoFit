@@ -18,7 +18,7 @@ online database. `Evaluated Nuclear Data File
 supported and more evaluated databases will be added in future.
 
 Python packages used are: SciPy [2], NumPy [3], Matplotlib [4], Pandas
-[5] lmfit [6] and ImagingReso [7].
+[5] Periodictable [6], lmfit [7] and ImagingReso [8].
 
 Statement of need
 #################
@@ -52,7 +52,7 @@ Calculation algorithm
 #####################
 
 The neutron transmission calculation algorithm of neutron transmission
-*T*\ (*E*), is base on Beer-lambert law [7]-[9]:
+*T*\ (*E*), is base on Beer-lambert law [9]-[10]:
 
 .. math:: T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
 
