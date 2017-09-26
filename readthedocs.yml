@@ -4,7 +4,7 @@
 # python version
 python:
    version: 3.5
-   setup_py_install: true
+   setup_py_install: False
 
 # build a PDF
 formats:
