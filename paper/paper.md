@@ -1,7 +1,7 @@
 ---
-title: 'ImagingReso: A tool for neutron resonance imaging'
+title: 'ResoFit: A tool for neutron resonance imaging'
 tags:
-  - neutron resonance
+  - neutron resonance fitting
   - neutron imaging
 authors:
  - name: Yuxuan Zhang
@@ -14,7 +14,7 @@ affiliations:
  - name: Oak Ridge National Laboratory
    index: 1
    
-date: 14 August 2017
+date: 25 September 2017
 bibliography: paper.bib
 ---
 

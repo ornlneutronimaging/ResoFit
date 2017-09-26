@@ -22,7 +22,7 @@ online database. `Evaluated Nuclear Data File
 supported and more evaluated databases will be added in future.
 
 Python packages used are: SciPy [2], NumPy [3], Matplotlib [4], Pandas
-[5] lmfit [6] and ImagingReso [7].
+[5] Periodictable [6], lmfit[7] and ImagingReso [8].
 
 Statement of need
 ~~~~~~~~~~~~~~~~~
@@ -56,7 +56,7 @@ Calculation algorithm
 ~~~~~~~~~~~~~~~~~~~~~
 
 The neutron transmission calculation algorithm of neutron transmission
-*T*\ (*E*), is base on Beer-lambert law [7]-[9]:
+*T*\ (*E*), is base on Beer-lambert law [9]-[10]:
 
 .. image:: documentation/source/_static/Beer_lambert_law_1.png
     :width: 504px
@@ -126,17 +126,22 @@ in Proceedings of the 9th Python in Science Conference, 2010, pp. 51–56.
 [6] P. A. Kienzle, “Periodictable V1.5.0,” Journal of Open Source
 Software, Jan. 2017.
 
-[7] M. Ooi et al., “Neutron Resonance Imaging of a Au-In-Cd Alloy for
+[7] M. Newville, A. Nelson, A. Ingargiola, T. Stensitzki, R. Otten,
+D. Allan, Michał, Glenn, Y. Ram, MerlinSmiles, L. Li, G. Pasquevich,
+C. Deil, D.M. Fobes, Stuermer, A. Beelen, O. Frost, A. Stark, T. Spillane,
+S. Caldwell, A. Polloreno, stonebig, P.A. Brodtkorb, N. Earl, colgan,
+R. Clarken, K. Anagnostopoulos, B. Gamari, A. Almarza, lmfit/lmfit-py 0.9.7,
+(2017). doi:10.5281/zenodo.802298.
+
+[8]
+
+[9] M. Ooi et al., “Neutron Resonance Imaging of a Au-In-Cd Alloy for
 the JSNS,” Physics Procedia, vol. 43, pp. 337–342, 2013.
 
-[8] A. S. Tremsin et al., “Non-Contact Measurement of Partial Gas
+[10] A. S. Tremsin et al., “Non-Contact Measurement of Partial Gas
 Pressure and Distribution of Elemental Composition Using Energy-Resolved
 Neutron Imaging,” AIP Advances, vol. 7, no. 1, p. 15315, 2017.
 
-[9] Y. Zhang et al., “The Nature of Electrochemical Delithiation of
-Li-Mg Alloy Electrodes: Neutron Computed Tomography and Analytical
-Modeling of Li Diffusion and Delithiation Phenomenon,” Journal of the
-Electrochemical Society, vol. 164, no. 2, pp. A28–A38, 2017.
 
 .. |pypi version| image:: https://img.shields.io/pypi/v/resofit.svg
    :target: https://pypi.python.org/pypi/ResoFit
