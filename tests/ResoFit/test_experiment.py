@@ -107,7 +107,6 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(x_interp[1] - x_interp[0], self.energy_step, delta=self.energy_step / 1000)
 
     def test_x_raw(self):
-        # _file_path = os.path.join(self.folder, '_data_xy_unit_test.txt')
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
         _x_returned = experiment.x_raw(angstrom=False, offset_us=0., source_to_detector_m=15)
         _x_expected = np.array([5.825324e+00,
