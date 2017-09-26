@@ -66,13 +66,13 @@ The neutron transmission calculation algorithm of neutron transmission
 
 .. math:: T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
 
-:math:`N_i` : number of atoms per unit volume of element *i*,
+N\ :sub:`i` : number of atoms per unit volume of element *i*,
 
-:math:`d_i` : effective thickness along the neutron path of element *i*,
+d\ :sub:`i` : effective thickness along the neutron path of element *i*,
 
-:math:`\sigma_{ij}\left( E \right)` : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
+σ\ :sub:`ij` (E) : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
 
-:math:`A_{ij}` : abundance for the isotope *j* of element *i*.
+A\ :sub:`ij` : abundance for the isotope *j* of element *i*.
 
 For solid materials the number of atoms per unit volume can be
 calculated from:
@@ -85,13 +85,13 @@ calculated from:
 
 .. math:: {N_i} = {N_A}{C_i} = \frac{{{N_A}{\rho _i}}}{{\sum\nolimits_j {{m_{ij}}{A_{ij}}} }}
 
-:math:`N_A` : Avogadro’s number,
+N\ :sub:`A` : Avogadro’s number,
 
-:math:`C_i` : molar concentration of element *i*,
+C\ :sub:`i` : molar concentration of element *i*,
 
-:math:`\rho_i` : density of the element *i*,
+ρ\ :sub:`i` : density of the element *i*,
 
-:math:`m_{ij}` : atomic mass values for the isotope *j* of element *i*.
+m\ :sub:`ij` : atomic mass values for the isotope *j* of element *i*.
 
 Acknowledgements
 ~~~~~~~~~~~~~~~~
