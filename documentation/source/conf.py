@@ -46,14 +46,16 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.ipynb']
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = 'ResoFit'
-copyright = '2017, Yuxuan Zhang, Jean C. Bilheux'
+# from datetime import date
+# year = date.today().year
+copyright = '2017, Oak Ridge National Laboratory'
 author = 'Yuxuan Zhang, Jean C. Bilheux'
 
 # The version info for the project you're documenting, acts as replacement for
