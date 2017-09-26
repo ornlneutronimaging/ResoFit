@@ -56,7 +56,7 @@ project = 'ResoFit'
 # from datetime import date
 # year = date.today().year
 copyright = '2017, Oak Ridge National Laboratory'
-author = 'Yuxuan Zhang, Jean C. Bilheux'
+author = 'Yuxuan (Shawn) Zhang, Jean C. Bilheux'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
