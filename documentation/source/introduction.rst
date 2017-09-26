@@ -56,13 +56,13 @@ The neutron transmission calculation algorithm of neutron transmission
 
 .. math:: T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
 
-:math:`N_i` : number of atoms per unit volume of element *i*,
+:math:`N_i` : number of atoms per unit volume of element :math:`i`,
 
-:math:`d_i` : effective thickness along the neutron path of element *i*,
+:math:`d_i` : effective thickness along the neutron path of element :math:`i`,
 
-:math:`\sigma_{ij}\left( E \right)` : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
+:math:`\sigma_{ij}\left( E \right)` : energy-dependent neutron total cross-section for the isotope :math:`j` of element :math:`i`,
 
-:math:`A_{ij}` : abundance for the isotope *j* of element *i*.
+:math:`A_{ij}` : abundance for the isotope :math:`j` of element :math:`i`.
 
 For solid materials the number of atoms per unit volume can be
 calculated from:
@@ -71,9 +71,9 @@ calculated from:
 
 :math:`N_A` : Avogadro’s number,
 
-:math:`C_i` : molar concentration of element *i*,
+:math:`C_i` : molar concentration of element :math:`i`,
 
-:math:`\rho_i` : density of the element *i*,
+:math:`\rho_i` : density of the element :math:`i`,
 
-:math:`m_{ij}` : atomic mass values for the isotope *j* of element *i*.
+:math:`m_{ij}` : atomic mass values for the isotope :math:`j` of element :math:`i`.
 
