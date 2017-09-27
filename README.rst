@@ -49,49 +49,9 @@ Terminal:
 Example usage
 ~~~~~~~~~~~~~
 
-Example of usage is presented in ``tutorial.ipynb`` under ``/notebooks``
-directory.
-
-Calculation algorithm
-~~~~~~~~~~~~~~~~~~~~~
-
-The neutron transmission calculation algorithm of neutron transmission
-*T*\ (*E*), is base on Beer-lambert law [9]-[10]:
-
-.. image:: documentation/source/_static/Beer_lambert_law_1.png
-    :width: 504px
-    :align: center
-    :height: 80px
-    :alt: Beer-lambert law 1
-
-.. math:: T\left( E \right) =\frac { I\left( E \right)  }{ { I }_{ 0 }\left( E \right)  } =exp\left[ -\sum\nolimits_i { { N }_{ i }{ d }_{ i } } \sum\nolimits_j { { \sigma  }_{ ij }\left( E \right) { A }_{ ij } }  \right]
-
-N\ :sub:`i` : number of atoms per unit volume of element *i*,
-
-d\ :sub:`i` : effective thickness along the neutron path of element *i*,
-
-σ\ :sub:`ij` (E) : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
-
-A\ :sub:`ij` : abundance for the isotope *j* of element *i*.
-
-For solid materials the number of atoms per unit volume can be
-calculated from:
-
-.. image:: documentation/source/_static/Beer_lambert_law_2.png
-    :width: 244px
-    :align: center
-    :height: 80px
-    :alt: Beer-lambert law 2
-
-.. math:: {N_i} = {N_A}{C_i} = \frac{{{N_A}{\rho _i}}}{{\sum\nolimits_j {{m_{ij}}{A_{ij}}} }}
-
-N\ :sub:`A` : Avogadro’s number,
-
-C\ :sub:`i` : molar concentration of element *i*,
-
-ρ\ :sub:`i` : density of the element *i*,
-
-m\ :sub:`ij` : atomic mass values for the isotope *j* of element *i*.
+Example of usage is presented at http://resofit.readthedocs.io/ .
+Same content can also be found in ``tutorial.ipynb`` under ``/notebooks``
+in this repository.
 
 Acknowledgements
 ~~~~~~~~~~~~~~~~
