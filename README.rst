@@ -37,6 +37,8 @@ could fill this gap.
 Installation instructions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Python 3.x is required for installing this package.
+
 Install **ResoFit** by typing the following command in Terminal:
 
 ``pip install ResoFit``
@@ -52,6 +54,43 @@ Example usage
 Example of usage is presented at http://resofit.readthedocs.io/ .
 Same content can also be found in ``tutorial.ipynb`` under ``/notebooks``
 in this repository.
+
+Calculation algorithm
+---------------------
+
+The calculation algorithm of neutron transmission *T*\ (*E*),
+is base on Beer-Lambert law [9]-[10]:
+
+.. figure:: https://github.com/ornlneutronimaging/ResoFit/blob/master/documentation/source/_static/Beer_lambert_law_1.png
+   :alt: Beer-lambert Law 1
+   :align: center
+
+where
+
+N\ :sub:`i` : number of atoms per unit volume of element *i*,
+
+d\ :sub:`i` : effective thickness along the neutron path of element *i*,
+
+σ\ :sub:`ij` (E) : energy-dependent neutron total cross-section for the isotope *j* of element *i*,
+
+A\ :sub:`ij` : abundance for the isotope *j* of element *i*.
+
+For solid materials, the number of atoms per unit volume can be
+calculated from:
+
+.. figure:: https://github.com/ornlneutronimaging/ResoFit/blob/master/documentation/source/_static/Beer_lambert_law_2.png
+   :align: center
+   :alt: Beer-lambert law 2
+
+where
+
+N\ :sub:`A` : Avogadro’s number,
+
+C\ :sub:`i` : molar concentration of element *i*,
+
+ρ\ :sub:`i` : density of the element *i*,
+
+m\ :sub:`ij` : atomic mass values for the isotope *j* of element *i*.
 
 Acknowledgements
 ~~~~~~~~~~~~~~~~
