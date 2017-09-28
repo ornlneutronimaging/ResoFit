@@ -35,6 +35,8 @@ class Calibration(Simulation):
         self.repeat = repeat
         self.data_file = data_file
         self.spectra_file = spectra_file
+        self.init_source_to_detector_m = None
+        self.init_offset_us = None
         self.calibrated_offset_us = None
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None
@@ -44,6 +46,12 @@ class Calibration(Simulation):
         self.exp_y_interp_calibrated = None
         self.layer_1 = layer_1
 
+    def norm_to(self, file):
+        self.experiment.norm_to(file=file)
+
+    def slice(self, slice_start=None, slice_end=None):
+        self.experiment.slice(slice_start=slice_start, slice_end=slice_end)
+
     def calibrate(self, source_to_detector_m, offset_us, vary='all'):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
@@ -52,6 +60,8 @@ class Calibration(Simulation):
         :param vary: vary one of or both of 'source_to_detector' and 'offset' to calibrate (default: 'all')
         :return: lmfit MinimizerResult
         """
+        self.init_source_to_detector_m = source_to_detector_m
+        self.init_offset_us = offset_us
         if vary not in ['source_to_detector', 'offset', 'all']:
             raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all']")
         simu_x = self.simu_x
@@ -70,7 +80,7 @@ class Calibration(Simulation):
         self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
-                                               self.data_file, self.spectra_file, self.repeat))
+                                               self.experiment))
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
@@ -99,7 +109,9 @@ class Calibration(Simulation):
         plt.plot(self.simu_x, self.simu_y,
                  'b.', label=self.layer_1 + '_ideal', markersize=1)
 
-        plt.plot(self.experiment.x_raw(), self.experiment.y_raw(),
+        plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
+                                       source_to_detector_m=self.init_source_to_detector_m),
+                 self.experiment.y_raw(),
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('Before Calibration')

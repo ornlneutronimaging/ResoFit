@@ -58,7 +58,8 @@ class Experiment(object):
             else:
                 raise ValueError("The file '{}' columns must be separated with 'tab' or ',' ".format(data_file))
         if list(self.data[0][:4]) == [1, 2, 3, 4]:
-            raise ValueError("Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
+            raise ValueError(
+                "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
 
     def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15):
         """
@@ -123,27 +124,27 @@ class Experiment(object):
             x_interp = reso_utils.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
-    def slice(self, slice_start, slice_end):
-        self.data.drop(self.data.index[:slice_start], inplace=True)
-        self.data.drop(self.data.index[slice_end:], inplace=True)
-        self.spectra.drop(self.data.index[:slice_start], inplace=True)
-        self.spectra.drop(self.data.index[slice_end:], inplace=True)
-        self.slice_start = slice_start
-        self.slice_end = slice_end
+    def slice(self, slice_start=None, slice_end=None):
+        if slice_start is not None:
+            self.data.drop(self.data.index[:slice_start], inplace=True)
+            self.spectra.drop(self.data.index[:slice_start], inplace=True)
+            self.slice_start = slice_start
+        if slice_end is not None:
+            self.data.drop(self.data.index[slice_end:], inplace=True)
+            self.spectra.drop(self.data.index[slice_end:], inplace=True)
+            self.slice_end = slice_end
         return self.spectra[0], self.data[0]
 
-    def norm_to(self, file, baseline=False, transmission=False):
+    def norm_to(self, file):
         _full_path = os.path.join(self.folder_path, file)
         df = load_txt_csv(_full_path)
         if len(self.data) != len(df):
             df.drop(df.index[:self.slice_start], inplace=True)
             df.drop(df.index[self.slice_end:], inplace=True)
 
-        self.data[0] = self.data[0]/df[0]
-        if transmission is False:
-            self.data[0] = 1 - self.data[0]
-        if baseline is True:
-            baseline = pku.baseline(self.data[0])
-            self.data[0] = self.data[0] - baseline
-
-
+        self.data[0] = self.data[0] / df[0]
+        # if transmission is False:
+        #     self.data[0] = 1 - self.data[0]
+        # if baseline is True:
+        #     baseline = pku.baseline(self.data[0])
+        #     self.data[0] = self.data[0] - baseline

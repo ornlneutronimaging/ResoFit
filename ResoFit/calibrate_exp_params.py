@@ -22,8 +22,8 @@ data_file = 'all_thick_div.txt'
 spectra_file = 'Image002_Spectra.txt'
 
 repeat = 1
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
+offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,

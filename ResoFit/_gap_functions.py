@@ -2,13 +2,12 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 
 
-def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, data_file, spectra_file,
-                          repeat=1):
+def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment):
     # Unpack Parameters:
     parvals = params.valuesdict()
     source_to_detector_m = parvals['source_to_detector_m']
     offset_us = parvals['offset_us']
-    experiment = Experiment(data_file=data_file, spectra_file=spectra_file, repeat=repeat)
+    # experiment = Experiment(data_file=data_file, spectra_file=spectra_file, repeat=repeat)
     exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
                                         energy_max=energy_max,
                                         energy_step=energy_step,
