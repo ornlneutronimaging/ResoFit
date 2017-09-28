@@ -1,7 +1,18 @@
-|pypi version| |Build Status| |codecov| |Documentation Status|
-
 ResoFit
 =======
+
+.. image:: https://img.shields.io/pypi/v/ResoFit.svg
+  :target: https://pypi.python.org/pypi/ResoFit
+
+.. image:: https://travis-ci.org/ornlneutronimaging/ResoFit.svg?branch=master
+  :target: https://travis-ci.org/ornlneutronimaging/ResoFit
+
+.. image:: https://codecov.io/gh/ornlneutronimaging/ResoFit/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/ornlneutronimaging/ResoFit
+
+.. image:: https://readthedocs.org/projects/resofit/badge/?version=latest
+  :target: http://resofit.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
 
 Abstract
 ~~~~~~~~
@@ -141,12 +152,3 @@ the JSNS,” Physics Procedia, vol. 43, pp. 337–342, 2013.
 Pressure and Distribution of Elemental Composition Using Energy-Resolved
 Neutron Imaging,” AIP Advances, vol. 7, no. 1, p. 15315, 2017.
 
-
-.. |pypi version| image:: https://img.shields.io/pypi/v/resofit.svg
-   :target: https://pypi.python.org/pypi/ResoFit
-.. |Build Status| image:: https://travis-ci.org/ornlneutronimaging/ResoFit.svg?branch=master
-   :target: https://travis-ci.org/ornlneutronimaging/ResoFit
-.. |codecov| image:: https://codecov.io/gh/ornlneutronimaging/ResoFit/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/ornlneutronimaging/ResoFit
-.. |Documentation Status| image:: https://readthedocs.org/projects/resofit/badge/?version=latest
-   :target: http://resofit.readthedocs.io/en/latest/?badge=latest
