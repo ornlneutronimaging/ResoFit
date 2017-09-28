@@ -14,6 +14,8 @@ class Experiment(object):
     data_path = ''
     spectra = pd.DataFrame
     data = pd.DataFrame
+    slice_start = None
+    slice_end = None
 
     def __init__(self, spectra_file, data_file, repeat=1, folder='data'):
         """
@@ -22,28 +24,17 @@ class Experiment(object):
         :param data_file: data file of neutron transmission
         :param repeat: input is needed only if the exp data is a summed result of multiple runs
         :param folder: folder name in str under /ResoFit directory
-
         """
         _file_path = os.path.abspath(os.path.dirname(__file__))
-        _folder_path = os.path.join(_file_path, folder)
+        self.folder_path = os.path.join(_file_path, folder)
 
         # Error for 'folder' existence
-        if os.path.isdir(_folder_path) is False:
+        if os.path.isdir(self.folder_path) is False:
             raise ValueError("Folder '{}' specified does not exist".format(folder))
-        # Error for 'spectra_file' format and existence
-        spectra_format = spectra_file[-4:]
-        if spectra_format not in ['.txt', '.csv']:
-            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
-        self.spectra_path = os.path.join(_folder_path, spectra_file)
-        if os.path.exists(self.spectra_path) is False:
-            raise ValueError("Can not find spectra file '{}' in '{}' folder".format(spectra_file, _folder_path))
-        # Error for 'data_file' format and existence
-        date_format = data_file[-4:]
-        if date_format not in ['.txt', '.csv']:
-            raise ValueError("Spectra file must be in the format of '.txt' or '.csv'")
-        self.data_path = os.path.join(_folder_path, data_file)
-        if os.path.exists(self.data_path) is False:
-            raise ValueError("Can not find data file '{}' in '{}' folder".format(data_file, _folder_path))
+
+        self.spectra_path = os.path.join(self.folder_path, spectra_file)
+        self.data_path = os.path.join(self.folder_path, data_file)
+
         # Error for 'repeat' int & >=1
         if isinstance(repeat, int) is False:
             raise ValueError("Repeat value must be an integer!")
@@ -66,6 +57,8 @@ class Experiment(object):
                 raise ValueError("Remove the axis descriptions in '{}' before loading ".format(data_file))
             else:
                 raise ValueError("The file '{}' columns must be separated with 'tab' or ',' ".format(data_file))
+        if list(self.data[0][:4]) == [1, 2, 3, 4]:
+            raise ValueError("Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
 
     def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15):
         """
@@ -90,10 +83,7 @@ class Experiment(object):
         :param transmission: bool to switch between transmission and attenuation
         :return: array
         """
-        if list(self.data[0][:4]) == [1, 2, 3, 4]:
-            y_exp_raw = np.array(self.data[1]) / self.repeat
-        else:
-            y_exp_raw = np.array(self.data[0]) / self.repeat
+        y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
         # baseline = pku.baseline(y_exp_raw)
@@ -118,10 +108,7 @@ class Experiment(object):
         x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
                                        offset_us=offset_us,
                                        source_to_detector_m=source_to_detector_m)
-        if list(self.data[0][:4]) == [1, 2, 3, 4]:
-            y_exp_raw = np.array(self.data[1]) / self.repeat
-        else:
-            y_exp_raw = np.array(self.data[0]) / self.repeat
+        y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
 
@@ -136,16 +123,27 @@ class Experiment(object):
             x_interp = reso_utils.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
-    def xy_sliced(self, slice_start, slice_end, baseline=True):
-        x_exp_raw_sliced = self.spectra[0][slice_start:slice_end]
-        if list(self.data[0][:4]) == [1, 2, 3, 4]:
-            y_exp_raw_sliced = np.array(self.data[1]) / self.repeat
-        else:
-            y_exp_raw_sliced = np.array(self.data[0]) / self.repeat
+    def slice(self, slice_start, slice_end):
+        self.data.drop(self.data.index[:slice_start], inplace=True)
+        self.data.drop(self.data.index[slice_end:], inplace=True)
+        self.spectra.drop(self.data.index[:slice_start], inplace=True)
+        self.spectra.drop(self.data.index[slice_end:], inplace=True)
+        self.slice_start = slice_start
+        self.slice_end = slice_end
+        return self.spectra[0], self.data[0]
 
-        y_exp_raw_sliced = 1 - y_exp_raw_sliced[slice_start:slice_end]#/2.574063196
+    def norm_to(self, file, baseline=False, transmission=False):
+        _full_path = os.path.join(self.folder_path, file)
+        df = load_txt_csv(_full_path)
+        if len(self.data) != len(df):
+            df.drop(df.index[:self.slice_start], inplace=True)
+            df.drop(df.index[self.slice_end:], inplace=True)
+
+        self.data[0] = self.data[0]/df[0]
+        if transmission is False:
+            self.data[0] = 1 - self.data[0]
         if baseline is True:
-            baseline = pku.baseline(y_exp_raw_sliced)
-            y_exp_raw_sliced = y_exp_raw_sliced - baseline
+            baseline = pku.baseline(self.data[0])
+            self.data[0] = self.data[0] - baseline
 
-        return x_exp_raw_sliced, y_exp_raw_sliced
+

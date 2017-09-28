@@ -63,12 +63,15 @@ class TestExperiment(unittest.TestCase):
 
     def test_load_txt_csv(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
-        _dict_expected = {0: [1, 2, 3, 4, 5, 6],
-                          1: [1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091]
-                          }
-        _dict_returned = experiment.data.to_dict('list')
+        _dict_expected = np.array([1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091])
+        _dict_returned = np.array(experiment.data[0])
 
-        self.assertEqual(_dict_returned, _dict_expected)
+        self.assertEqual(_dict_returned[0], _dict_expected[0])
+        self.assertEqual(_dict_returned[1], _dict_expected[1])
+        self.assertEqual(_dict_returned[2], _dict_expected[2])
+        self.assertEqual(_dict_returned[3], _dict_expected[3])
+        self.assertEqual(_dict_returned[4], _dict_expected[4])
+        self.assertEqual(_dict_returned[5], _dict_expected[5])
 
     def test_loaded_data_sep(self):
         folder = self.folder

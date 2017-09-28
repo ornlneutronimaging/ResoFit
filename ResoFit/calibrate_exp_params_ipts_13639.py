@@ -20,10 +20,10 @@ mm3_to_cm3 = 0.001
 density = np.NaN  # mass / (length * width * height * mm3_to_cm3)
 
 folder = 'data'
-data_file = 'Ag.csv'
+data_file = 'Co.csv'
 spectra_file = 'spectra.csv'
 
-repeat = 5
+repeat = 1
 source_to_detector_m = 16.12  # 16#16.445359069030175#16.447496101100739
 offset_us = 12  # 0#2.7120797253959119#2.7355447625559037
 
@@ -37,7 +37,7 @@ experiment = Experiment(data_file=data_file,
 #                                     energy_step=energy_step,
 #                                     offset_us=offset_us,
 #                                     source_to_detector_m=source_to_detector_m)
-
-exp_x_sliced, exp_y_sliced = experiment.xy_sliced(450, 2000, baseline=False)
+experiment.norm_to('Ag.csv', baseline=True)
+exp_x_sliced, exp_y_sliced = experiment.slice(400, 2700)
 plt.plot(exp_y_sliced)
 plt.show()
