@@ -2,7 +2,7 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 
 
-def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment):
+def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment, baseline=False):
     # Unpack Parameters:
     parvals = params.valuesdict()
     source_to_detector_m = parvals['source_to_detector_m']
@@ -14,7 +14,8 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
                                         angstrom=False,
                                         transmission=False,
                                         offset_us=offset_us,
-                                        source_to_detector_m=source_to_detector_m)
+                                        source_to_detector_m=source_to_detector_m,
+                                        baseline=baseline)
     # if sum((simu_x - exp_x) ** 2) >= 0.001:
     #     raise ValueError("The experiment x-axis is not identical to simulation x-axis!")
     gap = (exp_y - simu_y) ** 2

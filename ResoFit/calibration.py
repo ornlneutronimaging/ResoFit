@@ -12,7 +12,7 @@ from ResoFit._gap_functions import y_gap_for_calibration
 class Calibration(Simulation):
     def __init__(self, spectra_file, data_file, layer_1, thickness_1, density_1=np.NaN,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
-                 repeat=1, folder='data'):
+                 repeat=1, folder='data', baseline=False):
         """
         Initialization with passed file location and sample info
         :param spectra_file:
@@ -45,6 +45,7 @@ class Calibration(Simulation):
         self.exp_x_interp_calibrated = None
         self.exp_y_interp_calibrated = None
         self.layer_1 = layer_1
+        self.baseline = baseline
 
     def norm_to(self, file):
         self.experiment.norm_to(file=file)
@@ -58,6 +59,8 @@ class Calibration(Simulation):
         :param source_to_detector_m: estimated distance in m
         :param offset_us: estimated time offset in us
         :param vary: vary one of or both of 'source_to_detector' and 'offset' to calibrate (default: 'all')
+        :param baseline: boolean to remove baseline/background by detrend
+
         :return: lmfit MinimizerResult
         """
         self.init_source_to_detector_m = source_to_detector_m
@@ -80,7 +83,7 @@ class Calibration(Simulation):
         self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
-                                               self.experiment))
+                                               self.experiment, self.baseline))
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
@@ -90,14 +93,15 @@ class Calibration(Simulation):
         self.exp_x_raw_calibrated = self.experiment.x_raw(angstrom=False,
                                                           offset_us=self.calibrated_offset_us,
                                                           source_to_detector_m=self.calibrated_source_to_detector_m)
-        self.exp_y_raw_calibrated = self.experiment.y_raw(transmission=False)
+        self.exp_y_raw_calibrated = self.experiment.y_raw(transmission=False, baseline=self.baseline)
 
         self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
             energy_min=self.energy_min,
             energy_max=self.energy_max,
             energy_step=self.energy_step,
             offset_us=self.calibrated_offset_us,
-            source_to_detector_m=self.calibrated_source_to_detector_m)
+            source_to_detector_m=self.calibrated_source_to_detector_m,
+            baseline=self.baseline)
 
         return self.calibrate_result
 
@@ -111,7 +115,7 @@ class Calibration(Simulation):
 
         plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                        source_to_detector_m=self.init_source_to_detector_m),
-                 self.experiment.y_raw(),
+                 self.experiment.y_raw(baseline=self.baseline),
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('Before Calibration')

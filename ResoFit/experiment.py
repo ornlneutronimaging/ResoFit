@@ -78,23 +78,28 @@ class Experiment(object):
             x_exp_raw = np.array(reso_utils.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
 
-    def y_raw(self, transmission=False):
+    def y_raw(self, transmission=False, baseline=False):
         """
         Get the 'y' in eV or angstrom with experimental parameters
         :param transmission: bool to switch between transmission and attenuation
+        :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
         y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
-        # baseline = pku.baseline(y_exp_raw)
-        # y_exp_raw = y_exp_raw - baseline
+
+            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+                _baseline = pku.baseline(y_exp_raw)
+                y_exp_raw = y_exp_raw - _baseline
+
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,
-                  offset_us=0, source_to_detector_m=15):
+                  offset_us=0, source_to_detector_m=15, baseline=False):
         """
         Get interpolated x & y within the scaled range same as simulation
+        :param baseline: boolean to remove baseline/background by detrend
         :param energy_min:
         :param energy_max:
         :param energy_step:
@@ -125,8 +130,14 @@ class Experiment(object):
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
-        # baseline = pku.baseline(y_interp)
-        # y_interp = y_interp - baseline
+
+        if transmission is False:
+            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+                _baseline = pku.baseline(y_interp)
+                y_interp = y_interp - _baseline
+        else:
+            if baseline is True:
+                raise ValueError("baseline removal only works for peaks instead of dips currently")
 
         if angstrom is True:
             x_interp = reso_utils.ev_to_angstroms(x_interp)

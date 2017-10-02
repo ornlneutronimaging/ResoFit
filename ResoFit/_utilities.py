@@ -29,3 +29,8 @@ def load_txt_csv(path_to_file):
     return df
 
 
+def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
+    _mm3_to_cm3 = 0.001
+    density_gcm3 = mass_g / (length_mm * width_mm * thickness_mm * _mm3_to_cm3)
+    return density_gcm3
+

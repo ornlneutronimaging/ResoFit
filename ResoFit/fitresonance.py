@@ -20,7 +20,7 @@ class FitResonance(Experiment):
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
                  layer, layer_thickness=0.2, layer_density=np.NaN,
-                 folder='data', repeat=1,
+                 folder='data', repeat=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01):
         super().__init__(spectra_file, data_file, repeat, folder)
@@ -33,6 +33,7 @@ class FitResonance(Experiment):
         self.layer_thickness = layer_thickness
         self.layer_density = layer_density
         self.slice(slice_start=slice_start, slice_end=slice_end)
+        self.baseline = baseline
         if norm_to_file is not None:
             self.norm_to(norm_to_file)
         # self.add_layer(layer=layer_list[0], layer_thickness=thickness_list[0], density)
@@ -41,7 +42,8 @@ class FitResonance(Experiment):
                                                               energy_step=self.energy_step,
                                                               angstrom=False, transmission=False,
                                                               offset_us=self.calibrated_offset_us,
-                                                              source_to_detector_m=self.calibrated_source_to_detector_m)
+                                                              source_to_detector_m=self.calibrated_source_to_detector_m,
+                                                              baseline=self.baseline)
 
     def fit(self, thickness, density, vary='density'):
         if vary not in ['density', 'thickness', 'all']:
@@ -106,7 +108,7 @@ class FitResonance(Experiment):
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
-                 self.y_raw(transmission=False),
+                 self.y_raw(transmission=False, baseline=self.baseline),
                  'r.', label=self.layer + '_exp', markersize=1)
 
         plt.title('Before fitting')
@@ -126,9 +128,9 @@ class FitResonance(Experiment):
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
-                 self.y_raw(transmission=False),
+                 self.y_raw(transmission=False, baseline=self.baseline),
                  'r.', label=self.layer + '_exp', markersize=1)
-
+        # Plot fitting differences
         plt.plot(simu_x,
                  self.fitted_residual,
                  'g-', label=self.layer + 'Diff.')
