@@ -22,7 +22,7 @@ class Experiment(object):
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
         :param data_file: data file of neutron transmission
-        :param repeat: input is needed only if the exp data is a summed result of multiple runs
+        :param repeat: input is needed only if the exp data is a summed result of multiple runs, default: 1, type: int
         :param folder: folder name in str under /ResoFit directory
         """
         _file_path = os.path.abspath(os.path.dirname(__file__))
@@ -109,6 +109,14 @@ class Experiment(object):
         x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
                                        offset_us=offset_us,
                                        source_to_detector_m=source_to_detector_m)
+        _list = list(x_exp_raw)
+        _x_max = _list[0]
+        _x_min = _list[-1]
+        if energy_min < _x_min:
+            raise ValueError("'Energy min' ({} eV) used for interpolation is beyond 'data min' ({} eV) ".format(energy_min, _x_min))
+        if energy_max > _x_max:
+            raise ValueError("'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
+
         y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
             y_exp_raw = 1 - y_exp_raw
@@ -124,27 +132,37 @@ class Experiment(object):
             x_interp = reso_utils.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
-    def slice(self, slice_start=None, slice_end=None):
-        if slice_start is not None:
-            self.data.drop(self.data.index[:slice_start], inplace=True)
-            self.spectra.drop(self.data.index[:slice_start], inplace=True)
-            self.slice_start = slice_start
+    def slice(self, slice_start=None, slice_end=None, reset_index=False):
         if slice_end is not None:
+            if slice_end == slice_start:
+                raise ValueError("The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start, slice_end))
             self.data.drop(self.data.index[slice_end:], inplace=True)
-            self.spectra.drop(self.data.index[slice_end:], inplace=True)
+            self.spectra.drop(self.spectra.index[slice_end:], inplace=True)
+            # No 'index reset needed' after drop
             self.slice_end = slice_end
+        if slice_start is not None:
+            if slice_start == slice_end:
+                raise ValueError("The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start, slice_end))
+            self.data.drop(self.data.index[:slice_start], inplace=True)
+            self.spectra.drop(self.spectra.index[:slice_start], inplace=True)
+            self.slice_start = slice_start
+            if reset_index is True:
+                self.spectra.reset_index(drop=True, inplace=True)
+                self.data.reset_index(drop=True, inplace=True)
         return self.spectra[0], self.data[0]
 
-    def norm_to(self, file):
+    def norm_to(self, file, reset_index=False):
         _full_path = os.path.join(self.folder_path, file)
         df = load_txt_csv(_full_path)
         if len(self.data) != len(df):
-            df.drop(df.index[:self.slice_start], inplace=True)
-            df.drop(df.index[self.slice_end:], inplace=True)
-
+            if self.slice_start is None and self.slice_end is None:
+                raise ValueError("The length of the 'norm_to_file' is not equal to the length of the data file.")
+            else:
+                if self.slice_end is not None:
+                    df.drop(df.index[self.slice_end:], inplace=True)
+                if self.slice_start is not None:
+                    df.drop(df.index[:self.slice_start], inplace=True)
+                    if reset_index is True:
+                        df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
-        # if transmission is False:
-        #     self.data[0] = 1 - self.data[0]
-        # if baseline is True:
-        #     baseline = pku.baseline(self.data[0])
-        #     self.data[0] = self.data[0] - baseline
+

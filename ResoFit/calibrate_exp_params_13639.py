@@ -40,5 +40,7 @@ experiment = Experiment(data_file=data_file,
 #                                     source_to_detector_m=source_to_detector_m)
 experiment.norm_to('Ag.csv')
 exp_x_sliced, exp_y_sliced = experiment.slice(400, 2700)
-plt.plot(exp_y_sliced)
+print(experiment.slice_end)
+exp_x_raw = experiment.x_raw(offset_us=-12112.494119089204, source_to_detector_m=16.123278721983177)
+plt.plot(exp_y_sliced, 'r*')
 plt.show()

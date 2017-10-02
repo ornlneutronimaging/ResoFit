@@ -32,9 +32,9 @@ class FitResonance(Experiment):
         self.layer = layer
         self.layer_thickness = layer_thickness
         self.layer_density = layer_density
+        self.slice(slice_start=slice_start, slice_end=slice_end)
         if norm_to_file is not None:
             self.norm_to(norm_to_file)
-        self.slice(slice_start=slice_start, slice_end=slice_end)
         # self.add_layer(layer=layer_list[0], layer_thickness=thickness_list[0], density)
         self.exp_x_interp, self.exp_y_interp = self.xy_scaled(energy_min=self.energy_min,
                                                               energy_max=self.energy_max,
