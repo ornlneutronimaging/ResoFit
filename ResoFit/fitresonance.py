@@ -16,6 +16,7 @@ class FitResonance(Experiment):
     fitted_density = None
     fitted_thickness = None
     fitted_residual = None
+    fitted_fjac = None
 
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
@@ -74,6 +75,8 @@ class FitResonance(Experiment):
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
         self.fitted_residual = self.fit_result.__dict__['residual']
+        self.fitted_fjac = self.fit_result.__dict__['fjac']
+        print(self.fit_result.__dict__['fjac'][0])
 
         return self.fit_result
 
@@ -131,9 +134,8 @@ class FitResonance(Experiment):
                  self.y_raw(transmission=False, baseline=self.baseline),
                  'r.', label=self.layer + '_exp', markersize=1)
         # Plot fitting differences
-        plt.plot(simu_x,
-                 self.fitted_residual,
-                 'g-', label=self.layer + 'Diff.')
+        plt.plot(simu_x, self.fitted_residual, 'g-', label=self.layer + ' Diff.')
+        # plt.plot(simu_x, self.fitted_fjac[0], 'y-', label=self.layer + ' fjac')
 
         plt.title('Best fit')
         plt.ylim(-0.01, 1.01)
