@@ -13,10 +13,9 @@ energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layer_1 = 'Co'
 thickness_1 = 0.05  # mm
-# density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
+density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
 # density = np.NaN
-density = 8.86
-
+# density = 8.86
 
 folder = 'data'
 data_file = 'Co.csv'
@@ -25,6 +24,7 @@ image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
 norm_to_file = 'Ag.csv'
 baseline = True
+each_step = False
 
 repeat = 1
 source_to_detector_m = 16.123278721983177  # 16#16.445359069030175#16.447496101100739
@@ -46,10 +46,10 @@ calibration = Calibration(data_file=data_file,
 calibration.norm_to(norm_to_file)
 calibration.slice(slice_start=image_start, slice_end=image_end)
 
-
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
-                                         vary='all')
+                                         vary='all',
+                                         each_step=each_step)
 calibration.plot_before()
 calibration.plot_after()
 # calibration.plot_after_interp()
@@ -68,7 +68,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit.fit(thickness=thickness_1, density=density, vary='thickness')
+fit.fit(thickness_mm=thickness_1, density_gcm3=density, vary='thickness', each_step=each_step)
 fit.molar_conc(layer_1)
 fit.plot_before()
 fit.plot_after()
