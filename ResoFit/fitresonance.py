@@ -110,12 +110,12 @@ class FitResonance(Experiment):
         simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm, layer_density_gcm3=self.layer_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'b-', label=self.layer + '_simu', markersize=1)
+                 'k-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False, baseline=self.baseline),
-                 'r.', label=self.layer + '_exp', markersize=1)
+                 'ro', label=self.layer + '_exp', markersize=1)
 
         plt.title('Before fitting')
         plt.ylim(ymax=1.01)
@@ -130,16 +130,16 @@ class FitResonance(Experiment):
         simulation.add_layer(layer=self.layer, layer_thickness_mm=self.fitted_thickness_mm, layer_density_gcm3=self.fitted_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'b-', label=self.layer + '_simu', markersize=1)
+                 'k-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False, baseline=self.baseline),
-                 'r.', label=self.layer + '_exp', markersize=1)
+                 'ro', label=self.layer + '_exp', markersize=1)
 
         if error is True:
             # Plot fitting differences
-            plt.plot(simu_x, self.fitted_residual-0.2, 'g-', label='Diff.', alpha=0.6)
+            plt.plot(simu_x, self.fitted_residual-0.2, 'b-', label='Diff.')
 
         plt.title('Best fit')
         plt.ylim(ymax=1.01)
