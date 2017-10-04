@@ -5,6 +5,7 @@ import os
 from scipy.interpolate import interp1d
 import peakutils as pku
 from ResoFit._utilities import load_txt_csv
+import matplotlib.pyplot as plt
 
 
 class Experiment(object):
@@ -16,6 +17,8 @@ class Experiment(object):
     data = pd.DataFrame
     slice_start = None
     slice_end = None
+    spectra_file = None
+    data_file = None
 
     def __init__(self, spectra_file, data_file, repeat=1, folder='data'):
         """
@@ -34,7 +37,8 @@ class Experiment(object):
 
         self.spectra_path = os.path.join(self.folder_path, spectra_file)
         self.data_path = os.path.join(self.folder_path, data_file)
-
+        self.spectra_file = spectra_file
+        self.data_file = data_file
         # Error for 'repeat' int & >=1
         if isinstance(repeat, int) is False:
             raise ValueError("Repeat value must be an integer!")
@@ -61,7 +65,7 @@ class Experiment(object):
             raise ValueError(
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
 
-    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15):
+    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15.):
         """
         Get the 'x' in eV or angstrom with experimental parameters
         :param angstrom: bool to switch between eV and angstrom
@@ -92,6 +96,9 @@ class Experiment(object):
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
                 _baseline = pku.baseline(y_exp_raw)
                 y_exp_raw = y_exp_raw - _baseline
+        else:
+            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+                raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         return y_exp_raw
 
@@ -118,9 +125,11 @@ class Experiment(object):
         _x_max = _list[0]
         _x_min = _list[-1]
         if energy_min < _x_min:
-            raise ValueError("'Energy min' ({} eV) used for interpolation is beyond 'data min' ({} eV) ".format(energy_min, _x_min))
+            raise ValueError(
+                "'Energy min' ({} eV) used for interpolation is beyond 'data min' ({} eV) ".format(energy_min, _x_min))
         if energy_max > _x_max:
-            raise ValueError("'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
+            raise ValueError(
+                "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
 
         y_exp_raw = np.array(self.data[0]) / self.repeat
         if transmission is False:
@@ -137,7 +146,7 @@ class Experiment(object):
                 y_interp = y_interp - _baseline
         else:
             if baseline is True:
-                raise ValueError("baseline removal only works for peaks instead of dips currently")
+                raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         if angstrom is True:
             x_interp = reso_utils.ev_to_angstroms(x_interp)
@@ -146,14 +155,18 @@ class Experiment(object):
     def slice(self, slice_start=None, slice_end=None, reset_index=False):
         if slice_end is not None:
             if slice_end == slice_start:
-                raise ValueError("The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start, slice_end))
+                raise ValueError(
+                    "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start,
+                                                                                                  slice_end))
             self.data.drop(self.data.index[slice_end:], inplace=True)
             self.spectra.drop(self.spectra.index[slice_end:], inplace=True)
             # No 'index reset needed' after drop
             self.slice_end = slice_end
         if slice_start is not None:
             if slice_start == slice_end:
-                raise ValueError("The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start, slice_end))
+                raise ValueError(
+                    "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start,
+                                                                                                  slice_end))
             self.data.drop(self.data.index[:slice_start], inplace=True)
             self.spectra.drop(self.spectra.index[:slice_start], inplace=True)
             self.slice_start = slice_start
@@ -177,3 +190,62 @@ class Experiment(object):
                         df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
 
+    def plot_raw(self, offset_us=2.69, source_to_detector_m=16.45,
+                 energy_xmax=150, lambda_xmax=None,
+                 transmission=False, baseline=False,
+                 x_axis='energy', time_unit='us'):
+        if x_axis not in ['energy', 'lambda', 'time', 'number']:
+            raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
+        if time_unit not in ['s', 'us', 'ns']:
+            raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
+        x_axis_label = None
+        x_exp_raw = None
+        """X-axis"""
+        # determine values and labels for x-axis with options from
+        # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
+        if x_axis in ['energy', 'lambda']:
+            if x_axis == 'energy':
+                x_axis_label = 'Energy (eV)'
+                angstrom = False
+                plt.xlim(xmin=0, xmax=energy_xmax)
+            else:
+                x_axis_label = u"Wavelength (\u212B)"
+                angstrom = True
+                if lambda_xmax is not None:
+                    plt.xlim(xmin=0, xmax=lambda_xmax)
+            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+
+        if x_axis in ['time', 'number']:
+            x_exp_raw = self.x_raw(angstrom=False, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            if x_axis == 'time':
+                if time_unit == 's':
+                    x_axis_label = 'Time (s)'
+                    x_exp_raw = self.spectra[0]
+                if time_unit == 'us':
+                    x_axis_label = 'Time (us)'
+                    x_exp_raw = 1e6 * self.spectra[0]
+                if time_unit == 'ns':
+                    x_axis_label = 'Time (ns)'
+                    x_exp_raw = 1e9 * self.spectra[0]
+
+            if x_axis == 'number':
+                x_axis_label = 'Image number (#)'
+                x_exp_raw = np.array(range(1, len(self.data[0])+1))
+        if x_axis_label is None:
+            raise ValueError("x_axis_label does NOT exist, please check.")
+
+        """Y-axis"""
+        # Determine to plot transmission or attenuation
+        # Determine to put transmission or attenuation words for y-axis
+        if transmission:
+            y_axis_label = 'Neutron Transmission'
+        else:
+            y_axis_label = 'Neutron Attenuation'
+        y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
+
+        # Plot
+        plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
+        plt.ylim(ymax=1.01)
+        plt.xlabel(x_axis_label)
+        plt.ylabel(y_axis_label)
+        plt.legend(loc='best')

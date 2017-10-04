@@ -8,7 +8,8 @@ def load_txt_csv(path_to_file):
     if _format not in ['.txt', '.csv']:
         raise ValueError("File must be in the format of '.txt' or '.csv'")
     if os.path.exists(path_to_file) is False:
-        raise ValueError("Can not locate file '{}' in '{}' ".format(os.path.basename(path_to_file), os.path.dirname(path_to_file)))
+        raise ValueError(
+            "Can not locate file '{}' in '{}' ".format(os.path.basename(path_to_file), os.path.dirname(path_to_file)))
 
     _sep = ','
     df = pd.read_csv(path_to_file, sep=_sep, header=None)
