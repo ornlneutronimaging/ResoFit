@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import peakutils as pku
 from lmfit import Parameters
-from scipy.interpolate import interp1d
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 import numpy as np
@@ -76,9 +75,8 @@ class FitResonance(Experiment):
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
         self.fitted_density = self.fit_result.__dict__['params'].valuesdict()['density']
         self.fitted_residual = self.fit_result.__dict__['residual']
-        self.fitted_gap =  - self.exp_y_interp
-        self.fitted_fjac = self.fit_result.__dict__['fjac']
-        print(self.fit_result.__dict__['fjac'][0])
+        # self.fitted_fjac = self.fit_result.__dict__['fjac']
+        # print(self.fit_result.__dict__['fjac'][0])
 
         return self.fit_result
 
@@ -141,7 +139,7 @@ class FitResonance(Experiment):
             plt.plot(simu_x, self.fitted_residual-0.2, 'g-', label='Diff.')
             # plt.plot(simu_x, self.fitted_fjac[0], 'y-', label=self.layer + ' fjac')
 
-        plt.title('Best fit of')
+        plt.title('Best fit')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')

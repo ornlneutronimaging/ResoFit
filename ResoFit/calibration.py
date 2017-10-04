@@ -111,7 +111,7 @@ class Calibration(Simulation):
         :return:
         """
         plt.plot(self.simu_x, self.simu_y,
-                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+                 'b-', label=self.layer_1 + '_ideal', markersize=1)
 
         plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                        source_to_detector_m=self.init_source_to_detector_m),

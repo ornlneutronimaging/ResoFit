@@ -1,4 +1,3 @@
-from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 
 
