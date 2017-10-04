@@ -16,6 +16,7 @@ class FitResonance(Experiment):
     fitted_density = None
     fitted_thickness = None
     fitted_residual = None
+    fitted_gap = None
     fitted_fjac = None
 
     def __init__(self, spectra_file, data_file,
@@ -73,8 +74,9 @@ class FitResonance(Experiment):
         # Save the fitted 'density' or 'thickness' in FitResonance class
         self.fitted_density = self.fit_result.__dict__['params'].valuesdict()['density']
         self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
-        self.fitted_thickness = self.fit_result.__dict__['params'].valuesdict()['thickness']
+        self.fitted_density = self.fit_result.__dict__['params'].valuesdict()['density']
         self.fitted_residual = self.fit_result.__dict__['residual']
+        self.fitted_gap =  - self.exp_y_interp
         self.fitted_fjac = self.fit_result.__dict__['fjac']
         print(self.fit_result.__dict__['fjac'][0])
 
@@ -107,7 +109,7 @@ class FitResonance(Experiment):
         simulation.add_layer(layer=self.layer, layer_thickness=self.layer_thickness, layer_density=self.layer_density)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'b.', label=self.layer + '_ideal', markersize=1)
+                 'b-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
@@ -115,30 +117,32 @@ class FitResonance(Experiment):
                  'r.', label=self.layer + '_exp', markersize=1)
 
         plt.title('Before fitting')
-        plt.ylim(-0.01, 1.01)
+        plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
 
-    def plot_after(self):
+    def plot_after(self, error=True):
         simulation = Simulation(energy_min=self.energy_min,
                                 energy_max=self.energy_max,
                                 energy_step=self.energy_step)
         simulation.add_layer(layer=self.layer, layer_thickness=self.fitted_thickness, layer_density=self.fitted_density)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'b.', label=self.layer + '_ideal', markersize=1)
+                 'b-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False, baseline=self.baseline),
                  'r.', label=self.layer + '_exp', markersize=1)
-        # Plot fitting differences
-        plt.plot(simu_x, self.fitted_residual, 'g-', label=self.layer + ' Diff.')
-        # plt.plot(simu_x, self.fitted_fjac[0], 'y-', label=self.layer + ' fjac')
 
-        plt.title('Best fit')
-        plt.ylim(-0.01, 1.01)
+        if error is True:
+            # Plot fitting differences
+            plt.plot(simu_x, self.fitted_residual-0.2, 'g-', label='Diff.')
+            # plt.plot(simu_x, self.fitted_fjac[0], 'y-', label=self.layer + ' fjac')
+
+        plt.title('Best fit of')
+        plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()

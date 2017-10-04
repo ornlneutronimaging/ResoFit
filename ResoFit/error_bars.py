@@ -58,5 +58,5 @@ fit = FitResonance(spectra_file=spectra_file,
 fit_result = fit.fit(thickness=thickness_1, density=density, vary='density')
 pprint.pprint(fit_result.__dict__)
 fit.molar_conc(layer_1)
-# fit.plot_before()
-fit.plot_after()
+fit.plot_before()
+fit.plot_after(error=True)

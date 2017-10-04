@@ -119,7 +119,7 @@ class Calibration(Simulation):
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('Before Calibration')
-        plt.ylim(-0.01, 1.01)
+        plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
@@ -130,13 +130,13 @@ class Calibration(Simulation):
         :return:
         """
         plt.plot(self.simu_x, self.simu_y,
-                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+                 'b-', label=self.layer_1 + '_ideal', markersize=1)
 
         plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('After Calibration')
-        plt.ylim(-0.01, 1.01)
+        plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
@@ -147,13 +147,13 @@ class Calibration(Simulation):
         :return:
         """
         plt.plot(self.simu_x, self.simu_y,
-                 'b.', label=self.layer_1 + '_ideal', markersize=1)
+                 'b-', label=self.layer_1 + '_ideal', markersize=1)
 
         plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
                  'r.', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('After Calibration')
-        plt.ylim(-0.01, 1.01)
+        plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
         plt.show()
