@@ -30,18 +30,18 @@ class Simulation(object):
         self.simu_y = None
         self.layers = []
 
-    def add_layer(self, layer, layer_thickness, layer_density=np.NaN):
+    def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
         """
         Add layers and update x y values to pass
         :param layer:
-        :param layer_thickness:
-        :param layer_density: can be omitted same as Resonance() in ImagingReso
+        :param layer_thickness_mm:
+        :param layer_density_gcm3: can be omitted same as Resonance() in ImagingReso
         :return: x in eV
                  y in attenuation
         """
         self.o_reso.add_layer(formula=layer,
-                              thickness=layer_thickness,
-                              density=layer_density)
+                              thickness=layer_thickness_mm,
+                              density=layer_density_gcm3)
         self.layers.append(layer)
         self.simu_x = self.o_reso.total_signal['energy_eV']
         self.simu_y = self.o_reso.total_signal['attenuation']

@@ -1,7 +1,8 @@
 from ResoFit.simulation import Simulation
 
 
-def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment, baseline=False):
+def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment,
+                          baseline=False, each_step=False):
     # Unpack Parameters:
     parvals = params.valuesdict()
     source_to_detector_m = parvals['source_to_detector_m']
@@ -14,25 +15,29 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
                                         offset_us=offset_us,
                                         source_to_detector_m=source_to_detector_m,
                                         baseline=baseline)
-    # print(sum((simu_x - exp_x) ** 2))
-    # if sum((simu_x - exp_x) ** 2) > 1e-10:
-    #     raise ValueError("The interpolated experiment x-axis is not identical to simulation x-axis!")
-    gap = (exp_y - simu_y) #** 2
+
+    gap = (exp_y - simu_y)  # ** 2
+    if each_step is True:
+        print("source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
+                                                                              offset_us,
+                                                                              sum((exp_y - simu_y) ** 2)))
     return gap
 
 
-def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer, energy_min, energy_max, energy_step):
+def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer, energy_min, energy_max, energy_step, each_step=False):
     parvals = params.valuesdict()
-    layer_density = parvals['density']
-    layer_thickness = parvals['thickness']
+    layer_density_gcm3 = parvals['density_gcm3']
+    layer_thickness_mm = parvals['thickness_mm']
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
                             energy_step=energy_step)
-    simulation.add_layer(layer=layer, layer_thickness=layer_thickness, layer_density=layer_density)
+    simulation.add_layer(layer=layer, layer_thickness_mm=layer_thickness_mm, layer_density_gcm3=layer_density_gcm3)
     simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
-    # if sum((simu_x - exp_x_interp) ** 2) > 1e-10:
-    #     raise ValueError("The interpolated experiment x-axis is not identical to simulation x-axis!")
-    gap = (exp_y_interp - simu_y) #** 2
+    gap = (exp_y_interp - simu_y)  # ** 2
+    if each_step is True:
+        print("density_gcm3: {}    thickness_mm: {}    chi^2: {}".format(layer_density_gcm3,
+                                                                         layer_thickness_mm,
+                                                                         sum((exp_y_interp - simu_y) ** 2)))
     return gap
 
 

@@ -45,8 +45,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all')
 calibration.plot_before()
-calibration.plot_after()
-# calibration.plot_after_interp()
+calibration.plot_after(interp=True)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -62,5 +61,5 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit.fit(thickness=thickness_1, density=density, vary='thickness')
 fit.molar_conc(layer_1)
-fit.plot_before()
+# fit.plot_before()
 fit.plot_after()

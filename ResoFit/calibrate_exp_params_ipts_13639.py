@@ -49,7 +49,8 @@ calibration.slice(slice_start=image_start, slice_end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
-                                         vary='all')
+                                         vary='all',
+                                         each_step=True)
 calibration.plot_before()
 calibration.plot_after()
 # calibration.plot_after_interp()
@@ -68,7 +69,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit.fit(thickness=thickness_1, density=density, vary='thickness')
+fit.fit(thickness_mm=thickness_1, density_gcm3=density, vary='thickness', each_step=True)
 fit.molar_conc(layer_1)
 fit.plot_before()
 fit.plot_after()
