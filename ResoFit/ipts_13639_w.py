@@ -8,27 +8,27 @@ from ResoFit._utilities import get_foil_density_gcm3
 
 # Global parameters
 energy_min = 7
-energy_max = 150
+energy_max = 100
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
-layer_1 = 'Gd'
+layer_1 = 'W'
 thickness_1 = 0.05  # mm
 # density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
 density = np.NaN
 # density = 8.86
 
 folder = 'data'
-data_file = 'all_thick.txt'
-spectra_file = 'Image002_Spectra.txt'
-image_start = None  # Can be omitted or =None
-image_end = None  # Can be omitted or =None
-norm_to_file = 'all_thin.txt'
+data_file = 'W.csv'
+spectra_file = 'spectra.csv'
+image_start = 500  # Can be omitted or =None
+image_end = 2200  # Can be omitted or =None
+norm_to_file = 'Hf.csv'
 baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.71  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.123278721983177  # 16#16.445359069030175#16.447496101100739
+offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,

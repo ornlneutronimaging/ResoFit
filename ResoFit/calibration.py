@@ -50,7 +50,8 @@ class Calibration(Simulation):
         self.calibrated_residual = None
 
     def norm_to(self, file):
-        self.experiment.norm_to(file=file)
+        if file is not None:
+            self.experiment.norm_to(file=file)
 
     def slice(self, slice_start=None, slice_end=None):
         self.experiment.slice(slice_start=slice_start, slice_end=slice_end)
