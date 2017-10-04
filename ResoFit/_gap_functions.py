@@ -49,7 +49,7 @@ def y_gap_for_fitting_multi_layers(params, exp_x_interp, exp_y_interp, energy_mi
                             energy_max=energy_max,
                             energy_step=energy_step)
     for _i in range(len(layers)):
-        simulation.add_layer(layer=layers[_i], layer_thickness=layer_thickness, layer_density=layer_density)
+        simulation.add_layer(layer=layers[_i], layer_thickness_mm=layer_thickness, layer_density_gcm3=layer_density)
     simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
     gap = (exp_y_interp - simu_y) ** 2
     return gap
