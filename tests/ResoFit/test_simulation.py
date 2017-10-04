@@ -15,7 +15,7 @@ class TestSimulation(unittest.TestCase):
         simulation = self.simulation
         self.assertIsNone(simulation.simu_x)
         self.assertIsNone(simulation.simu_y)
-        simulation.add_layer(layer='U', layer_thickness=0.15)
+        simulation.add_layer(layer='U', layer_thickness_mm=0.15)
         _simu_x_returned = simulation.simu_x
         _simu_y_returned = simulation.simu_y
         _simu_x_expected = np.array([7., 8., 9., 10.])
@@ -31,7 +31,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_set_isotopic_ratio(self):
         simulation = self.simulation
-        simulation.add_layer(layer='U', layer_thickness=0.15)
+        simulation.add_layer(layer='U', layer_thickness_mm=0.15)
         simulation.set_isotopic_ratio('U', 'U', [0., 0., 0.99, 0.01])
         _isotopic_ratio_list_wrong_len = [0., 0.99, 0.01]
         self.assertRaises(ValueError, simulation.set_isotopic_ratio,
@@ -51,7 +51,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_x_angstrom(self):
         simulation = self.simulation
-        simulation.add_layer(layer='U', layer_thickness=0.15)
+        simulation.add_layer(layer='U', layer_thickness_mm=0.15)
         _x_returned = simulation.x_angstrom()
         _x_expected = np.array([0.10809189, 0.10111071, 0.09532809, 0.09043617])
         self.assertAlmostEqual(_x_returned[0], _x_expected[0], delta=0.000001)
@@ -61,7 +61,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_y_tansmission(self):
         simulation = self.simulation
-        simulation.add_layer(layer='U', layer_thickness=0.15)
+        simulation.add_layer(layer='U', layer_thickness_mm=0.15)
         _y_returned = simulation.y_transmission()
         _y_expected = np.array([ 0.96300627,  0.99063463,  0.99145785,  0.99273996])
         self.assertAlmostEqual(_y_returned[0], _y_expected[0], delta=0.000001)
@@ -71,7 +71,7 @@ class TestSimulation(unittest.TestCase):
 
     def test_xy_simu(self):
         simulation = self.simulation
-        simulation.add_layer(layer='U', layer_thickness=0.15)
+        simulation.add_layer(layer='U', layer_thickness_mm=0.15)
         _x_returned, _y_returned = simulation.xy_simu(angstrom=True, transmission=True)
         _x_expected = np.array([0.10809189, 0.10111071, 0.09532809, 0.09043617])
         self.assertAlmostEqual(_x_returned[0], _x_expected[0], delta=0.000001)
