@@ -3,6 +3,11 @@ import os
 
 
 def load_txt_csv(path_to_file):
+    """
+    Load and format data from .txt or .csv files
+    :param path_to_file:
+    :return: pd.Dataframe
+    """
     # Error for file format and existence
     _format = path_to_file[-4:]
     if _format not in ['.txt', '.csv']:
@@ -31,6 +36,14 @@ def load_txt_csv(path_to_file):
 
 
 def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
+    """
+    Get density from mass/(L*W*H)
+    :param length_mm:
+    :param width_mm:
+    :param thickness_mm:
+    :param mass_g:
+    :return: density in g/cm^3
+    """
     _mm3_to_cm3 = 0.001
     density_gcm3 = mass_g / (length_mm * width_mm * thickness_mm * _mm3_to_cm3)
     return density_gcm3

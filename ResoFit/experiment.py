@@ -110,11 +110,11 @@ class Experiment(object):
         :param energy_min:
         :param energy_max:
         :param energy_step:
-        :param angstrom:
+        :param angstrom: True -> output the interpolated data with x-axis as wavelength in angstrom
         :param transmission:
         :param offset_us:
         :param source_to_detector_m:
-        :return:
+        :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
         """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
@@ -153,6 +153,13 @@ class Experiment(object):
         return x_interp, y_interp
 
     def slice(self, slice_start=None, slice_end=None, reset_index=False):
+        """
+        Slice the signal by image number
+        :param slice_start: start image
+        :param slice_end: end image
+        :param reset_index: True -> reset pd.Dataframe indexes after slicing
+        :return: pd.Dataframe. sliced self.spectra and self.data
+        """
         if slice_end is not None:
             if slice_end == slice_start:
                 raise ValueError(
@@ -176,6 +183,12 @@ class Experiment(object):
         return self.spectra[0], self.data[0]
 
     def norm_to(self, file, reset_index=False):
+        """
+        Use specified file for normalization and save normalized data signal in self.data
+        :param file: string. filename with suffix. ex: 'your_data.csv' inside the folder specified in __init__
+        :param reset_index: True -> reset pd.Dataframe indexes after slicing
+        :return: pd.Dataframe in place. normalized data signal in self.data
+        """
         _full_path = os.path.join(self.folder_path, file)
         df = load_txt_csv(_full_path)
         if len(self.data) != len(df):
@@ -194,6 +207,19 @@ class Experiment(object):
                  energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,
                  x_axis='energy', time_unit='us'):
+        """
+        Display the loaded signal from data and spectra files.
+        :param offset_us:
+        :param source_to_detector_m:
+        :param energy_xmax: maximum x-axis energy value to display
+        :param lambda_xmax: maximum x-axis lambda value to display
+        :param transmission: boolean. False -> show resonance peaks
+                                      True -> show resonance dips
+        :param baseline: boolean. True -> remove baseline by detrend
+        :param x_axis: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
+        :param time_unit: string. Must be either 's' or 'us' or 'ns'
+        :return: display raw data signals
+        """
         if x_axis not in ['energy', 'lambda', 'time', 'number']:
             raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
         if time_unit not in ['s', 'us', 'ns']:
