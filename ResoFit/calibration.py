@@ -121,7 +121,7 @@ class Calibration(Simulation):
         :return: plot of raw experimental data and theoretical resonance signal before calibration
         """
         plt.plot(self.simu_x, self.simu_y,
-                 'k-', label=self.layer_1 + '_ideal', markersize=1)
+                 'b-', label=self.layer_1 + '_ideal', markersize=1)
 
         plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                        source_to_detector_m=self.init_source_to_detector_m),
@@ -144,7 +144,7 @@ class Calibration(Simulation):
         :return: plot of raw experimental data and theoretical resonance signal after calibration
         """
         plt.plot(self.simu_x, self.simu_y,
-                 'k-', label=self.layer_1 + '_ideal', markersize=1)
+                 'b-', label=self.layer_1 + '_ideal', markersize=1)
         if interp is False:
             plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
                      'ro', label=self.layer_1 + '_exp', markersize=1)

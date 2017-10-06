@@ -110,7 +110,7 @@ class FitResonance(Experiment):
         simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm, layer_density_gcm3=self.layer_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'k-', label=self.layer + '_simu', markersize=1)
+                 'b-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
@@ -132,7 +132,7 @@ class FitResonance(Experiment):
         simulation.add_layer(layer=self.layer, layer_thickness_mm=self.fitted_thickness_mm, layer_density_gcm3=self.fitted_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
-                 'k-', label=self.layer + '_simu', markersize=1)
+                 'b-', label=self.layer + '_simu', markersize=1)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
@@ -141,7 +141,7 @@ class FitResonance(Experiment):
 
         if error is True:
             # Plot fitting differences
-            plt.plot(simu_x, self.fitted_residual-0.2, 'b-', label='Diff.')
+            plt.plot(simu_x, self.fitted_residual-0.2, 'g-', label='Diff.', alpha=0.8)
 
         plt.title('Best fit')
         plt.xlabel('Energy (eV)')
