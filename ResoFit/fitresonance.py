@@ -118,6 +118,8 @@ class FitResonance(Experiment):
                  'ro', label=self.layer + '_exp', markersize=1)
 
         plt.title('Before fitting')
+        plt.xlabel('Energy (eV)')
+        plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
@@ -142,6 +144,8 @@ class FitResonance(Experiment):
             plt.plot(simu_x, self.fitted_residual-0.2, 'b-', label='Diff.')
 
         plt.title('Best fit')
+        plt.xlabel('Energy (eV)')
+        plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')

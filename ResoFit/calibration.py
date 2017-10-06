@@ -129,6 +129,8 @@ class Calibration(Simulation):
                  'ro', label=self.layer_1 + '_exp', markersize=1)
 
         plt.title('Before Calibration')
+        plt.xlabel('Energy (eV)')
+        plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
@@ -151,6 +153,8 @@ class Calibration(Simulation):
                      'r-.', label=self.layer_1 + '_exp_interp', markersize=1)
 
         plt.title('After Calibration')
+        plt.xlabel('Energy (eV)')
+        plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')

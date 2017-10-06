@@ -8,27 +8,27 @@ from ResoFit._utilities import get_foil_density_gcm3
 
 # Global parameters
 energy_min = 7
-energy_max = 150
+energy_max = 60
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layer_1 = 'U'
-thickness_1 = 0.05  # mm
+thickness_1 = 0.018  # mm
 # density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
 density = np.NaN
 # density = 8.86
 
 folder = 'data'
-data_file = 'values_no_xy.txt'
+data_file = 'sphere.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = None
-baseline = False
+norm_to_file = None#'sphere_background_1.csv'
+baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.71  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.813  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -48,7 +48,7 @@ calibration.slice(slice_start=image_start, slice_end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
-                                         vary='all',
+                                         vary='none',
                                          each_step=each_step)
 calibration.plot_before()
 calibration.plot_after()
@@ -70,4 +70,4 @@ fit = FitResonance(spectra_file=spectra_file,
 fit.fit(thickness_mm=thickness_1, density_gcm3=density, vary='thickness', each_step=each_step)
 fit.molar_conc(layer_1)
 fit.plot_before()
-fit.plot_after()
+fit.plot_after(error=False)

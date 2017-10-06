@@ -18,17 +18,17 @@ density = np.NaN
 # density = 8.86
 
 folder = 'data'
-data_file = 'all_thick.txt'
+data_file = 'Gd_thick.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = 'all_thin.txt'
+norm_to_file = 'Gd_thin.csv'
 baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.71  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
+offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
