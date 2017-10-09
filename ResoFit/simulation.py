@@ -28,7 +28,7 @@ class Simulation(object):
         # self.simu_y = self.o_reso.total_signal['attenuation']
         self.simu_x = None
         self.simu_y = None
-        self.layers = []
+        self.layer_list = []
 
     def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
         """
@@ -42,7 +42,7 @@ class Simulation(object):
         self.o_reso.add_layer(formula=layer,
                               thickness=layer_thickness_mm,
                               density=layer_density_gcm3)
-        self.layers.append(layer)
+        self.layer_list.append(layer)
         self.simu_x = self.o_reso.total_signal['energy_eV']
         self.simu_y = self.o_reso.total_signal['attenuation']
 
@@ -56,7 +56,7 @@ class Simulation(object):
                  y in attenuation
         """
         # Check if layer exist
-        if layer not in self.layers:
+        if layer not in self.layer_list:
             raise ValueError('Layer {} does not exist.'.format(layer))
         # Check if element exist
         _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)

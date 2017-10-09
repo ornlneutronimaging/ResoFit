@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import pprint
+import re
 
 
 def load_txt_csv(path_to_file):
@@ -57,20 +58,36 @@ class Layer(object):
 
     def add_layer(self, layer, thickness_mm, density_gcm3=None):
         if type(layer) is not str:
-            raise ValueError("Please enter layer as string. Example: 'Gd' or 'UO3'")
+            raise ValueError("Please enter layer as string. Example: 'Gd' or 'U'")
+        _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)
+        _elements = []
+        for _element in _formula:
+            _single_element = list(_element)[0]
+            _elements.append(_single_element)
+        if len(_elements) > 1:
+            raise ValueError("Please enter element as layer in string. Example: 'Gd' or 'U'")
+
         if density_gcm3 is not None:
             self.info[layer] = {'layer': layer,
                                 'thickness': {'value': thickness_mm,
                                               'units': 'mm'},
                                 'density': {'value': density_gcm3,
-                                            'units': 'g/cm3'}
+                                            'units': 'g/cm3'},
+                                'molar_mass': {'value': None,
+                                               'units': None},
+                                'molar_conc': {'value': None,
+                                               'units': None}
                                 }
         else:
             self.info[layer] = {'layer': layer,
                                 'thickness': {'value': thickness_mm,
                                               'units': 'mm'},
                                 'density': {'value': np.NaN,
-                                            'units': 'g/cm3'}
+                                            'units': 'g/cm3'},
+                                'molar_mass': {'value': None,
+                                               'units': None},
+                                'molar_conc': {'value': None,
+                                               'units': None}
                                 }
 
 # def _forminfo(layer, thickness_mm, density_gcm3=None):

@@ -24,11 +24,15 @@ density_1 = None
 layer_2 = 'Gd'
 thickness_2 = 0.015
 density_2 = None
+# layer_3 = 'Cd'
+# thickness_3 = 0.015
+# density_3 = None
 layer = Layer()
 layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
+# layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
-
+pprint.pprint(layer.info)
 folder = 'data'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
@@ -45,7 +49,7 @@ offset_us = 2.813  # 0#2.7120797253959119#2.7355447625559037
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
                           spectra_file=spectra_file,
-                          layer_info=layer.info,
+                          raw_layer=layer,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
@@ -67,7 +71,6 @@ calibration.plot_after()
 fit = FitResonance(spectra_file=spectra_file,
                    data_file=data_file,
                    repeat=repeat,
-                   layer_info=layer.info,
                    energy_min=energy_min,
                    energy_max=energy_max,
                    energy_step=energy_step,
@@ -77,7 +80,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit.fit(layer.info, vary='thickness', each_step=each_step)
-fit.molar_conc(layer)
+fit.fit(layer, vary='density', each_step=each_step)
+fit.molar_conc()
 fit.plot_before()
 fit.plot_after(error=False)

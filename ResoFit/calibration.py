@@ -10,7 +10,7 @@ from ResoFit._gap_functions import y_gap_for_calibration
 
 
 class Calibration(Simulation):
-    def __init__(self, spectra_file, data_file, layer_info,
+    def __init__(self, spectra_file, data_file, raw_layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  repeat=1, folder='data', baseline=False):
         """
@@ -28,10 +28,10 @@ class Calibration(Simulation):
         :param baseline: boolean. True -> to remove baseline/background by detrend
         """
         super().__init__(energy_min, energy_max, energy_step)
-        for _each_layer in list(layer_info.keys()):
+        for _each_layer in list(raw_layer.info.keys()):
             self.add_layer(layer=_each_layer,
-                           layer_thickness_mm=layer_info[_each_layer]['thickness']['value'],
-                           layer_density_gcm3=layer_info[_each_layer]['density']['value'])
+                           layer_thickness_mm=raw_layer.info[_each_layer]['thickness']['value'],
+                           layer_density_gcm3=raw_layer.info[_each_layer]['density']['value'])
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -48,9 +48,9 @@ class Calibration(Simulation):
         self.exp_y_raw_calibrated = None
         self.exp_x_interp_calibrated = None
         self.exp_y_interp_calibrated = None
-        # self.layer = layer
         self.baseline = baseline
         self.calibrated_residual = None
+        self.raw_layer = raw_layer
 
     def norm_to(self, file):
         if file is not None:
@@ -123,13 +123,18 @@ class Calibration(Simulation):
         Plot the raw experimental data and theoretical resonance signal before calibration
         :return: plot of raw experimental data and theoretical resonance signal before calibration
         """
+        simu_label = 'ideal'
+        exp_label = 'exp'
+        for each_layer in self.layer_list:
+            simu_label = simu_label + '_' + each_layer
+            exp_label = exp_label + '_' + each_layer
         plt.plot(self.simu_x, self.simu_y,
-                 'b-', label='ideal', markersize=1)
+                 'b-', label=simu_label, markersize=1)
 
         plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                        source_to_detector_m=self.init_source_to_detector_m),
                  self.experiment.y_raw(baseline=self.baseline),
-                 'ro', label='exp.', markersize=1)
+                 'ro', label=simu_label, markersize=1)
 
         plt.title('Before Calibration')
         plt.xlabel('Energy (eV)')
@@ -146,14 +151,21 @@ class Calibration(Simulation):
                                 False -> display raw exp data
         :return: plot of raw experimental data and theoretical resonance signal after calibration
         """
+        simu_label = 'ideal'
+        exp_label = 'exp'
+        exp_interp_label = 'exp_interp'
+        for each_layer in self.layer_list:
+            simu_label = simu_label + '_' + each_layer
+            exp_label = exp_label + '_' + each_layer
+            exp_interp_label = exp_interp_label + '_' + each_layer
         plt.plot(self.simu_x, self.simu_y,
-                 'b-', label='ideal', markersize=1)
+                 'b-', label=simu_label, markersize=1)
         if interp is False:
             plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
-                     'ro', label='exp', markersize=1)
+                     'ro', label=exp_label, markersize=1)
         else:
             plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
-                     'r-.', label='exp. (interpolated)', markersize=1)
+                     'r-.', label=exp_interp_label, markersize=1)
 
         plt.title('After Calibration')
         plt.xlabel('Energy (eV)')
