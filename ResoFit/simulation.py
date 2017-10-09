@@ -102,52 +102,5 @@ class Simulation(object):
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
 
-    # def to_csv(self, filename='simulation.csv', angstrom=False, transmission=False):
-    #     """
-    #     Output x and y values to .csv file
-    #     :param filename:
-    #     :param angstrom: bool to determine the output x
-    #     :param transmission: bool to determine the output y
-    #     :return: .csv file
-    #     """
-    #     _x = self.o_reso.total_signal['energy_eV']
-    #     _x_tag = 'x (eV)'
-    #     if angstrom is True:
-    #         _x = reso_utils.ev_to_angstroms(_x)
-    #         _x_tag = 'x (\u212B)'
-    #     if transmission is True:
-    #         _y = self.o_reso.total_signal['transmission']
-    #         _y_tag = 'y (transmission)'
-    #     else:
-    #         _y = self.o_reso.total_signal['attenuation']
-    #         _y_tag = 'y (attenuation)'
-    #
-    #     df = pd.DataFrame(_x, index=None)
-    #     df.rename(columns={0: _x_tag}, inplace=True)
-    #     df[_y_tag] = _y
-    #     df.to_csv(filename)
-    #
-    # def to_clipboard(self, angstrom=False, transmission=False):
-    #     """
-    #     Output x and y values to clipboard
-    #     :param angstrom: bool to determine the output x
-    #     :param transmission: bool to determine the output y
-    #     :return: .csv file
-    #     """
-    #     _x = self.o_reso.total_signal['energy_eV']
-    #     _x_tag = 'x (eV)'
-    #     if angstrom is True:
-    #         _x = reso_utils.ev_to_angstroms(_x)
-    #         _x_tag = 'x (\u212B)'
-    #     if transmission is True:
-    #         _y = self.o_reso.total_signal['transmission']
-    #         _y_tag = 'y (transmission)'
-    #     else:
-    #         _y = self.o_reso.total_signal['attenuation']
-    #         _y_tag = 'y (attenuation)'
-    #
-    #     df = pd.DataFrame(_x, index=None)
-    #     df.rename(columns={0: _x_tag}, inplace=True)
-    #     df[_y_tag] = _y
-    #     df.to_clipboard(excel=True)
+
 

@@ -2,6 +2,7 @@ import unittest
 from ResoFit.calibration import Calibration
 import numpy as np
 import os
+from ResoFit._utilities import Layer
 
 
 class TestCalibration(unittest.TestCase):
@@ -15,13 +16,15 @@ class TestCalibration(unittest.TestCase):
         energy_max = 150
         energy_step = 0.01
 
-        thickness = 0.075
-        layer = 'Gd'
+        layer_1 = 'Gd'
+        thickness_1 = 0.075
+        density_1 = None
+        layer = Layer()
+        layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+
         self.calibration = Calibration(data_file=self.data_file,
                                        spectra_file=self.spectra_file,
-                                       layer_1=layer,
-                                       thickness_1=thickness,
-                                       density_1=np.NaN,
+                                       layer_info=layer.info,
                                        energy_min=energy_min,
                                        energy_max=energy_max,
                                        energy_step=energy_step,

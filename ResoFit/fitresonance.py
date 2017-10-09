@@ -20,7 +20,7 @@ class FitResonance(Experiment):
 
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
-                 layer, layer_thickness_mm=0.2, layer_density_gcm3=np.NaN,
+                 layer_info,
                  folder='data', repeat=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01):
@@ -30,14 +30,11 @@ class FitResonance(Experiment):
         self.energy_step = energy_step
         self.calibrated_offset_us = calibrated_offset_us
         self.calibrated_source_to_detector_m = calibrated_source_to_detector_m
-        self.layer = layer
-        self.layer_thickness_mm = layer_thickness_mm
-        self.layer_density_gcm3 = layer_density_gcm3
+        self.layer_info = layer_info
         self.slice(slice_start=slice_start, slice_end=slice_end)
         self.baseline = baseline
         if norm_to_file is not None:
             self.norm_to(norm_to_file)
-        # self.add_layer(layer=layer_list[0], layer_thickness=thickness_list[0], density)
         self.exp_x_interp, self.exp_y_interp = self.xy_scaled(energy_min=self.energy_min,
                                                               energy_max=self.energy_max,
                                                               energy_step=self.energy_step,
