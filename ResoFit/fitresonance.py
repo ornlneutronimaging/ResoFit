@@ -119,7 +119,7 @@ class FitResonance(Experiment):
             molar_conc_units = 'mol/cm3'
             self.fitted_layer.info[_each_layer]['molar_conc']['value'] = molar_conc_value
             self.fitted_layer.info[_each_layer]['molar_conc']['units'] = molar_conc_units
-            print('Molar conc. of {} is: {} ({})'.format(_each_layer, molar_conc_value, molar_conc_units))
+            print('Fitted molar conc. of {} is: {} ({})'.format(_each_layer, molar_conc_value, molar_conc_units))
 
         return self.fitted_layer.info
 

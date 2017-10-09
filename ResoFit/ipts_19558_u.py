@@ -32,7 +32,6 @@ layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
-pprint.pprint(layer.info)
 folder = 'data'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
