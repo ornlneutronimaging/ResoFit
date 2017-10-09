@@ -36,4 +36,11 @@ experiment1.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detecto
 experiment2.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
                      x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
                      lambda_xmax=lambda_xmax)
+
+x1, y1 = experiment1.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                               energy_min=7, energy_max=150, energy_step=0.01)
+plt.plot(x1, y1, 'r.', label='interp1')
+x2, y2 = experiment2.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                               energy_min=7, energy_max=150, energy_step=0.01)
+plt.plot(x2, y2, 'k.', label='interp2')
 plt.show()

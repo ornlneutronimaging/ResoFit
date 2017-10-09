@@ -50,8 +50,6 @@ class FitResonance(Experiment):
     def fit(self, raw_layer, vary='density', isotope=False, isotope_vary_tag_list=[], each_step=False):
         if vary not in ['density', 'thickness', 'none']:
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'none']")
-        exp_x_interp = self.exp_x_interp
-        exp_y_interp = self.exp_y_interp
         # Default vary is: 'density'
         thickness_vary_tag = False
         density_vary_tag = True
@@ -78,7 +76,7 @@ class FitResonance(Experiment):
 
         # Use lmfit to obtain 'density' to minimize 'y_gap_for_fitting'
         self.fit_result = minimize(y_gap_for_fitting, params_for_fit, method='leastsq',
-                                   args=(exp_x_interp, exp_y_interp, self.layer_list,
+                                   args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
         # Print chi^2
         self.fitted_residual = self.fit_result.__dict__['residual']
