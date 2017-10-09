@@ -24,32 +24,25 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     return gap
 
 
-def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer, energy_min, energy_max, energy_step, each_step=False):
+def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list, energy_min, energy_max, energy_step, each_step=False):
     parvals = params.valuesdict()
-    layer_density_gcm3 = parvals['density_gcm3']
-    layer_thickness_mm = parvals['thickness_mm']
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
                             energy_step=energy_step)
-    simulation.add_layer(layer=layer, layer_thickness_mm=layer_thickness_mm, layer_density_gcm3=layer_density_gcm3)
+    for each_layer in layer_list:
+        simulation.add_layer(layer=each_layer,
+                             layer_thickness_mm=parvals['thickness_mm_'+each_layer],
+                             layer_density_gcm3=parvals['density_gcm3_'+each_layer])
     simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
     gap = (exp_y_interp - simu_y)  # ** 2
+
     if each_step is True:
-        print("density_gcm3: {}    thickness_mm: {}    chi^2: {}".format(layer_density_gcm3,
-                                                                         layer_thickness_mm,
-                                                                         sum((exp_y_interp - simu_y) ** 2)))
+        for each_layer in layer_list:
+            print("density_gcm3_{}: {}    thickness_mm_{}: {}    chi^2: {}".format(
+                each_layer,
+                parvals['density_gcm3_' + each_layer],
+                each_layer,
+                parvals['thickness_mm_' + each_layer],
+                sum((exp_y_interp - simu_y) ** 2)))
     return gap
 
-
-def y_gap_for_fitting_multi_layers(params, exp_x_interp, exp_y_interp, energy_min, energy_max, energy_step, layers=[]):
-    parvals = params.valuesdict()
-    layer_density = parvals['density']
-    layer_thickness = parvals['thickness']
-    simulation = Simulation(energy_min=energy_min,
-                            energy_max=energy_max,
-                            energy_step=energy_step)
-    for _i in range(len(layers)):
-        simulation.add_layer(layer=layers[_i], layer_thickness_mm=layer_thickness, layer_density_gcm3=layer_density)
-    simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
-    gap = (exp_y_interp - simu_y) ** 2
-    return gap

@@ -43,13 +43,11 @@ class FitResonance(Experiment):
                                                               source_to_detector_m=self.calibrated_source_to_detector_m,
                                                               baseline=self.baseline)
 
-    def fit(self, thickness_mm, density_gcm3, vary='density', each_step=False):
+    def fit(self, layer_info, vary='density', each_step=False):
         if vary not in ['density', 'thickness', 'all', 'none']:
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'all', 'none']")
         exp_x_interp = self.exp_x_interp
         exp_y_interp = self.exp_y_interp
-        if density_gcm3 is np.NaN:
-            density_gcm3 = pt.elements.isotope(self.layer).density
         thickness_vary_tag = False
         density_vary_tag = True
         if vary == 'thickness':
@@ -59,17 +57,27 @@ class FitResonance(Experiment):
             thickness_vary_tag = True
         if vary == 'none':
             density_vary_tag = False
-        params_fit = Parameters()
-        params_fit.add('thickness_mm', value=thickness_mm, vary=thickness_vary_tag, min=0)
-        params_fit.add('density_gcm3', value=density_gcm3, vary=density_vary_tag, min=0)
+        layer_list = list(layer_info.keys())
+        params_for_fit = Parameters()
+        for _each_layer in layer_list:
+            if layer_info[_each_layer]['density']['value'] == np.NaN:
+                layer_info[_each_layer]['density']['value'] = pt.elements.isotope(_each_layer).density
+            params_for_fit.add('thickness_mm_' + _each_layer,
+                               value=layer_info[_each_layer]['thickness']['value'],
+                               vary=thickness_vary_tag,
+                               min=0)
+            params_for_fit.add('density_gcm3_' + _each_layer,
+                               value=layer_info[_each_layer]['density']['value'],
+                               vary=density_vary_tag,
+                               min=0)
 
         # Use lmfit to obtain 'density' to minimize 'y_gap_for_fitting'
-        self.fit_result = minimize(y_gap_for_fitting, params_fit, method='leastsq',
-                                   args=(exp_x_interp, exp_y_interp, self.layer,
+        self.fit_result = minimize(y_gap_for_fitting, params_for_fit, method='leastsq',
+                                   args=(exp_x_interp, exp_y_interp, layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
         # Print chi^2
         self.fitted_residual = self.fit_result.__dict__['residual']
-        print("Fitting chi^2 : {}".format(sum(self.fitted_residual**2)))
+        print("Fitting chi^2 : {}".format(sum(self.fitted_residual ** 2)))
         # Print values give best fit
         self.fit_result.__dict__['params'].pretty_print()
         # Save the fitted 'density' or 'thickness' in FitResonance class
@@ -94,7 +102,8 @@ class FitResonance(Experiment):
         simulation = Simulation(energy_min=self.energy_min,
                                 energy_max=self.energy_max,
                                 energy_step=self.energy_step)
-        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm, layer_density_gcm3=self.layer_density_gcm3)
+        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm,
+                             layer_density_gcm3=self.layer_density_gcm3)
         molar_mass = simulation.o_reso.stack[layer][element]['molar_mass']['value']
         molar_conc = self.fitted_density_gcm3 / molar_mass
         print('Molar conc. of element {} in layer {} is: {} (mol/cm3)'.format(element, layer, molar_conc))
@@ -104,7 +113,8 @@ class FitResonance(Experiment):
         simulation = Simulation(energy_min=self.energy_min,
                                 energy_max=self.energy_max,
                                 energy_step=self.energy_step)
-        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm, layer_density_gcm3=self.layer_density_gcm3)
+        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.layer_thickness_mm,
+                             layer_density_gcm3=self.layer_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
                  'b-', label=self.layer + '_simu', markersize=1)
@@ -126,7 +136,8 @@ class FitResonance(Experiment):
         simulation = Simulation(energy_min=self.energy_min,
                                 energy_max=self.energy_max,
                                 energy_step=self.energy_step)
-        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.fitted_thickness_mm, layer_density_gcm3=self.fitted_density_gcm3)
+        simulation.add_layer(layer=self.layer, layer_thickness_mm=self.fitted_thickness_mm,
+                             layer_density_gcm3=self.fitted_density_gcm3)
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
         plt.plot(simu_x, simu_y,
                  'b-', label=self.layer + '_simu', markersize=1)
@@ -138,7 +149,7 @@ class FitResonance(Experiment):
 
         if error is True:
             # Plot fitting differences
-            plt.plot(simu_x, self.fitted_residual-0.2, 'g-', label='Diff.', alpha=0.8)
+            plt.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', alpha=0.8)
 
         plt.title('Best fit')
         plt.xlabel('Energy (eV)')

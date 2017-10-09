@@ -77,7 +77,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit.fit(thickness_mm=thickness, density_gcm3=density, vary='thickness', each_step=each_step)
+fit.fit(layer.info, vary='thickness', each_step=each_step)
 fit.molar_conc(layer)
 fit.plot_before()
 fit.plot_after(error=False)
