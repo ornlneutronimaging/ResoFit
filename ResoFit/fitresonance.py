@@ -97,6 +97,22 @@ class FitResonance(Experiment):
         # print(self.fit_result.__dict__['fjac'][0])
         return self.fit_result
 
+    def fit_iso(self, layer):
+        a = self.fitted_layer
+        params_for_iso_fit = Parameters()
+        for _each_layer in self.layer_list:
+            if self.raw_layer.info[_each_layer]['density']['value'] is np.NaN:
+                self.raw_layer.info[_each_layer]['density']['value'] = pt.elements.isotope(_each_layer).density
+                params_for_iso_fit.add('thickness_mm_' + _each_layer,
+                                       value=self.raw_layer.info[_each_layer]['thickness']['value'],
+                                       # vary=thickness_vary_tag,
+                                       min=0)
+                params_for_iso_fit.add('density_gcm3_' + _each_layer,
+                                       value=self.raw_layer.info[_each_layer]['density']['value'],
+                                       # vary=density_vary_tag,
+                                       min=0)
+        pass
+
     def molar_conc(self):
         self.fitted_simulation = Simulation(energy_min=self.energy_min,
                                             energy_max=self.energy_max,
@@ -165,8 +181,10 @@ class FitResonance(Experiment):
                                                 energy_step=self.energy_step)
             for each_layer in self.layer_list:
                 self.fitted_simulation.add_layer(layer=each_layer,
-                                                 layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness']['value'],
-                                                 layer_density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
+                                                 layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
+                                                     'value'],
+                                                 layer_density_gcm3=self.fitted_layer.info[each_layer]['density'][
+                                                     'value'])
         simu_x, simu_y = self.fitted_simulation.xy_simu(angstrom=False, transmission=False)
 
         # Get plot labels
