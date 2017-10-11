@@ -32,7 +32,7 @@ layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
-folder = 'data'
+folder = 'data/resonance_data/IPTS_19558/reso_data_19558'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
@@ -69,6 +69,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
                    data_file=data_file,
+                   folder=folder,
                    repeat=repeat,
                    energy_min=energy_min,
                    energy_max=energy_max,

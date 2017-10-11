@@ -5,7 +5,7 @@ _energy_min = 13
 _energy_max = 170
 _energy_step = 0.01
 # Input sample name or names as str, case sensitive
-_layer_1 = 'UGd'
+_layer_1 = 'U'
 _name = _layer_1
 _thickness_1 = 0.075  # mm
 _density_1 = 4  # g/cm3 deviated due to porosity

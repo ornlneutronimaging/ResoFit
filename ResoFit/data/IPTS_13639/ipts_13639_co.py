@@ -25,7 +25,7 @@ density_1 = None
 layer = Layer()
 layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 
-folder = 'data/resonance_data/IPTS_13639'
+folder = 'data/resonance_data/IPTS_13639/reso_data_13639'
 data_file = 'Co.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
