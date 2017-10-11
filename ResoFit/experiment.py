@@ -20,7 +20,7 @@ class Experiment(object):
     spectra_file = None
     data_file = None
 
-    def __init__(self, spectra_file, data_file, repeat=1, folder='data'):
+    def __init__(self, spectra_file, data_file, folder, repeat=1):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight

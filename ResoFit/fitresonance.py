@@ -25,10 +25,10 @@ class FitResonance(Experiment):
 
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
-                 folder='data', repeat=1, baseline=False,
+                 folder, repeat=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01):
-        super().__init__(spectra_file, data_file, repeat, folder)
+        super().__init__(spectra_file=spectra_file, data_file=data_file, folder=folder, repeat=repeat)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -133,8 +133,8 @@ class FitResonance(Experiment):
         simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
 
         # Get plot labels
-        simu_label = 'ideal'
-        exp_label = 'exp'
+        simu_label = 'Ideal'
+        exp_label = 'Exp'
         exp_interp_label = 'exp_interp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
@@ -170,9 +170,9 @@ class FitResonance(Experiment):
         simu_x, simu_y = self.fitted_simulation.xy_simu(angstrom=False, transmission=False)
 
         # Get plot labels
-        simu_label = 'ideal'
-        exp_label = 'exp'
-        exp_interp_label = 'exp_interp'
+        simu_label = 'Ideal'
+        exp_label = 'Exp'
+        exp_interp_label = 'Exp_interp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
             exp_label = exp_label + '_' + each_layer

@@ -27,7 +27,7 @@ class Calibration(Simulation):
         :param folder:
         :param baseline: boolean. True -> to remove baseline/background by detrend
         """
-        super().__init__(energy_min, energy_max, energy_step)
+        super().__init__(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
         for _each_layer in list(raw_layer.info.keys()):
             self.add_layer(layer=_each_layer,
                            layer_thickness_mm=raw_layer.info[_each_layer]['thickness']['value'],
@@ -123,8 +123,8 @@ class Calibration(Simulation):
         Plot the raw experimental data and theoretical resonance signal before calibration
         :return: plot of raw experimental data and theoretical resonance signal before calibration
         """
-        simu_label = 'ideal'
-        exp_label = 'exp'
+        simu_label = 'Ideal'
+        exp_label = 'Exp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
             exp_label = exp_label + '_' + each_layer
@@ -151,9 +151,9 @@ class Calibration(Simulation):
                                 False -> display raw exp data
         :return: plot of raw experimental data and theoretical resonance signal after calibration
         """
-        simu_label = 'ideal'
-        exp_label = 'exp'
-        exp_interp_label = 'exp_interp'
+        simu_label = 'Ideal'
+        exp_label = 'Exp'
+        exp_interp_label = 'Exp_interp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
             exp_label = exp_label + '_' + each_layer
