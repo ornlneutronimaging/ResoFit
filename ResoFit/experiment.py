@@ -270,7 +270,7 @@ class Experiment(object):
         y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
 
         # Plot
-        plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
+        plt.plot(x_exp_raw, y_exp_raw, 'ro', label=self.data_file, markersize=2)
         plt.ylim(ymax=1.01)
         plt.xlabel(x_axis_label)
         plt.ylabel(y_axis_label)
