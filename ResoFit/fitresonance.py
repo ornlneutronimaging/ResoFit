@@ -7,8 +7,10 @@ import numpy as np
 from lmfit import minimize
 import re
 from ResoFit._gap_functions import y_gap_for_fitting
+from ResoFit._gap_functions import y_gap_for_iso_fitting
 import periodictable as pt
 from ResoFit._utilities import Layer
+import pprint
 
 
 class FitResonance(Experiment):
@@ -22,6 +24,9 @@ class FitResonance(Experiment):
     fitted_simulation = None
     layer_list = None
     raw_layer = None
+    fitted_iso_result = None
+    fitted_iso_residual = None
+    isotope_stack = {}
 
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
@@ -73,18 +78,21 @@ class FitResonance(Experiment):
                                value=self.raw_layer.info[_each_layer]['density']['value'],
                                vary=density_vary_tag,
                                min=0)
-
-        # Use lmfit to obtain 'density' to minimize 'y_gap_for_fitting'
+        # Print before
+        print("Params before '{}' fitting:".format(vary))
+        params_for_fit.pretty_print()
+        # Fitting
         self.fit_result = minimize(y_gap_for_fitting, params_for_fit, method='leastsq',
                                    args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
+        # Print after
+        print("Params after '{}' fitting:".format(vary))
+        self.fit_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_residual = self.fit_result.__dict__['residual']
-        print("Fitting chi^2 : {}".format(sum(self.fitted_residual ** 2)))
-        # Print values give best fit
-        self.fit_result.__dict__['params'].pretty_print()
+        print("Fitting chi^2 : {}\n".format(sum(self.fitted_residual ** 2)))
 
-        '''Unload fitted params'''
+        '''Export fitted params as Layer()'''
         # Save the fitted 'density' or 'thickness' in Layer()
         self.fitted_layer = Layer()
         for _each_layer in self.layer_list:
@@ -95,25 +103,8 @@ class FitResonance(Experiment):
                                             'density_gcm3_' + _each_layer])
         # self.fitted_fjac = self.fit_result.__dict__['fjac']
         # print(self.fit_result.__dict__['fjac'][0])
-        return self.fit_result
 
-    def fit_iso(self, layer):
-        a = self.fitted_layer
-        params_for_iso_fit = Parameters()
-        for _each_layer in self.layer_list:
-            if self.raw_layer.info[_each_layer]['density']['value'] is np.NaN:
-                self.raw_layer.info[_each_layer]['density']['value'] = pt.elements.isotope(_each_layer).density
-                params_for_iso_fit.add('thickness_mm_' + _each_layer,
-                                       value=self.raw_layer.info[_each_layer]['thickness']['value'],
-                                       # vary=thickness_vary_tag,
-                                       min=0)
-                params_for_iso_fit.add('density_gcm3_' + _each_layer,
-                                       value=self.raw_layer.info[_each_layer]['density']['value'],
-                                       # vary=density_vary_tag,
-                                       min=0)
-        pass
-
-    def molar_conc(self):
+        '''Create fitted simulation'''
         self.fitted_simulation = Simulation(energy_min=self.energy_min,
                                             energy_max=self.energy_max,
                                             energy_step=self.energy_step)
@@ -122,18 +113,71 @@ class FitResonance(Experiment):
                                              layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                  'value'],
                                              layer_density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
+
+        return self.fit_result
+
+    def fit_iso(self, layer, each_step=False):
+        params_for_iso_fit = Parameters()
+        self.isotope_stack[layer] = {'list': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['list'],
+                                     'ratios': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['isotopic_ratio']}
+        _formatted_isotope_list = []
+        _params_name_list = []
+        _restriction_list = []
+        for _isotope_index in range(len(self.isotope_stack[layer]['list'])):
+            _formatted_isotope_name = self.isotope_stack[layer]['list'][_isotope_index].replace('-', '_')
+            _formatted_isotope_list.append(_formatted_isotope_name)
+            _params_name_list.append('isotope_ratio_' + _formatted_isotope_name)
+
+        # for _each_param_name in _params_name_list:
+        #     _params_name_list_without_current =
+        #     _restriction_list.append('1.0 - '+)
+
+        for _name_index in range(len(_params_name_list)):
+            params_for_iso_fit.add(_params_name_list[_name_index],
+                                   value=self.isotope_stack[layer]['ratios'][_name_index],
+                                   min=0,
+                                   max=1,
+                                   expr=_restriction_list[_name_index])
+
+        # Print params before
+        print("Params before 'isotope' fitting:")
+        params_for_iso_fit.pretty_print()
+        # Fitting
+        self.fitted_iso_result = minimize(y_gap_for_iso_fitting, params_for_iso_fit, method='leastsq',
+                                          args=(self.exp_x_interp, self.exp_y_interp, layer, _formatted_isotope_list,
+                                                self.fitted_simulation, each_step))
+        # Print params after
+        print("Params after 'isotope' fitting:")
+        self.fitted_iso_result.__dict__['params'].pretty_print()
+        # Print chi^2
+        self.fitted_iso_residual = self.fitted_iso_result.__dict__['residual']
+        print("Fit iso chi^2 : {}\n".format(sum(self.fitted_iso_residual ** 2)))
+
+        return
+
+    def molar_conc(self):
+        molar_conc_units = 'mol/cm3'
+        print("Molar-conc. ({})\tBefore_fit\tAfter_fit".format(molar_conc_units))
         for _each_layer in self.layer_list:
             molar_mass_value = self.fitted_simulation.o_reso.stack[_each_layer][_each_layer]['molar_mass']['value']
             molar_mass_units = self.fitted_simulation.o_reso.stack[_each_layer][_each_layer]['molar_mass']['units']
             # Adding molar_mass to fitted_layer info
             self.fitted_layer.info[_each_layer]['molar_mass']['value'] = molar_mass_value
             self.fitted_layer.info[_each_layer]['molar_mass']['units'] = molar_mass_units
+            # Adding molar_mass to raw_layer info
+            self.raw_layer.info[_each_layer]['molar_mass']['value'] = molar_mass_value
+            self.raw_layer.info[_each_layer]['molar_mass']['units'] = molar_mass_units
             # Adding molar_concentration to fitted_layer info
             molar_conc_value = self.fitted_layer.info[_each_layer]['density']['value'] / molar_mass_value
-            molar_conc_units = 'mol/cm3'
             self.fitted_layer.info[_each_layer]['molar_conc']['value'] = molar_conc_value
             self.fitted_layer.info[_each_layer]['molar_conc']['units'] = molar_conc_units
-            print('Fitted molar conc. of {} is: {} ({})'.format(_each_layer, molar_conc_value, molar_conc_units))
+            # Calculate starting molar_concentration and fitted_layer info
+            start_molar_conc_value = self.raw_layer.info[_each_layer]['density']['value'] / molar_mass_value
+            self.raw_layer.info[_each_layer]['molar_conc']['value'] = start_molar_conc_value
+            self.raw_layer.info[_each_layer]['molar_conc']['units'] = molar_conc_units
+            # molar_conc_output[_each_layer] = {'Before_fit': start_molar_conc_value,
+            #                                   'After_fit': molar_conc_value}
+            print("{}\t{}\t{}".format(_each_layer, start_molar_conc_value, molar_conc_value))
 
         return self.fitted_layer.info
 

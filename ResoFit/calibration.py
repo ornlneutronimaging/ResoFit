@@ -88,16 +88,20 @@ class Calibration(Simulation):
         params_calibrate = Parameters()
         params_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=source_to_detector_vary_tag)
         params_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
+        # Print before
+        print("Params before calibration:")
+        params_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
         self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.experiment, self.baseline, each_step))
+        # Print after
+        print("Params after calibration:")
+        self.calibrate_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.calibrated_residual = self.calibrate_result.__dict__['residual']
-        print("Calibration chi^2 : {}".format(sum(self.calibrated_residual ** 2)))
-        # Print values give best fit
-        self.calibrate_result.__dict__['params'].pretty_print()
+        print("Calibration chi^2 : {}\n".format(sum(self.calibrated_residual ** 2)))
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
