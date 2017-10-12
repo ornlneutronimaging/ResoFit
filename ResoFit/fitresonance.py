@@ -128,16 +128,22 @@ class FitResonance(Experiment):
             _formatted_isotope_list.append(_formatted_isotope_name)
             _params_name_list.append('isotope_ratio_' + _formatted_isotope_name)
 
-        # for _each_param_name in _params_name_list:
-        #     _params_name_list_without_current =
-        #     _restriction_list.append('1.0 - '+)
-
         for _name_index in range(len(_params_name_list)):
             params_for_iso_fit.add(_params_name_list[_name_index],
                                    value=self.isotope_stack[layer]['ratios'][_name_index],
                                    min=0,
-                                   max=1,
-                                   expr=_restriction_list[_name_index])
+                                   max=1)
+                                   # expr=_restriction_list[_name_index])
+        # Create expr to restrict the total to be 1.0
+        for _each_param_name in _params_name_list:
+            _params_name_list_temp = _params_name_list[:]
+            _params_name_list_temp.remove(_each_param_name)
+            _params_name_list_temp.insert(0, '1.0')
+            _restriction_list.append(' - '.join(_params_name_list_temp))
+            print(_params_name_list_temp)
+        print(_restriction_list)
+        # for _each_restriction in _restriction_list:
+        # params_for_iso_fit.
 
         # Print params before
         print("Params before 'isotope' fitting:")
