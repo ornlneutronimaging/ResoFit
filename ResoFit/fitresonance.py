@@ -119,7 +119,8 @@ class FitResonance(Experiment):
     def fit_iso(self, layer, each_step=False):
         params_for_iso_fit = Parameters()
         self.isotope_stack[layer] = {'list': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['list'],
-                                     'ratios': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['isotopic_ratio']}
+                                     'ratios': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes'][
+                                         'isotopic_ratio']}
         _formatted_isotope_list = []
         _params_name_list = []
         _restriction_list = []
@@ -133,17 +134,19 @@ class FitResonance(Experiment):
                                    value=self.isotope_stack[layer]['ratios'][_name_index],
                                    min=0,
                                    max=1)
-                                   # expr=_restriction_list[_name_index])
+
+        # Restriction is not working as expected ###
         # Create expr to restrict the total to be 1.0
-        for _each_param_name in _params_name_list:
-            _params_name_list_temp = _params_name_list[:]
-            _params_name_list_temp.remove(_each_param_name)
-            _params_name_list_temp.insert(0, '1.0')
-            _restriction_list.append(' - '.join(_params_name_list_temp))
-            print(_params_name_list_temp)
-        print(_restriction_list)
-        # for _each_restriction in _restriction_list:
-        # params_for_iso_fit.
+        # for _each_param_name in _params_name_list:
+        #     _params_name_list_temp = _params_name_list[:]
+        #     _params_name_list_temp.remove(_each_param_name)
+        #     _params_name_list_temp.insert(0, '1.0')
+        #     _restriction_list.append(' - '.join(_params_name_list_temp))
+        #     print(_params_name_list_temp)
+        # print(_restriction_list)
+        # params_for_iso_fit.pretty_print()
+        # for _i in range(len(_restriction_list)):
+        #     params_for_iso_fit[_params_name_list[_i]].set(expr=_restriction_list[_i], vary=True)
 
         # Print params before
         print("Params before 'isotope' fitting:")
