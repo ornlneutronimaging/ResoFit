@@ -191,7 +191,7 @@ class FitResonance(Experiment):
         return self.fitted_layer.info
 
     def plot(self, error=True, before=False):
-        # Form signals from fitted raw_layer
+        # Form signals from fitted_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,
                                                 energy_max=self.energy_max,
@@ -216,7 +216,7 @@ class FitResonance(Experiment):
             simu_before_label = simu_before_label + '_' + each_layer
         plt.plot(simu_x, simu_y, 'b-', label=simu_label, markersize=1)
         if before is True:
-            # Form signals from raw raw_layer
+            # Form signals from raw_layer
             simulation = Simulation(energy_min=self.energy_min,
                                     energy_max=self.energy_max,
                                     energy_step=self.energy_step)

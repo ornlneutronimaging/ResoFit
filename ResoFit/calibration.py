@@ -139,17 +139,26 @@ class Calibration(Simulation):
             exp_label = exp_label + '_' + each_layer
             exp_interp_label = exp_interp_label + '_' + each_layer
             exp_before_label = exp_before_label + '_' + each_layer
+        # fig, axe = plt.subplot(2, 1)
         plt.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
         if interp is False:
             plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
         else:
-            plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label, markersize=1)
+            plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
+                     markersize=1)
         if before is True:
             plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
                      'ko', label=exp_before_label, markersize=1, alpha=0.6)
 
+        columns = self.calibrate_result.__dict__['var_names']
+        rows = ['Before', 'After']
+        # colors = plt.cm.BuPu(np.linspace(0, 0.5, len(rows)))
+        plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
+                                                               [self.calibrated_source_to_detector_m,
+                                                                self.calibrated_offset_us]], loc='bottom')
+        # plt.subplots_adjust(left=0.2, top=0.5)
         plt.title('Calibration result')
         plt.xlabel('Energy (eV)')
         plt.ylabel('Attenuation')

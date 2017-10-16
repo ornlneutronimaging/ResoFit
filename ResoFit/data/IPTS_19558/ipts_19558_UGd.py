@@ -66,23 +66,23 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.plot(before=before)
 
-# Fit sample density or thickness
-fit = FitResonance(spectra_file=spectra_file,
-                   data_file=data_file,
-                   folder=folder,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-fit.fit(layer, vary='density', each_step=each_step)
-fit.molar_conc()
+# # Fit sample density or thickness
+# fit = FitResonance(spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    folder=folder,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# fit.fit(layer, vary='density', each_step=each_step)
+# # # Fit isotope ratios
+# # fit.fit_iso(layer=layer_1)
+# fit.molar_conc()
+# fit.plot(before=before)
 
-# # Fit isotope ratios
-# fit.fit_iso(layer=layer_1)
-fit.plot(before=before)
