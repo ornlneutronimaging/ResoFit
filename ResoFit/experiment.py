@@ -75,7 +75,7 @@ class Experiment(object):
         """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
-        x_exp_raw = np.array(reso_utils.s_to_ev(self.spectra[0],  # x in seconds
+        x_exp_raw = np.array(reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
                                                 offset_us=offset_us,
                                                 source_to_detector_m=source_to_detector_m))
         if angstrom is True:
@@ -118,8 +118,8 @@ class Experiment(object):
         """
         self.offset_us = offset_us
         self.source_to_detector_m = source_to_detector_m
-        x_exp_raw = reso_utils.s_to_ev(self.spectra[0],  # x in seconds
-                                       offset_us=offset_us,
+        x_exp_raw = reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
+                                       offset_us=self.offset_us,
                                        source_to_detector_m=source_to_detector_m)
         _list = list(x_exp_raw)
         _x_max = _list[0]

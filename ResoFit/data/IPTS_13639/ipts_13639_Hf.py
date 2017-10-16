@@ -8,11 +8,11 @@ from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
 
 # Global parameters
-energy_min = 15
+energy_min = 14
 energy_max = 300
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
-layer_1 = 'Co'
+layer_1 = 'Hf'
 thickness_1 = 0.05  # mm
 density_1 = None
 # density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
@@ -26,12 +26,12 @@ layer = Layer()
 layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 
 folder = 'data/IPTS_13639/reso_data_13639'
-data_file = layer_1 + '.csv'
+data_file = 'Hf.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
-# norm_to_file = 'Ag.csv'
-baseline = False
+# norm_to_file = 'Hf.csv'
+baseline = True
 each_step = False
 
 repeat = 1

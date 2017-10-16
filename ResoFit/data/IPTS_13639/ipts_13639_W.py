@@ -25,12 +25,12 @@ density_1 = None
 layer = Layer()
 layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 
-folder = 'data/resonance_data/IPTS_13639'
+folder = 'data/IPTS_13639/reso_data_13639'
 data_file = 'W.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
-# norm_to_file = 'Ag.csv'
+norm_to_file = 'Hf.csv'
 baseline = True
 each_step = False
 

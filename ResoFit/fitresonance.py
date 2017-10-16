@@ -190,43 +190,7 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def plot_before(self):
-        # Form signals from raw raw_layer
-        simulation = Simulation(energy_min=self.energy_min,
-                                energy_max=self.energy_max,
-                                energy_step=self.energy_step)
-        for each_layer in self.layer_list:
-            simulation.add_layer(layer=each_layer,
-                                 layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
-                                 layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
-        simu_x, simu_y = simulation.xy_simu(angstrom=False, transmission=False)
-
-        # Get plot labels
-        simu_label = 'Ideal'
-        exp_label = 'Exp'
-        exp_interp_label = 'exp_interp'
-        for each_layer in self.layer_list:
-            simu_label = simu_label + '_' + each_layer
-            exp_label = exp_label + '_' + each_layer
-            exp_interp_label = exp_interp_label + '_' + each_layer
-
-        # Plot
-        plt.plot(simu_x, simu_y,
-                 'b-', label=simu_label, markersize=1)
-        plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
-                            source_to_detector_m=self.source_to_detector_m),
-                 self.y_raw(transmission=False, baseline=self.baseline),
-                 'ro', label=exp_label, markersize=1)
-
-        plt.title('Before fitting')
-        plt.xlabel('Energy (eV)')
-        plt.ylabel('Attenuation')
-        plt.ylim(ymax=1.01)
-        plt.xlim(0, self.energy_max)
-        plt.legend(loc='best')
-        plt.show()
-
-    def plot_after(self, error=True):
+    def plot(self, error=True, before=False):
         # Form signals from fitted raw_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,
@@ -242,25 +206,37 @@ class FitResonance(Experiment):
 
         # Get plot labels
         simu_label = 'Ideal'
+        simu_before_label = 'Ideal_before_fitting'
         exp_label = 'Exp'
         exp_interp_label = 'Exp_interp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
             exp_label = exp_label + '_' + each_layer
             exp_interp_label = exp_interp_label + '_' + each_layer
-        plt.plot(simu_x, simu_y,
-                 'b-', label=simu_label, markersize=1)
+            simu_before_label = simu_before_label + '_' + each_layer
+        plt.plot(simu_x, simu_y, 'b-', label=simu_label, markersize=1)
+        if before is True:
+            # Form signals from raw raw_layer
+            simulation = Simulation(energy_min=self.energy_min,
+                                    energy_max=self.energy_max,
+                                    energy_step=self.energy_step)
+            for each_layer in self.layer_list:
+                simulation.add_layer(layer=each_layer,
+                                     layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
+                                     layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
+            simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
+            plt.plot(simu_x, simu_y_before,
+                     'k-', label=simu_before_label, markersize=1, alpha=0.6)
 
         plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                             source_to_detector_m=self.source_to_detector_m),
                  self.y_raw(transmission=False, baseline=self.baseline),
                  'ro', label=exp_label, markersize=1)
-
         if error is True:
             # Plot fitting differences
             plt.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', alpha=0.8)
 
-        plt.title('Best fit')
+        plt.title('Fitting result')
         plt.xlabel('Energy (eV)')
         plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)

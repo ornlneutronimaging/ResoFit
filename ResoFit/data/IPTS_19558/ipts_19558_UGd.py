@@ -40,10 +40,11 @@ image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
+before = False
 
 repeat = 1
 source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.813  # 0#2.7120797253959119#2.7355447625559037
+offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate source_to_detector and/or delay
 calibration = Calibration(data_file=data_file,
@@ -63,8 +64,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-# calibration.plot_before()
-# calibration.plot_after()
+calibration.plot(before=before)
 
 # Fit sample density or thickness
 fit = FitResonance(spectra_file=spectra_file,
@@ -83,8 +83,6 @@ fit = FitResonance(spectra_file=spectra_file,
 fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
 
-# Fit isotope ratios
-fit.fit_iso(layer=layer_1)
-fit.molar_conc()
-fit.plot_before()
-fit.plot_after(error=True)
+# # Fit isotope ratios
+# fit.fit_iso(layer=layer_1)
+fit.plot(before=before)

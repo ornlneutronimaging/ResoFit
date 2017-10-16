@@ -12,8 +12,8 @@ energy_min = 15
 energy_max = 300
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
-layer_1 = 'Co'
-thickness_1 = 0.05  # mm
+layer_1 = 'Cd'
+thickness_1 = 0.5  # mm
 density_1 = None
 # density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
 # layer_2 = 'Gd'
@@ -30,8 +30,8 @@ data_file = layer_1 + '.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
-# norm_to_file = 'Ag.csv'
-baseline = False
+norm_to_file = 'In.csv'
+baseline = True
 each_step = False
 
 repeat = 1
@@ -49,7 +49,7 @@ calibration = Calibration(data_file=data_file,
                           folder=folder,
                           baseline=baseline)
 
-# calibration.norm_to(norm_to_file)
+calibration.norm_to(norm_to_file)
 calibration.slice(slice_start=image_start, slice_end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
@@ -59,21 +59,21 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 calibration.plot_before()
 calibration.plot_after()
 
-# Fit the peak height
-fit = FitResonance(folder=folder,
-                   spectra_file=spectra_file,
-                   data_file=data_file,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   # norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-fit.fit(layer, vary='thickness', each_step=each_step)
-fit.molar_conc()
-fit.plot_before()
-fit.plot_after()
+# # Fit the peak height
+# fit = FitResonance(folder=folder,
+#                    spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# fit.fit(layer, vary='thickness', each_step=each_step)
+# fit.molar_conc()
+# fit.plot_before()
+# fit.plot_after()

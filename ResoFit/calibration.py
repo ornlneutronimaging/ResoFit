@@ -122,56 +122,35 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot_before(self):
-        """
-        Plot the raw experimental data and theoretical resonance signal before calibration
-        :return: plot of raw experimental data and theoretical resonance signal before calibration
-        """
-        simu_label = 'Ideal'
-        exp_label = 'Exp'
-        for each_layer in self.layer_list:
-            simu_label = simu_label + '_' + each_layer
-            exp_label = exp_label + '_' + each_layer
-        plt.plot(self.simu_x, self.simu_y,
-                 'b-', label=simu_label, markersize=1)
-
-        plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
-                                       source_to_detector_m=self.init_source_to_detector_m),
-                 self.experiment.y_raw(baseline=self.baseline),
-                 'ro', label=simu_label, markersize=1)
-
-        plt.title('Before Calibration')
-        plt.xlabel('Energy (eV)')
-        plt.ylabel('Attenuation')
-        plt.ylim(ymax=1.01)
-        plt.xlim(0, self.energy_max)
-        plt.legend(loc='best')
-        plt.show()
-
-    def plot_after(self, interp=False):
+    def plot(self, interp=False, before=False):
         """
         Plot the raw experimental data and theoretical resonance signal after calibration
+        :param before: boolean. Plot the data before calibration applied.
         :param interp: boolean. True -> display interpolated exp data
                                 False -> display raw exp data
         :return: plot of raw experimental data and theoretical resonance signal after calibration
         """
         simu_label = 'Ideal'
         exp_label = 'Exp'
+        exp_before_label = 'Exp_before_calibration'
         exp_interp_label = 'Exp_interp'
         for each_layer in self.layer_list:
             simu_label = simu_label + '_' + each_layer
             exp_label = exp_label + '_' + each_layer
             exp_interp_label = exp_interp_label + '_' + each_layer
-        plt.plot(self.simu_x, self.simu_y,
-                 'b-', label=simu_label, markersize=1)
+            exp_before_label = exp_before_label + '_' + each_layer
+        plt.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
         if interp is False:
-            plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
-                     'ro', label=exp_label, markersize=1)
+            plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
         else:
-            plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
-                     'r-.', label=exp_interp_label, markersize=1)
+            plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label, markersize=1)
+        if before is True:
+            plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
+                                           source_to_detector_m=self.init_source_to_detector_m),
+                     self.experiment.y_raw(baseline=self.baseline),
+                     'ko', label=exp_before_label, markersize=1, alpha=0.6)
 
-        plt.title('After Calibration')
+        plt.title('Calibration result')
         plt.xlabel('Energy (eV)')
         plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
