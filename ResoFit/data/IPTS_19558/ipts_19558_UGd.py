@@ -43,7 +43,7 @@ each_step = False
 before = False
 
 repeat = 1
-source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
+source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate source_to_detector and/or delay
@@ -64,6 +64,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
+
 calibration.plot(before=before)
 
 # # Fit sample density or thickness
@@ -80,7 +81,8 @@ calibration.plot(before=before)
 #                    slice_start=image_start,
 #                    slice_end=image_end,
 #                    baseline=baseline)
-# fit.fit(layer, vary='density', each_step=each_step)
+# fit_result = fit.fit(layer, vary='density', each_step=each_step)
+# pprint.pprint(fit_result.__dict__)
 # # # Fit isotope ratios
 # # fit.fit_iso(layer=layer_1)
 # fit.molar_conc()

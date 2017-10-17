@@ -122,10 +122,11 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self, interp=False, before=False):
+    def plot(self, interp=False, before=False, params=True):
         """
         Plot the raw experimental data and theoretical resonance signal after calibration
-        :param before: boolean. Plot the data before calibration applied.
+        :param params: boolean. True -> display table of calibrated parameters
+        :param before: boolean. True -> plot the raw data before calibration applied.
         :param interp: boolean. True -> display interpolated exp data
                                 False -> display raw exp data
         :return: plot of raw experimental data and theoretical resonance signal after calibration
@@ -139,7 +140,13 @@ class Calibration(Simulation):
             exp_label = exp_label + '_' + each_layer
             exp_interp_label = exp_interp_label + '_' + each_layer
             exp_before_label = exp_before_label + '_' + each_layer
-        # fig, axe = plt.subplot(2, 1)
+        # Plot params calibrated result as table
+        if params is True:
+            row_num = 2
+        else:
+            row_num = 1
+        # Plot graph
+        plt.subplot(row_num, 1, 1)
         plt.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
         if interp is False:
             plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
@@ -151,18 +158,25 @@ class Calibration(Simulation):
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
                      'ko', label=exp_before_label, markersize=1, alpha=0.6)
-
-        columns = self.calibrate_result.__dict__['var_names']
-        rows = ['Before', 'After']
-        # colors = plt.cm.BuPu(np.linspace(0, 0.5, len(rows)))
-        plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
-                                                               [self.calibrated_source_to_detector_m,
-                                                                self.calibrated_offset_us]], loc='bottom')
-        # plt.subplots_adjust(left=0.2, top=0.5)
         plt.title('Calibration result')
         plt.xlabel('Energy (eV)')
         plt.ylabel('Attenuation')
         plt.ylim(ymax=1.01)
         plt.xlim(0, self.energy_max)
         plt.legend(loc='best')
+
+        # Plot table
+        plt.subplot(row_num, 1, 2)
+        plt.axis('off')
+        columns = self.calibrate_result.__dict__['var_names']
+        rows = ['Before', 'After']
+        _row_before = []
+        _row_after = []
+        for _each in columns:
+            _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
+            _row_before.append(self.calibrate_result.__dict__['init_values'][_each])
+        plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
+                                                               [self.calibrated_source_to_detector_m,
+                                                                self.calibrated_offset_us]], loc='center')
+
         plt.show()
