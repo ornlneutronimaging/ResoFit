@@ -50,6 +50,7 @@ class Calibration(Simulation):
         self.exp_y_interp_calibrated = None
         self.baseline = baseline
         self.calibrated_residual = None
+        self.params_to_calibrate = None
         self.raw_layer = raw_layer
 
     def norm_to(self, file):
@@ -85,14 +86,14 @@ class Calibration(Simulation):
         if vary == 'none':
             source_to_detector_vary_tag = False
             offset_vary_tag = False
-        params_calibrate = Parameters()
-        params_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=source_to_detector_vary_tag)
-        params_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
+        self.params_to_calibrate = Parameters()
+        self.params_to_calibrate.add('source_to_detector_m', value=source_to_detector_m, vary=source_to_detector_vary_tag)
+        self.params_to_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
         # Print before
         print("Params before calibration:")
-        params_calibrate.pretty_print()
+        self.params_to_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
-        self.calibrate_result = minimize(y_gap_for_calibration, params_calibrate, method='leastsq',
+        self.calibrate_result = minimize(y_gap_for_calibration, self.params_to_calibrate, method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.experiment, self.baseline, each_step))
@@ -122,10 +123,10 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self, interp=False, before=False, params=True):
+    def plot(self, interp=False, before=False, table=True):
         """
         Plot the raw experimental data and theoretical resonance signal after calibration
-        :param params: boolean. True -> display table of calibrated parameters
+        :param table: boolean. True -> display table of calibrated parameters
         :param before: boolean. True -> plot the raw data before calibration applied.
         :param interp: boolean. True -> display interpolated exp data
                                 False -> display raw exp data
@@ -141,11 +142,13 @@ class Calibration(Simulation):
             exp_interp_label = exp_interp_label + '_' + each_layer
             exp_before_label = exp_before_label + '_' + each_layer
         # Plot params calibrated result as table
-        if params is True:
+        if table is True:
             row_num = 2
         else:
             row_num = 1
         # Plot graph
+        # fig = plt.figure()
+        # ax1_fig = fig.add_subplot()
         plt.subplot(row_num, 1, 1)
         plt.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
         if interp is False:
@@ -166,17 +169,19 @@ class Calibration(Simulation):
         plt.legend(loc='best')
 
         # Plot table
-        plt.subplot(row_num, 1, 2)
-        plt.axis('off')
-        columns = self.calibrate_result.__dict__['var_names']
-        rows = ['Before', 'After']
-        _row_before = []
-        _row_after = []
-        for _each in columns:
-            _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
-            _row_before.append(self.calibrate_result.__dict__['init_values'][_each])
-        plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
-                                                               [self.calibrated_source_to_detector_m,
-                                                                self.calibrated_offset_us]], loc='center')
+        if table is True:
+            plt.subplot(row_num, 1, 2)
+            plt.axis('off')
+            columns = self.calibrate_result.__dict__['var_names']
+            rows = ['Before', 'After']
+            _row_before = []
+            _row_after = []
+            for _each in columns:
+                _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
+                _row_before.append(self.params_to_calibrate.valuesdict()[_each])
+            plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
+                                                                   [self.calibrated_source_to_detector_m,
+                                                                    self.calibrated_offset_us]], loc='center')
 
+        plt.tight_layout()
         plt.show()

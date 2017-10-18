@@ -26,6 +26,7 @@ class FitResonance(Experiment):
     raw_layer = None
     fitted_iso_result = None
     fitted_iso_residual = None
+    params_for_fit = None
     isotope_stack = {}
 
     def __init__(self, spectra_file, data_file,
@@ -64,25 +65,27 @@ class FitResonance(Experiment):
         if vary == 'none':
             density_vary_tag = False
         self.raw_layer = raw_layer
+
         '''Load params'''
+
         self.layer_list = list(raw_layer.info.keys())
-        params_for_fit = Parameters()
+        self.params_for_fit = Parameters()
         for _each_layer in self.layer_list:
             if self.raw_layer.info[_each_layer]['density']['value'] is np.NaN:
                 self.raw_layer.info[_each_layer]['density']['value'] = pt.elements.isotope(_each_layer).density
-            params_for_fit.add('thickness_mm_' + _each_layer,
-                               value=self.raw_layer.info[_each_layer]['thickness']['value'],
-                               vary=thickness_vary_tag,
-                               min=0)
-            params_for_fit.add('density_gcm3_' + _each_layer,
-                               value=self.raw_layer.info[_each_layer]['density']['value'],
-                               vary=density_vary_tag,
-                               min=0)
+            self.params_for_fit.add('thickness_mm_' + _each_layer,
+                                    value=self.raw_layer.info[_each_layer]['thickness']['value'],
+                                    vary=thickness_vary_tag,
+                                    min=0)
+            self.params_for_fit.add('density_gcm3_' + _each_layer,
+                                    value=self.raw_layer.info[_each_layer]['density']['value'],
+                                    vary=density_vary_tag,
+                                    min=0)
         # Print before
         print("Params before '{}' fitting:".format(vary))
-        params_for_fit.pretty_print()
+        self.params_for_fit.pretty_print()
         # Fitting
-        self.fit_result = minimize(y_gap_for_fitting, params_for_fit, method='leastsq',
+        self.fit_result = minimize(y_gap_for_fitting, self.params_for_fit, method='leastsq',
                                    args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
         # Print after
@@ -93,6 +96,7 @@ class FitResonance(Experiment):
         print("Fitting chi^2 : {}\n".format(sum(self.fitted_residual ** 2)))
 
         '''Export fitted params as Layer()'''
+
         # Save the fitted 'density' or 'thickness' in Layer()
         self.fitted_layer = Layer()
         for _each_layer in self.layer_list:
@@ -105,6 +109,7 @@ class FitResonance(Experiment):
         # print(self.fit_result.__dict__['fjac'][0])
 
         '''Create fitted simulation'''
+
         self.fitted_simulation = Simulation(energy_min=self.energy_min,
                                             energy_max=self.energy_max,
                                             energy_step=self.energy_step)
@@ -113,7 +118,6 @@ class FitResonance(Experiment):
                                              layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                  'value'],
                                              layer_density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
-
         return self.fit_result
 
     def fit_iso(self, layer, each_step=False):
@@ -123,7 +127,7 @@ class FitResonance(Experiment):
                                          'isotopic_ratio']}
         _formatted_isotope_list = []
         _params_name_list = []
-        _restriction_list = []
+        # _restriction_list = []
         for _isotope_index in range(len(self.isotope_stack[layer]['list'])):
             _formatted_isotope_name = self.isotope_stack[layer]['list'][_isotope_index].replace('-', '_')
             _formatted_isotope_list.append(_formatted_isotope_name)
@@ -190,7 +194,7 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def plot(self, interp=False, error=True, before=False, params=True):
+    def plot(self, interp=False, error=True, before=False, table=True):
         # Form signals from fitted_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,
@@ -215,7 +219,7 @@ class FitResonance(Experiment):
             exp_interp_label = exp_interp_label + '_' + each_layer
             simu_before_label = simu_before_label + '_' + each_layer
 
-        if params is True:
+        if table is True:
             row_num = 2
         else:
             row_num = 1
@@ -259,15 +263,17 @@ class FitResonance(Experiment):
         plt.legend(loc='best')
 
         # Plot table
-        plt.subplot(row_num, 1, 2)
-        columns = self.fit_result.__dict__['var_names']
-        rows = ['Before', 'After']
-        _row_before = []
-        _row_after = []
-        for _each in columns:
-            _row_after.append(self.fit_result.__dict__['params'].valuesdict()[_each])
-            _row_before.append(self.fit_result.__dict__['init_values'][_each])
-        plt.table(rowLabels=rows, colLabels=columns,cellText=[_row_before, _row_after], loc='center')
-        plt.axis('off')
+        if table is True:
+            plt.subplot(row_num, 1, 2)
+            columns = self.fit_result.__dict__['var_names']
+            rows = ['Before', 'After']
+            _row_before = []
+            _row_after = []
+            for _each in columns:
+                _row_after.append(self.fit_result.__dict__['params'].valuesdict()[_each])
+                _row_before.append(self.params_for_fit.valuesdict()[_each])
+            plt.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='center')
+            plt.axis('off')
 
+        plt.tight_layout()
         plt.show()

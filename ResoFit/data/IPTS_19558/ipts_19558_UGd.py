@@ -41,6 +41,7 @@ norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
 before = False
+table = False
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -65,7 +66,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 
-calibration.plot(before=before)
+calibration.plot(before=before, table=table)
 
 # # Fit sample density or thickness
 # fit = FitResonance(spectra_file=spectra_file,
@@ -82,9 +83,8 @@ calibration.plot(before=before)
 #                    slice_end=image_end,
 #                    baseline=baseline)
 # fit_result = fit.fit(layer, vary='density', each_step=each_step)
-# pprint.pprint(fit_result.__dict__)
 # # # Fit isotope ratios
 # # fit.fit_iso(layer=layer_1)
 # fit.molar_conc()
-# fit.plot(before=before)
+# fit.plot(before=before, table=table)
 
