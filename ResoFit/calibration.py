@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import peakutils as pku
 from lmfit import Parameters
 from scipy.interpolate import interp1d
@@ -146,32 +147,36 @@ class Calibration(Simulation):
             row_num = 2
         else:
             row_num = 1
+
+        gs = gridspec.GridSpec(row_num, 1)
+
         # Plot graph
-        # fig = plt.figure()
-        # ax1_fig = fig.add_subplot()
-        plt.subplot(row_num, 1, 1)
-        plt.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
+        fig = plt.figure()
+        ax1 = fig.add_subplot(row_num, 1, 1)
+        ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
         if interp is False:
-            plt.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
+            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
         else:
-            plt.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
+            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
                      markersize=1)
         if before is True:
-            plt.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
+            ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
                      'ko', label=exp_before_label, markersize=1, alpha=0.6)
-        plt.title('Calibration result')
-        plt.xlabel('Energy (eV)')
-        plt.ylabel('Attenuation')
-        plt.ylim(ymax=1.01)
-        plt.xlim(0, self.energy_max)
-        plt.legend(loc='best')
+        ax1.set_xlim([0, self.energy_max])
+        ax1.set_ylim([0, 1.01])
+        ax1.set_title('Calibration result')
+        ax1.set_xlabel('Energy (eV)')
+        ax1.set_ylabel('Attenuation')
+        # plt.ylim(ymax=1.01)
+        # plt.xlim(0, self.energy_max)
+        ax1.legend(loc='best')
 
         # Plot table
         if table is True:
-            plt.subplot(row_num, 1, 2)
-            plt.axis('off')
+            ax2 = fig.add_subplot(row_num, 1, 2)
+            ax2.axis('off')
             columns = self.calibrate_result.__dict__['var_names']
             rows = ['Before', 'After']
             _row_before = []
@@ -179,9 +184,10 @@ class Calibration(Simulation):
             for _each in columns:
                 _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
                 _row_before.append(self.params_to_calibrate.valuesdict()[_each])
-            plt.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
+            ax2.table(rowLabels=rows, colLabels=columns, cellText=[[self.init_source_to_detector_m, self.init_offset_us],
                                                                    [self.calibrated_source_to_detector_m,
                                                                     self.calibrated_offset_us]], loc='center')
+            ax2.set_title('Table of parameters')
 
         plt.tight_layout()
         plt.show()

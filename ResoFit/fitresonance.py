@@ -121,6 +121,15 @@ class FitResonance(Experiment):
         return self.fit_result
 
     def fit_iso(self, layer, each_step=False):
+        """
+
+        :param layer:
+        :type layer:
+        :param each_step:
+        :type each_step:
+        :return:
+        :rtype:
+        """
         params_for_iso_fit = Parameters()
         self.isotope_stack[layer] = {'list': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['list'],
                                      'ratios': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes'][
@@ -195,6 +204,20 @@ class FitResonance(Experiment):
         return self.fitted_layer.info
 
     def plot(self, interp=False, error=True, before=False, table=True):
+        """
+
+        :param interp:
+        :type interp:
+        :param error:
+        :type error:
+        :param before:
+        :type before:
+        :param table:
+        :type table:
+        :return:
+        :rtype:
+        """
+
         # Form signals from fitted_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,

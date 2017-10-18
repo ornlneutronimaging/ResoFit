@@ -13,7 +13,7 @@ energy_max = 300
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layer_1 = 'Co'
-thickness_1 = 0.05  # mm
+thickness_1 = 0.025  # mm
 density_1 = None
 # density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
 # layer_2 = 'Gd'
@@ -34,9 +34,10 @@ norm_to_file = 'Ag.csv'
 baseline = True
 each_step = False
 before = False
+table = True
 
 repeat = 1
-source_to_detector_m = 16.123278721983177  # 16#16.445359069030175#16.447496101100739
+source_to_detector_m = 16.293278721983177  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
@@ -57,7 +58,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.plot(before=before)
+calibration.plot(before=before, table=table)
 
 
 # # Fit the peak height
