@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -158,8 +157,6 @@ fabric.properties
 # mac
 
 # Packages
-*.egg-info
-dist
 eggs
 parts
 bin
@@ -167,5 +164,6 @@ var
 sdist
 MANIFEST
 
-.idea/preferred-vcs.xml
+documentation/source/_templates/
 .idea/sf-acc.xml
+.idea/preferred-vcs.xml
