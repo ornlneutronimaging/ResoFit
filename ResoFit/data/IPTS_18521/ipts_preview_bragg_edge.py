@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from ResoFit.experiment import Experiment
 import peakutils as pku
 
-folder = 'data/bragg_edge_data/IPTS_18521/bragg_data_18521'
+folder = 'data/IPTS_18521/bragg_data_18521'
 data_file1 = 'run_42_image0_small.txt'
 ob_file1 = 'run_42_image0_small_ob.txt'
 spectra_file = 'Image017_Spectra.txt'
@@ -68,4 +68,5 @@ experiment4.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detecto
 # x2, y2 = experiment2.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 #                                energy_min=7, energy_max=150, energy_step=0.01)
 # plt.plot(x2, y2, 'k.', label='interp2')
+plt.title('IPTS-18521 CT Bragg-edge data of spheres')
 plt.show()

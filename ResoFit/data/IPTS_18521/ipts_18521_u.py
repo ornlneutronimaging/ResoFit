@@ -32,7 +32,7 @@ layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 # layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
-folder = 'data'
+folder = 'data/IPTS_18521/reso_data_18521'
 data_file = 'run_33_resonance.txt'
 spectra_file = 'Image033_Spectra.txt'
 image_start = None  # Can be omitted or =None
@@ -63,12 +63,12 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-# calibration.plot_before()
-# calibration.plot_after()
+calibration.plot()
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
                    data_file=data_file,
+                   folder=folder,
                    repeat=repeat,
                    energy_min=energy_min,
                    energy_max=energy_max,
@@ -81,5 +81,4 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
-fit.plot_before()
-fit.plot_after(error=True)
+fit.plot(error=True)

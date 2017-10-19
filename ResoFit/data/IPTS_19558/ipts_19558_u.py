@@ -32,18 +32,18 @@ layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
-folder = 'data'
+folder = 'data/IPTS_19558/reso_data_19558'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = None  # 'sphere_background_1.csv'
+norm_to_file = 'spheres_background_1.csv'  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.813  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.75  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -63,12 +63,12 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-# calibration.plot_before()
-# calibration.plot_after()
+calibration.plot(before=False)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
                    data_file=data_file,
+                   folder=folder,
                    repeat=repeat,
                    energy_min=energy_min,
                    energy_max=energy_max,
@@ -79,7 +79,6 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit.fit(layer, vary='density', each_step=each_step)
+fit_result = fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
-fit.plot_before()
-fit.plot_after(error=True)
+fit.plot()

@@ -248,8 +248,8 @@ class FitResonance(Experiment):
             row_num = 1
 
         # Plot graph
-        plt.subplot(row_num, 1, 1)
-        plt.plot(simu_x, simu_y, 'b-', label=simu_label, markersize=1)
+        ax1 = plt.subplot2grid(shape=(10, 10), loc=(1, 1), rowspan=8, colspan=8)
+        ax1.plot(simu_x, simu_y, 'b-', label=simu_label, markersize=1)
         if before is True:
             # Form signals from raw_layer
             simulation = Simulation(energy_min=self.energy_min,
@@ -260,7 +260,7 @@ class FitResonance(Experiment):
                                      layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
                                      layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
             simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
-            plt.plot(simu_x, simu_y_before,
+            ax1.plot(simu_x, simu_y_before,
                      'k-', label=simu_before_label, markersize=1, alpha=0.6)
         if interp is True:
             x_interp, y_interp = self.xy_scaled(energy_max=self.energy_max, energy_min=self.energy_min,
@@ -268,26 +268,25 @@ class FitResonance(Experiment):
                                                 angstrom=False, transmission=False, baseline=self.baseline,
                                                 offset_us=self.calibrated_offset_us,
                                                 source_to_detector_m=self.source_to_detector_m)
-            plt.plot(x_interp, y_interp, 'r-.', label=exp_interp_label, markersize=1)
+            ax1.plot(x_interp, y_interp, 'r-.', label=exp_interp_label, markersize=1)
         else:
-            plt.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
+            ax1.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                                 source_to_detector_m=self.source_to_detector_m),
                      self.y_raw(transmission=False, baseline=self.baseline),
                      'ro', label=exp_label, markersize=1)
         if error is True:
             # Plot fitting differences
-            plt.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', alpha=0.8)
+            ax1.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', alpha=0.8)
 
-        plt.title('Fitting result')
-        plt.xlabel('Energy (eV)')
-        plt.ylabel('Attenuation')
-        plt.ylim(ymax=1.01)
-        plt.xlim(0, self.energy_max)
-        plt.legend(loc='best')
+        ax1.set_xlim([0, self.energy_max])
+        ax1.set_ylim(ymax=1.01)
+        ax1.set_title('Fitting result')
+        ax1.set_xlabel('Energy (eV)')
+        ax1.set_ylabel('Attenuation')
+        ax1.legend(loc='upper left')
 
         # Plot table
         if table is True:
-            plt.subplot(row_num, 1, 2)
             columns = self.fit_result.__dict__['var_names']
             rows = ['Before', 'After']
             _row_before = []
@@ -295,8 +294,8 @@ class FitResonance(Experiment):
             for _each in columns:
                 _row_after.append(self.fit_result.__dict__['params'].valuesdict()[_each])
                 _row_before.append(self.params_for_fit.valuesdict()[_each])
-            plt.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='center')
-            plt.axis('off')
+            table = ax1.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='upper right')
+            table.scale(0.5, 1)
 
         plt.tight_layout()
         plt.show()
