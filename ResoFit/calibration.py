@@ -132,9 +132,11 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self, interp=False, before=False, table=True, grid=False):
+    def plot(self, table=True, grid=True, before=False, interp=False):
         """
         Plot the raw experimental data and theoretical resonance signal after calibration
+        :param grid:
+        :type grid:
         :param table: boolean. True -> display table of calibrated parameters
         :param before: boolean. True -> plot the raw data before calibration applied.
         :param interp: boolean. True -> display interpolated exp data

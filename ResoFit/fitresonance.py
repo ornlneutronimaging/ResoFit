@@ -203,7 +203,7 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def plot(self, interp=False, error=True, before=False, table=True, grid=False):
+    def plot(self, error=True, table=True, grid=True, before=False, interp=False):
         """
 
         :param grid:
