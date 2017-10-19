@@ -22,7 +22,7 @@ layer_1 = 'U'
 thickness_1 = 0.018
 density_1 = None
 layer_2 = 'Gd'
-thickness_2 = 0.015
+thickness_2 = 0.08
 density_2 = None
 # layer_3 = 'Cd'
 # thickness_3 = 0.015
@@ -40,6 +40,9 @@ image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
+table = True
+grid = True
+fit_vary = 'thickness'
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -79,6 +82,6 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit_result = fit.fit(layer, vary='density', each_step=each_step)
+fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
 fit.plot()
