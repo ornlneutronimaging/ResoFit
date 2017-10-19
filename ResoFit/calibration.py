@@ -17,16 +17,23 @@ class Calibration(Simulation):
         """
         Initialization with passed file location and sample info
         :param spectra_file:
+        :type spectra_file:
         :param data_file:
-        :param layer:
-        :param thickness_mm:
-        :param density_gcm3:
+        :type data_file:
+        :param raw_layer:
+        :type raw_layer:
         :param energy_min:
+        :type energy_min:
         :param energy_max:
+        :type energy_max:
         :param energy_step:
+        :type energy_step:
         :param repeat:
+        :type repeat:
         :param folder:
-        :param baseline: boolean. True -> to remove baseline/background by detrend
+        :type folder:
+        :param baseline: True -> to remove baseline/background by detrend
+        :type baseline: boolean
         """
         super().__init__(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
         for _each_layer in list(raw_layer.info.keys()):
@@ -139,7 +146,7 @@ class Calibration(Simulation):
         exp_before_label = 'Exp_raw'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
-        fig_title = 'Calibration result of ' + sample_name
+        fig_title = 'Calibration result of sample ' + '(' + sample_name + ')'
 
         # Plot graph
         if table is True:
@@ -151,7 +158,7 @@ class Calibration(Simulation):
             ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
-                     'gs', label=exp_before_label, markersize=2)
+                     'cs', label=exp_before_label, markersize=2)
         if interp is False:
             ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'rx', label=exp_label, markersize=2)
         else:
@@ -163,6 +170,8 @@ class Calibration(Simulation):
         ax1.set_xlabel('Energy (eV)')
         ax1.set_ylabel('Attenuation')
         ax1.legend(loc='best')
+        # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
+        # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)
         if grid is True:
             # ax1.set_xticks(np.arange(0, 100, 10))
             # ax1.set_yticks(np.arange(0, 1., 0.1))
@@ -179,24 +188,16 @@ class Calibration(Simulation):
             for _each in columns:
                 _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
                 _row_before.append(self.params_to_calibrate.valuesdict()[_each])
-            table = ax1.table(rowLabels=rows, colLabels=columns,
+            table = ax1.table(rowLabels=rows, colLabels=columns,  # colWidths=
                               cellText=[[self.init_source_to_detector_m, self.init_offset_us],
                                         [self.calibrated_source_to_detector_m,
-                                         self.calibrated_offset_us]],
-                              bbox=[0, -0.33, 1.0, 0.18])
+                                         self.calibrated_offset_us]],  # rows of data values
+                              bbox=[0, -0.33, 1.0, 0.18]  # [left,bottom,width,height]
+                              )
             # table.scale(0.5, 1)
             table.auto_set_font_size(False)
             table.set_fontsize(10)
-            # table.set_fontsize(24)
-            # table.scale(4, 4)
-            # ax2.set_title('Table of parameters')
+            plt.tight_layout()
 
-        # def on_plot_hover(event):
-        #     for curve in ax1.get_lines():
-        #         if curve.contains(event)[0]:
-        #             print("over %s" % curve.get_gid())
-        #
-        # fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)
-        # plt.suptitle(fig_title)
-        plt.tight_layout()
         plt.show()
+        # plt.savefig('test.tiff', dpi=300)

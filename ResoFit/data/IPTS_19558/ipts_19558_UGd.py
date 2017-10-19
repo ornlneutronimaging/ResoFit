@@ -40,7 +40,7 @@ image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
-before = False
+before = True
 table = True
 grid = True
 

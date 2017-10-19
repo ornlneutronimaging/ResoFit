@@ -239,7 +239,7 @@ class FitResonance(Experiment):
         exp_label = 'Exp'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
-        fig_title = 'Fitting result of ' + sample_name
+        fig_title = 'Fitting result of sample ' + '(' + sample_name + ')'
 
         # Plot graph
         if table is True:
@@ -258,7 +258,7 @@ class FitResonance(Experiment):
                                      layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
             simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
             ax1.plot(simu_x, simu_y_before,
-                     'g:', label=simu_before_label, linewidth=1)
+                     'c-.', label=simu_before_label, linewidth=1)
         # Plot after fitting
         ax1.plot(simu_x, simu_y, 'b-', label=simu_label, linewidth=1)
         if interp is True:
@@ -274,10 +274,10 @@ class FitResonance(Experiment):
             ax1.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                                 source_to_detector_m=self.source_to_detector_m),
                      self.y_raw(transmission=False, baseline=self.baseline),
-                     'rx', label=exp_label, markersize=1)
+                     'rx', label=exp_label, markersize=2)
         if error is True:
             # Plot fitting differences
-            ax1.plot(simu_x, self.fitted_residual - 0.2, 'k-', label='Diff.', linewidth=1, alpha=0.7)
+            ax1.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', linewidth=1, alpha=1)
 
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)
@@ -301,6 +301,9 @@ class FitResonance(Experiment):
                 _row_before.append(self.params_for_fit.valuesdict()[_each])
             table = ax1.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='upper right',
                               bbox=[0, -0.33, 1.0, 0.18])
+            table.auto_set_font_size(False)
+            table.set_fontsize(10)
+            plt.tight_layout()
 
-        plt.tight_layout()
         plt.show()
+        plt.savefig('test.tiff')
