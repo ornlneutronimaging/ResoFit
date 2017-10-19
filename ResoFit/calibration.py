@@ -125,7 +125,7 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self, interp=False, before=False, table=True):
+    def plot(self, interp=False, before=False, table=True, grid=False):
         """
         Plot the raw experimental data and theoretical resonance signal after calibration
         :param table: boolean. True -> display table of calibrated parameters
@@ -136,41 +136,37 @@ class Calibration(Simulation):
         """
         simu_label = 'Ideal'
         exp_label = 'Exp'
-        exp_before_label = 'Exp_before_calibration'
+        exp_before_label = 'Exp_raw'
         exp_interp_label = 'Exp_interp'
-        for each_layer in self.layer_list:
-            simu_label = simu_label + '_' + each_layer
-            exp_label = exp_label + '_' + each_layer
-            exp_interp_label = exp_interp_label + '_' + each_layer
-            exp_before_label = exp_before_label + '_' + each_layer
-        # Plot params calibrated result as table
-        if table is True:
-            row_num = 2
-        else:
-            row_num = 1
-
-        # gs = gridspec.GridSpec(row_num, 1)
+        sample_name = ' & '.join(self.layer_list)
+        fig_title = 'Calibration result of ' + sample_name
 
         # Plot graph
-        # fig = plt.figure()
-        ax1 = plt.subplot2grid(shape=(10, 10), loc=(1, 1), rowspan=8, colspan=8)
-        ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, markersize=1)
-        if interp is False:
-            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'ro', label=exp_label, markersize=1)
+        if table is True:
+            ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
         else:
-            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
-                     markersize=1)
+            ax1 = plt.subplot(111)
+        ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
         if before is True:
             ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
-                     'ko', label=exp_before_label, markersize=1, alpha=0.6)
+                     'gs', label=exp_before_label, markersize=2)
+        if interp is False:
+            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'rx', label=exp_label, markersize=2)
+        else:
+            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
+                     linewidth=1)
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)
-        ax1.set_title('Calibration result')
+        ax1.set_title(fig_title)
         ax1.set_xlabel('Energy (eV)')
         ax1.set_ylabel('Attenuation')
-        ax1.legend(loc='upper left')
+        ax1.legend(loc='best')
+        if grid is True:
+            # ax1.set_xticks(np.arange(0, 100, 10))
+            # ax1.set_yticks(np.arange(0, 1., 0.1))
+            ax1.grid()
 
         # Plot table
         if table is True:
@@ -186,10 +182,11 @@ class Calibration(Simulation):
             table = ax1.table(rowLabels=rows, colLabels=columns,
                               cellText=[[self.init_source_to_detector_m, self.init_offset_us],
                                         [self.calibrated_source_to_detector_m,
-                                         self.calibrated_offset_us]], loc='upper right')
-            table.scale(0.5,1)
-            # table.auto_set_font_size(False)
-            # table.set_fontsize(10)
+                                         self.calibrated_offset_us]],
+                              bbox=[0, -0.33, 1.0, 0.18])
+            # table.scale(0.5, 1)
+            table.auto_set_font_size(False)
+            table.set_fontsize(10)
             # table.set_fontsize(24)
             # table.scale(4, 4)
             # ax2.set_title('Table of parameters')
@@ -200,6 +197,6 @@ class Calibration(Simulation):
         #             print("over %s" % curve.get_gid())
         #
         # fig.canvas.mpl_connect('motion_notify_event', on_plot_hover)
-        # plt.suptitle('Calibration result')
+        # plt.suptitle(fig_title)
         plt.tight_layout()
         plt.show()
