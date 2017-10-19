@@ -40,6 +40,7 @@ image_end = None  # Can be omitted or =None
 norm_to_file = 'spheres_background_1.csv'  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
+before = True
 
 repeat = 1
 source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
@@ -63,7 +64,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.plot(before=False)
+calibration.plot(before=before)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -81,4 +82,4 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit_result = fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
-fit.plot()
+fit.plot(before=before)

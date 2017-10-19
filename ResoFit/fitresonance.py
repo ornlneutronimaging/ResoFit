@@ -306,4 +306,4 @@ class FitResonance(Experiment):
             plt.tight_layout()
 
         plt.show()
-        plt.savefig('test.tiff')
+        # plt.savefig('test.tiff')

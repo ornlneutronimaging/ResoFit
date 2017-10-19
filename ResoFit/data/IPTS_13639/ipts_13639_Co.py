@@ -35,6 +35,7 @@ baseline = True
 each_step = False
 before = False
 table = True
+fit_vary = 'thickness'
 
 repeat = 1
 source_to_detector_m = 16.293278721983177  # 16#16.445359069030175#16.447496101100739
@@ -75,7 +76,7 @@ fit = FitResonance(folder=folder,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit_result = fit.fit(layer, vary='thickness', each_step=each_step)
+fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
-fit.plot()
+fit.plot(before=before, table=table)
 
