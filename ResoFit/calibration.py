@@ -132,17 +132,30 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def plot(self, table=True, grid=True, before=False, interp=False):
+    def plot(self, table=True, grid=True, before=False, interp=False,
+             all_elements=False, all_isotopes=False, items_to_plot=None):
         """
-        Plot the raw experimental data and theoretical resonance signal after calibration
+
+        :param table:
+        :type table:
         :param grid:
         :type grid:
-        :param table: boolean. True -> display table of calibrated parameters
-        :param before: boolean. True -> plot the raw data before calibration applied.
-        :param interp: boolean. True -> display interpolated exp data
-                                False -> display raw exp data
-        :return: plot of raw experimental data and theoretical resonance signal after calibration
+        :param before:
+        :type before:
+        :param interp:
+        :type interp:
+        :param all_elements:
+        :type all_elements:
+        :param all_isotopes:
+        :type all_isotopes:
+        :param items_to_plot:
+        :type items_to_plot:
+        :return:
+        :rtype:
         """
+        if all_elements is True:
+            if len(self.layer_list) == 1:
+                raise ValueError("'elements=True' has not effect on the plot if only one element involved.")
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_raw'
@@ -150,27 +163,74 @@ class Calibration(Simulation):
         sample_name = ' & '.join(self.layer_list)
         fig_title = 'Calibration result of sample ' + '(' + sample_name + ')'
 
-        # Plot graph
         if table is True:
+            # plot table + graph
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
         else:
+            # plot graph only
             ax1 = plt.subplot(111)
+
+        # Plot simulated total signal
         ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
+
+        """Plot options"""
+        # 1.
         if before is True:
+            # Plot the raw data before fitting
             ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
                      'cs', label=exp_before_label, markersize=2)
+        # 2.
         if interp is False:
+            # plot the calibrated raw data
             ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'rx', label=exp_label, markersize=2)
         else:
+            # plot the interpolated raw data
             ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
                      linewidth=1)
+        # 3.
+        if all_elements is True:
+            # show signal from each elements
+            _stack_signal = self.o_reso.stack_signal
+            _stack = self.o_reso.stack
+            y_axis_tag = 'attenuation'
+            for _layer in _stack.keys():
+                for _element in _stack[_layer]['elements']:
+                    _y_axis = _stack_signal[_layer][_element][y_axis_tag]
+                    ax1.plot(self.simu_x, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
+        # 4.
+        if all_isotopes is True:
+            # show signal from each isotopes
+            _stack_signal = self.o_reso.stack_signal
+            _stack = self.o_reso.stack
+            y_axis_tag = 'attenuation'
+            for _layer in _stack.keys():
+                for _element in _stack[_layer]['elements']:
+                    for _isotope in _stack[_layer][_element]['isotopes']['list']:
+                        _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
+                        ax1.plot(self.simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=0.85)
+        # 5.
+        if items_to_plot is not None:
+            # plot specified from 'items_to_plot'
+            _stack_signal = self.o_reso.stack_signal
+            y_axis_tag = 'attenuation'
+            for _path_to_plot in items_to_plot:
+                _path_to_plot = list(_path_to_plot)
+                _live_path = _stack_signal
+                _label = _path_to_plot[-1]#"/".join(_path_to_plot)
+                while _path_to_plot:
+                    _item = _path_to_plot.pop(0)
+                    _live_path = _live_path[_item]
+                _y_axis = _live_path[y_axis_tag]
+                ax1.plot(self.simu_x, _y_axis, ':', label=_label, linewidth=1, alpha=0.85)
+
+            pass
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)
         ax1.set_title(fig_title)
         ax1.set_xlabel('Energy (eV)')
-        ax1.set_ylabel('Attenuation')
+        ax1.set_ylabel('Neutron attenuation')
         ax1.legend(loc='best')
         # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
         # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)

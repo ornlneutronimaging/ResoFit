@@ -10,6 +10,7 @@ from ResoFit._gap_functions import y_gap_for_fitting
 from ResoFit._gap_functions import y_gap_for_iso_fitting
 import periodictable as pt
 from ResoFit._utilities import Layer
+import pandas as pd
 import pprint
 
 
@@ -241,6 +242,8 @@ class FitResonance(Experiment):
         sample_name = ' & '.join(self.layer_list)
         fig_title = 'Fitting result of sample ' + '(' + sample_name + ')'
 
+        self.fitted_simulation.o_reso.plot()
+
         # Plot graph
         if table is True:
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
@@ -307,3 +310,82 @@ class FitResonance(Experiment):
 
         plt.show()
         # plt.savefig('test.tiff')
+
+    # def export(self, filename=None):
+    #     _x_axis = self.total_signal['energy_eV']
+    #     x_axis_label = None
+    #     df = pd.DataFrame()
+    #
+    #     """X-axis"""
+    #     # determine values and labels for x-axis with options from
+    #     # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
+    #     x_axis_label = 'Energy (eV)'
+    #     df[x_axis_label] = _x_axis
+    #
+    #     """Y-axis"""
+    #     df['Total_'+y_axis_tag] = _y_axis
+    #             # export based on specified level : layer|element|isotope
+    #             if all_layers:
+    #                 for _compound in _stack.keys():
+    #                     _y_axis = _stack_signal[_compound][y_axis_tag]
+    #                     df[_compound] = _y_axis
+    #
+    #             if all_elements:
+    #                 for _compound in _stack.keys():
+    #                     for _element in _stack[_compound]['elements']:
+    #                         _y_axis = _stack_signal[_compound][_element][y_axis_tag]
+    #                         df[_compound + '/' + _element] = _y_axis
+    #
+    #             if all_isotopes:
+    #                 for _compound in _stack.keys():
+    #                     for _element in _stack[_compound]['elements']:
+    #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
+    #                             _y_axis = _stack_signal[_compound][_element][_isotope][y_axis_tag]
+    #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
+    #         else:
+    #             # export specified transmission or attenuation
+    #             for _path_to_export in items_to_export:
+    #                 _path_to_export = list(_path_to_export)
+    #                 _live_path = _stack_signal
+    #                 _label = "/".join(_path_to_export)
+    #                 while _path_to_export:
+    #                     _item = _path_to_export.pop(0)
+    #                     _live_path = _live_path[_item]
+    #                 _y_axis = _live_path[y_axis_tag]
+    #                 df[_label] = _y_axis
+    #     else:
+    #         # export sigma
+    #         _stack_sigma = self.stack_sigma
+    #         y_axis_tag = 'sigma_b'
+    #         if items_to_export is None:
+    #             for _compound in _stack.keys():
+    #                 for _element in _stack[_compound]['elements']:
+    #                     _y_axis = _stack_sigma[_compound][_element][y_axis_tag]
+    #                     df[_compound + '/' + _element + '/atoms_per_cm3'] = _stack[_compound]['atoms_per_cm3'][_element]
+    #                     df[_compound + '/' + _element] = _y_axis
+    #                     if all_isotopes:
+    #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
+    #                             _y_axis = _stack_sigma[_compound][_element][_isotope][y_axis_tag]
+    #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
+    #         else:
+    #             # export specified sigma
+    #             for _path_to_export in items_to_export:
+    #                 if len(_path_to_export) == 1:
+    #                     raise ValueError(
+    #                         "Getting total sigma of '{}' at layer level is not supported. "
+    #                         "If it is a single element layer, please follow ['layer', 'element'] format.".format(
+    #                             _path_to_export[0]))
+    #                 _path_to_export = list(_path_to_export)
+    #                 _live_path = _stack_sigma
+    #                 _label = "/".join(_path_to_export)
+    #                 while _path_to_export:
+    #                     _item = _path_to_export.pop(0)
+    #                     _live_path = _live_path[_item]
+    #                 _y_axis = _live_path[y_axis_tag]
+    #                 df[_label] = _y_axis
+    #
+    #     if filename is None:
+    #         df.to_clipboard(excel=True)
+    #     else:
+    #         df.to_csv(filename)
+    #
