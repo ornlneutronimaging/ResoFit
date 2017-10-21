@@ -10,6 +10,7 @@ from ResoFit._gap_functions import y_gap_for_fitting
 from ResoFit._gap_functions import y_gap_for_iso_fitting
 import periodictable as pt
 from ResoFit._utilities import Layer
+from ResoFit._utilities import shape_item_to_plot
 import pandas as pd
 import pprint
 
@@ -204,23 +205,9 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def plot(self, error=True, table=True, grid=True, before=False, interp=False):
-        """
-
-        :param grid:
-        :type grid:
-        :param interp:
-        :type interp:
-        :param error:
-        :type error:
-        :param before:
-        :type before:
-        :param table:
-        :type table:
-        :return:
-        :rtype:
-        """
-
+    def plot(self, error=True, table=True, grid=True, before=False, interp=False,
+             all_elements=False, all_isotopes=False, items_to_plot=None):
+        """"""
         # Form signals from fitted_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,
@@ -242,13 +229,19 @@ class FitResonance(Experiment):
         sample_name = ' & '.join(self.layer_list)
         fig_title = 'Fitting result of sample ' + '(' + sample_name + ')'
 
-        self.fitted_simulation.o_reso.plot()
-
-        # Plot graph
         if table is True:
+            # plot table + graph
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
         else:
+            # plot graph only
             ax1 = plt.subplot(111)
+
+        # Plot after fitting
+        ax1.plot(simu_x, simu_y, 'b-', label=simu_label, linewidth=1)
+
+        """Plot options"""
+
+        # 1.
         if before is True:
             # Plot before fitting
             # Form signals from raw_layer
@@ -262,8 +255,7 @@ class FitResonance(Experiment):
             simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
             ax1.plot(simu_x, simu_y_before,
                      'c-.', label=simu_before_label, linewidth=1)
-        # Plot after fitting
-        ax1.plot(simu_x, simu_y, 'b-', label=simu_label, linewidth=1)
+        # 2.
         if interp is True:
             # Plot exp. data (interpolated)
             x_interp, y_interp = self.xy_scaled(energy_max=self.energy_max, energy_min=self.energy_min,
@@ -278,9 +270,49 @@ class FitResonance(Experiment):
                                 source_to_detector_m=self.source_to_detector_m),
                      self.y_raw(transmission=False, baseline=self.baseline),
                      'rx', label=exp_label, markersize=2)
+        # 3.
         if error is True:
             # Plot fitting differences
             ax1.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', linewidth=1, alpha=1)
+        # 4.
+        if all_elements is True:
+            # show signal from each elements
+            _stack_signal = self.fitted_simulation.o_reso.stack_signal
+            _stack = self.fitted_simulation.o_reso.stack
+            y_axis_tag = 'attenuation'
+            for _layer in _stack.keys():
+                for _element in _stack[_layer]['elements']:
+                    _y_axis = _stack_signal[_layer][_element][y_axis_tag]
+                    ax1.plot(simu_x, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
+        # 4.
+        if all_isotopes is True:
+            # show signal from each isotopes
+            _stack_signal = self.fitted_simulation.o_reso.stack_signal
+            _stack = self.fitted_simulation.o_reso.stack
+            y_axis_tag = 'attenuation'
+            for _layer in _stack.keys():
+                for _element in _stack[_layer]['elements']:
+                    for _isotope in _stack[_layer][_element]['isotopes']['list']:
+                        _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
+                        ax1.plot(simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
+        # 5.
+        if items_to_plot is not None:
+            # plot specified from 'items_to_plot'
+            _stack_signal = self.fitted_simulation.o_reso.stack_signal
+            y_axis_tag = 'attenuation'
+
+            for _path_to_plot in items_to_plot:
+                if type(_path_to_plot) is not list:
+                    _path_to_plot = shape_item_to_plot(_path_to_plot)
+                _path_to_plot = list(_path_to_plot)
+                _live_path = _stack_signal
+                _label = _path_to_plot[-1]#"/".join(_path_to_plot)
+                while _path_to_plot:
+                    _item = _path_to_plot.pop(0)
+                    _live_path = _live_path[_item]
+                _y_axis = _live_path[y_axis_tag]
+                ax1.plot(simu_x, _y_axis, '--', label=_label, linewidth=1, alpha=1)
+
 
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)

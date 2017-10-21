@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import peakutils as pku
 from lmfit import Parameters
 from scipy.interpolate import interp1d
@@ -8,6 +7,7 @@ from ResoFit.simulation import Simulation
 import numpy as np
 from lmfit import minimize
 from ResoFit._gap_functions import y_gap_for_calibration
+from ResoFit._utilities import shape_item_to_plot
 
 
 class Calibration(Simulation):
@@ -174,6 +174,7 @@ class Calibration(Simulation):
         ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
+
         # 1.
         if before is True:
             # Plot the raw data before fitting
@@ -209,13 +210,16 @@ class Calibration(Simulation):
                 for _element in _stack[_layer]['elements']:
                     for _isotope in _stack[_layer][_element]['isotopes']['list']:
                         _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
-                        ax1.plot(self.simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=0.85)
+                        ax1.plot(self.simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
             _stack_signal = self.o_reso.stack_signal
             y_axis_tag = 'attenuation'
+
             for _path_to_plot in items_to_plot:
+                if type(_path_to_plot) is not list:
+                    _path_to_plot = shape_item_to_plot(_path_to_plot)
                 _path_to_plot = list(_path_to_plot)
                 _live_path = _stack_signal
                 _label = _path_to_plot[-1]#"/".join(_path_to_plot)
@@ -223,9 +227,8 @@ class Calibration(Simulation):
                     _item = _path_to_plot.pop(0)
                     _live_path = _live_path[_item]
                 _y_axis = _live_path[y_axis_tag]
-                ax1.plot(self.simu_x, _y_axis, ':', label=_label, linewidth=1, alpha=0.85)
+                ax1.plot(self.simu_x, _y_axis, '--', label=_label, linewidth=1, alpha=1)
 
-            pass
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)
         ax1.set_title(fig_title)

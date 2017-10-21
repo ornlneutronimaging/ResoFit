@@ -52,22 +52,25 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def restructure_input(name):
+def shape_item_to_plot(name):
+    # input is not structured as required by ImagingReso
     if type(name) is not str:
         raise ValueError("'{}' entered is not a string.".format(name))
     if len(name) == 0:
         raise ValueError("'{}' entered has no length.".format(name))
-
     _path_of_input = []
+
     if any(str.isdigit(i) for i in name) is True:
-        if str.isdigit(name[0]) is False:
-            raise ValueError("Please format you isotope name {} in the form of '238-U'.".format(name))
+        # isotopes
         _parsed = re.findall(r'([A-Z][a-z]*)(\d*)', name)
-        _element_name = _parsed[0][0]
-        _path_of_input.append(_element_name)
-        _path_of_input.append(_element_name)
-        _path_of_input.append(name)
+        _element_str = _parsed[0][0]
+        _number_str = re.findall('\d+', name)[0]
+        _isotope_str = _number_str + '-' + _element_str
+        _path_of_input.append(_element_str)
+        _path_of_input.append(_element_str)
+        _path_of_input.append(_isotope_str)
     else:
+        # elements
         if len(name) > 2:
             raise ValueError("'{}' entered is not a single element symbol.".format(name))
         if len(name) == 1:

@@ -43,6 +43,7 @@ each_step = False
 before = True
 table = True
 grid = True
+items_to_plot = ['238-U', '235-U', 'Gd']
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -67,7 +68,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 
-calibration.plot(before=before, table=table, grid=grid)
+calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
 
 # Fit sample density or thickness
 fit = FitResonance(spectra_file=spectra_file,
@@ -87,5 +88,5 @@ fit_result = fit.fit(layer, vary='density', each_step=each_step)
 # # Fit isotope ratios
 # fit.fit_iso(layer=layer_1)
 fit.molar_conc()
-fit.plot(before=before, table=table, grid=grid)
+fit.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
 
