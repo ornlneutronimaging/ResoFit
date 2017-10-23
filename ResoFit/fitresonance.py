@@ -313,7 +313,6 @@ class FitResonance(Experiment):
                 _y_axis = _live_path[y_axis_tag]
                 ax1.plot(simu_x, _y_axis, '--', label=_label, linewidth=1, alpha=1)
 
-
         ax1.set_xlim([0, self.energy_max])
         ax1.set_ylim(ymax=1.01)
         ax1.set_title(fig_title)

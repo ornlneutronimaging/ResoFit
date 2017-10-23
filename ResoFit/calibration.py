@@ -155,7 +155,7 @@ class Calibration(Simulation):
         """
         if all_elements is True:
             if len(self.layer_list) == 1:
-                raise ValueError("'elements=True' has not effect on the plot if only one element involved.")
+                raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_raw'
