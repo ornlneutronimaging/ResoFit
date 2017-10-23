@@ -78,5 +78,6 @@ fit = FitResonance(folder=folder,
                    baseline=baseline)
 fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
+# fit.fit_iso(layer=layer_1)
 fit.plot(before=before, table=table)
 

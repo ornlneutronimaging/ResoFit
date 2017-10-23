@@ -30,6 +30,7 @@ class FitResonance(Experiment):
     fitted_iso_residual = None
     params_for_fit = None
     isotope_stack = {}
+    sample_vary = None
 
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
@@ -59,6 +60,7 @@ class FitResonance(Experiment):
         if vary not in ['density', 'thickness', 'none']:
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'none']")
         # Default vary is: 'density'
+        self.sample_vary = vary
         thickness_vary_tag = False
         density_vary_tag = True
         if vary == 'thickness':
@@ -149,19 +151,19 @@ class FitResonance(Experiment):
                                    value=self.isotope_stack[layer]['ratios'][_name_index],
                                    min=0,
                                    max=1)
-
+        _restriction_list = []
         # Restriction is not working as expected ###
         # Create expr to restrict the total to be 1.0
-        # for _each_param_name in _params_name_list:
-        #     _params_name_list_temp = _params_name_list[:]
-        #     _params_name_list_temp.remove(_each_param_name)
-        #     _params_name_list_temp.insert(0, '1.0')
-        #     _restriction_list.append(' - '.join(_params_name_list_temp))
-        #     print(_params_name_list_temp)
-        # print(_restriction_list)
-        # params_for_iso_fit.pretty_print()
-        # for _i in range(len(_restriction_list)):
-        #     params_for_iso_fit[_params_name_list[_i]].set(expr=_restriction_list[_i], vary=True)
+        for _each_param_name in _params_name_list:
+            _params_name_list_temp = _params_name_list[:]
+            _params_name_list_temp.remove(_each_param_name)
+            _params_name_list_temp.insert(0, '1')
+            _restriction_list.append('-'.join(_params_name_list_temp))
+            print(_params_name_list_temp)
+        print(_restriction_list)
+        params_for_iso_fit.pretty_print()
+        for _i in range(len(_restriction_list)):
+            params_for_iso_fit[_params_name_list[_i]].set(expr=_restriction_list[_i], vary=True)
 
         # Print params before
         print("Params before 'isotope' fitting:")
@@ -227,7 +229,9 @@ class FitResonance(Experiment):
         exp_label = 'Exp'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
-        fig_title = 'Fitting result of sample ' + '(' + sample_name + ')'
+        if self.sample_vary is None:
+            raise ValueError("Vary type ['density'|'thickness'] is not set.")
+        fig_title = 'Fitting result of sample ' + self.sample_vary + ' (' + sample_name + ')'
 
         if table is True:
             # plot table + graph
