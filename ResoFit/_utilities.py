@@ -1,3 +1,4 @@
+from functools import wraps
 import pandas as pd
 import numpy as np
 import os
@@ -127,3 +128,77 @@ class Layer(object):
 
     def show(self):
         pprint.pprint(self.info)
+
+
+
+
+def a_new_decorator(a_func):
+    @wraps(a_func)
+    def wrapTheFunction():
+        print("I am doing some boring work before executing a_func()")
+        a_func()
+        print("I am doing some boring work after executing a_func()")
+    return wrapTheFunction
+
+@a_new_decorator
+def a_function_requiring_decoration():
+    """Hey yo! Decorate me!"""
+    print("I am the function which needs some decoration to "
+          "remove my foul smell")
+
+
+class Plot(object):
+    def __init__(self, logfile='out.log'):
+        self.logfile = logfile
+
+    def __call__(self, func):
+        log_string = func.__name__ + " was called"
+        print(log_string)
+        # Open the logfile and append
+        with open(self.logfile, 'a') as opened_file:
+            # Now we log to the specified logfile
+            opened_file.write(log_string + '\n')
+        # Now, send a notification
+        self.notify()
+
+    def notify(self):
+        # logit only logs, no more
+        pass
+
+
+class Export(object):
+    def __init__(self, logfile='out.log'):
+        self.logfile = logfile
+
+    def __call__(self, func):
+        log_string = func.__name__ + " was called"
+        print(log_string)
+        # Open the logfile and append
+        with open(self.logfile, 'a') as opened_file:
+            # Now we log to the specified logfile
+            opened_file.write(log_string + '\n')
+        # Now, send a notification
+        self.notify()
+
+    def notify(self):
+        # logit only logs, no more
+        pass
+
+
+class Logit(object):
+    def __init__(self, logfile='out.log'):
+        self.logfile = logfile
+
+    def __call__(self, func):
+        log_string = func.__name__ + " was called"
+        print(log_string)
+        # Open the logfile and append
+        with open(self.logfile, 'a') as opened_file:
+            # Now we log to the specified logfile
+            opened_file.write(log_string + '\n')
+        # Now, send a notification
+        self.notify()
+
+    def notify(self):
+        # logit only logs, no more
+        pass

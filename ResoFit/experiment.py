@@ -275,3 +275,8 @@ class Experiment(object):
         plt.xlabel(x_axis_label)
         plt.ylabel(y_axis_label)
         plt.legend(loc='best')
+
+    # def export_raw(self):
+
+
+
