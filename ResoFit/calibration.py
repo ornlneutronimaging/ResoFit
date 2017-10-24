@@ -219,7 +219,10 @@ class Calibration(Simulation):
 
             for _path_to_plot in items_to_plot:
                 if type(_path_to_plot) is not list:
-                    _path_to_plot = shape_item_to_plot(_path_to_plot)
+                    if '*' in _path_to_plot is True:
+                        pass
+                    else:
+                        _path_to_plot = shape_item_to_plot(_path_to_plot)
                 _path_to_plot = list(_path_to_plot)
                 _live_path = _stack_signal
                 _label = _path_to_plot[-1]#"/".join(_path_to_plot)
