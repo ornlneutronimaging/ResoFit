@@ -235,7 +235,7 @@ class FitResonance(Experiment):
         sample_name = ' & '.join(self.layer_list)
         if self.sample_vary is None:
             raise ValueError("Vary type ['density'|'thickness'] is not set.")
-        fig_title = 'Fitting result of sample ' + self.sample_vary + ' (' + sample_name + ')'
+        fig_title = 'Fitting result of sample (' + sample_name + ')'
 
         if table is True:
             # plot table + graph
@@ -334,7 +334,20 @@ class FitResonance(Experiment):
 
         # Plot table
         if table is True:
-            columns = self.fit_result.__dict__['var_names']
+            if self.fitted_iso_result is None:
+                columns = list(self.fit_result.__dict__['params'].valuesdict().keys())
+            else:
+                columns = self.fit_result.__dict__['var_names']
+
+            columns_to_show_dict = {}
+            for _each in columns:
+                _split = _each.split('_')
+                if _split[0] == 'thickness':
+                    _name_to_show = r'$d_{' + _split[-1] + '}$' + ' (mm)'
+                else:
+                    _name_to_show = r'$\rho_{' + _split[-1] + '}$' + ' (g/$cm^3$)'
+                columns_to_show_dict[_each] = _name_to_show
+            columns_to_show = list(columns_to_show_dict.values())
             rows = ['Before', 'After']
             _row_before = []
             _row_after = []
@@ -345,10 +358,11 @@ class FitResonance(Experiment):
             if self.fitted_iso_result is not None:
                 _iso_columns = list(self.fitted_iso_result.__dict__['params'].valuesdict().keys())
                 columns = columns + _iso_columns
+                columns_to_show = columns_to_show + _iso_columns
                 for _each in _iso_columns:
                     _row_after.append(round(self.fitted_iso_result.__dict__['params'].valuesdict()[_each], 3))
                     _row_before.append(round(self.params_for_iso_fit.valuesdict()[_each], 3))
-            table = ax1.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='upper right',
+            table = ax1.table(rowLabels=rows, colLabels=columns_to_show, cellText=[_row_before, _row_after], loc='upper right',
                               bbox=[0, -0.33, 1.0, 0.18])
             table.auto_set_font_size(False)
             table.set_fontsize(10)

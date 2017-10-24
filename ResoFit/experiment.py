@@ -256,7 +256,7 @@ class Experiment(object):
 
             if x_axis == 'number':
                 x_axis_label = 'Image number (#)'
-                x_exp_raw = np.array(range(1, len(self.data[0])+1))
+                x_exp_raw = np.array(range(1, len(self.data[0]) + 1))
         if x_axis_label is None:
             raise ValueError("x_axis_label does NOT exist, please check.")
 
@@ -276,7 +276,75 @@ class Experiment(object):
         plt.ylabel(y_axis_label)
         plt.legend(loc='best')
 
-    # def export_raw(self):
+    def export_raw(self, offset_us=2.69, source_to_detector_m=16.45,
+                   energy_xmax=150, lambda_xmax=None,
+                   transmission=False, baseline=False,
+                   x_axis='energy', time_unit='us'):
+        """
+        Display the loaded signal from data and spectra files.
+        :param offset_us:
+        :param source_to_detector_m:
+        :param energy_xmax: maximum x-axis energy value to display
+        :param lambda_xmax: maximum x-axis lambda value to display
+        :param transmission: boolean. False -> show resonance peaks
+                                      True -> show resonance dips
+        :param baseline: boolean. True -> remove baseline by detrend
+        :param x_axis: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
+        :param time_unit: string. Must be either 's' or 'us' or 'ns'
+        :return: display raw data signals
+        """
+        if x_axis not in ['energy', 'lambda', 'time', 'number']:
+            raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
+        if time_unit not in ['s', 'us', 'ns']:
+            raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
+        x_axis_label = None
+        x_exp_raw = None
+        """X-axis"""
+        # determine values and labels for x-axis with options from
+        # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
+        if x_axis in ['energy', 'lambda']:
+            if x_axis == 'energy':
+                x_axis_label = 'Energy (eV)'
+                angstrom = False
+                plt.xlim(xmin=0, xmax=energy_xmax)
+            else:
+                x_axis_label = u"Wavelength (\u212B)"
+                angstrom = True
+                if lambda_xmax is not None:
+                    plt.xlim(xmin=0, xmax=lambda_xmax)
+            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
 
+        if x_axis in ['time', 'number']:
+            x_exp_raw = self.x_raw(angstrom=False, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            if x_axis == 'time':
+                if time_unit == 's':
+                    x_axis_label = 'Time (s)'
+                    x_exp_raw = self.spectra[0]
+                if time_unit == 'us':
+                    x_axis_label = 'Time (us)'
+                    x_exp_raw = 1e6 * self.spectra[0]
+                if time_unit == 'ns':
+                    x_axis_label = 'Time (ns)'
+                    x_exp_raw = 1e9 * self.spectra[0]
 
+            if x_axis == 'number':
+                x_axis_label = 'Image number (#)'
+                x_exp_raw = np.array(range(1, len(self.data[0]) + 1))
+        if x_axis_label is None:
+            raise ValueError("x_axis_label does NOT exist, please check.")
 
+        """Y-axis"""
+        # Determine to plot transmission or attenuation
+        # Determine to put transmission or attenuation words for y-axis
+        if transmission:
+            y_axis_label = 'Neutron Transmission'
+        else:
+            y_axis_label = 'Neutron Attenuation'
+        y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
+
+        # Plot
+        plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
+        plt.ylim(ymax=1.01)
+        plt.xlabel(x_axis_label)
+        plt.ylabel(y_axis_label)
+        plt.legend(loc='best')

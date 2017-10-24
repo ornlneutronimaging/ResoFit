@@ -161,7 +161,7 @@ class Calibration(Simulation):
         exp_before_label = 'Exp_raw'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
-        fig_title = 'Calibration result of sample ' + '(' + sample_name + ')'
+        fig_title = 'Calibration result of sample (' + sample_name + ')'
 
         if table is True:
             # plot table + graph
@@ -247,13 +247,14 @@ class Calibration(Simulation):
             # ax2 = plt.subplot2grid(shape=(10, 7), loc=(0, 1), rowspan=4, colspan=5)
             # ax2.axis('off')
             columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
+            columns_to_show = ['L (m)', r'$\Delta$t ($\mu$s)']
             rows = ['Before', 'After']
             _row_before = []
             _row_after = []
             for _each in columns:
                 _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
                 _row_before.append(self.params_to_calibrate.valuesdict()[_each])
-            table = ax1.table(rowLabels=rows, colLabels=columns,  # colWidths=
+            table = ax1.table(rowLabels=rows, colLabels=columns_to_show,  # colWidths=
                               cellText=[_row_before, _row_after],  # rows of data values
                               bbox=[0, -0.33, 1.0, 0.18]  # [left,bottom,width,height]
                               )
