@@ -29,6 +29,7 @@ class FitResonance(Experiment):
     fitted_iso_result = None
     fitted_iso_residual = None
     params_for_fit = None
+    params_for_iso_fit = None
     isotope_stack = {}
     sample_vary = None
 
@@ -134,42 +135,45 @@ class FitResonance(Experiment):
         :return:
         :rtype:
         """
-        params_for_iso_fit = Parameters()
+        self.params_for_iso_fit = Parameters()
         self.isotope_stack[layer] = {'list': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes']['list'],
                                      'ratios': self.fitted_simulation.o_reso.stack[layer][layer]['isotopes'][
                                          'isotopic_ratio']}
         _formatted_isotope_list = []
         _params_name_list = []
-        # _restriction_list = []
+        # Form list of param name
         for _isotope_index in range(len(self.isotope_stack[layer]['list'])):
-            _formatted_isotope_name = self.isotope_stack[layer]['list'][_isotope_index].replace('-', '_')
+            _split = self.isotope_stack[layer]['list'][_isotope_index].split('-')
+            _flip = _split[::-1]
+            _formatted_isotope_name = ''.join(_flip)
+            # _formatted_isotope_name = self.isotope_stack[layer]['list'][_isotope_index].replace('-', '_')
             _formatted_isotope_list.append(_formatted_isotope_name)
-            _params_name_list.append('isotope_ratio_' + _formatted_isotope_name)
-
+            _params_name_list = _formatted_isotope_list
+        # Form Parameters() for fitting
         for _name_index in range(len(_params_name_list)):
-            params_for_iso_fit.add(_params_name_list[_name_index],
-                                   value=self.isotope_stack[layer]['ratios'][_name_index],
-                                   min=0,
-                                   max=1)
-        _restriction_list = []
-        # Restriction is not working as expected ###
-        # Create expr to restrict the total to be 1.0
-        for _each_param_name in _params_name_list:
-            _params_name_list_temp = _params_name_list[:]
-            _params_name_list_temp.remove(_each_param_name)
-            _params_name_list_temp.insert(0, '1')
-            _restriction_list.append('-'.join(_params_name_list_temp))
-            print(_params_name_list_temp)
-        print(_restriction_list)
-        params_for_iso_fit.pretty_print()
-        for _i in range(len(_restriction_list)):
-            params_for_iso_fit[_params_name_list[_i]].set(expr=_restriction_list[_i], vary=True)
+            self.params_for_iso_fit.add(_params_name_list[_name_index],
+                                        value=self.isotope_stack[layer]['ratios'][_name_index],
+                                        min=0,
+                                        max=1)
+        # Constrain sum of isotope ratios to be 1
+
+        # _params_name_list_temp = _params_name_list[:]
+        # _constraint = '+'.join(_params_name_list_temp)
+        # self.params_for_iso_fit.add('sum', expr=_constraint)
+
+        _constraint_param = _params_name_list[-1]
+        _params_name_list_temp = _params_name_list[:]
+        _params_name_list_temp.remove(_constraint_param)
+
+        _constraint = '-'.join(_params_name_list_temp)
+        _constraint = '1-' + _constraint
+        self.params_for_iso_fit[_constraint_param].set(expr=_constraint)
 
         # Print params before
         print("Params before 'isotope' fitting:")
-        params_for_iso_fit.pretty_print()
+        self.params_for_iso_fit.pretty_print()
         # Fitting
-        self.fitted_iso_result = minimize(y_gap_for_iso_fitting, params_for_iso_fit, method='leastsq',
+        self.fitted_iso_result = minimize(y_gap_for_iso_fitting, self.params_for_iso_fit, method='leastsq',
                                           args=(self.exp_x_interp, self.exp_y_interp, layer, _formatted_isotope_list,
                                                 self.fitted_simulation, each_step))
         # Print params after
@@ -310,7 +314,7 @@ class FitResonance(Experiment):
                     _path_to_plot = shape_item_to_plot(_path_to_plot)
                 _path_to_plot = list(_path_to_plot)
                 _live_path = _stack_signal
-                _label = _path_to_plot[-1]#"/".join(_path_to_plot)
+                _label = _path_to_plot[-1]  # "/".join(_path_to_plot)
                 while _path_to_plot:
                     _item = _path_to_plot.pop(0)
                     _live_path = _live_path[_item]
@@ -335,8 +339,15 @@ class FitResonance(Experiment):
             _row_before = []
             _row_after = []
             for _each in columns:
-                _row_after.append(self.fit_result.__dict__['params'].valuesdict()[_each])
-                _row_before.append(self.params_for_fit.valuesdict()[_each])
+                _row_after.append(round(self.fit_result.__dict__['params'].valuesdict()[_each], 3))
+                _row_before.append(round(self.params_for_fit.valuesdict()[_each], 3))
+
+            if self.fitted_iso_result is not None:
+                _iso_columns = list(self.fitted_iso_result.__dict__['params'].valuesdict().keys())
+                columns = columns + _iso_columns
+                for _each in _iso_columns:
+                    _row_after.append(round(self.fitted_iso_result.__dict__['params'].valuesdict()[_each], 3))
+                    _row_before.append(round(self.params_for_iso_fit.valuesdict()[_each], 3))
             table = ax1.table(rowLabels=rows, colLabels=columns, cellText=[_row_before, _row_after], loc='upper right',
                               bbox=[0, -0.33, 1.0, 0.18])
             table.auto_set_font_size(False)
@@ -346,81 +357,81 @@ class FitResonance(Experiment):
         plt.show()
         # plt.savefig('test.tiff')
 
-    # def export(self, filename=None):
-    #     _x_axis = self.total_signal['energy_eV']
-    #     x_axis_label = None
-    #     df = pd.DataFrame()
-    #
-    #     """X-axis"""
-    #     # determine values and labels for x-axis with options from
-    #     # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-    #     x_axis_label = 'Energy (eV)'
-    #     df[x_axis_label] = _x_axis
-    #
-    #     """Y-axis"""
-    #     df['Total_'+y_axis_tag] = _y_axis
-    #             # export based on specified level : layer|element|isotope
-    #             if all_layers:
-    #                 for _compound in _stack.keys():
-    #                     _y_axis = _stack_signal[_compound][y_axis_tag]
-    #                     df[_compound] = _y_axis
-    #
-    #             if all_elements:
-    #                 for _compound in _stack.keys():
-    #                     for _element in _stack[_compound]['elements']:
-    #                         _y_axis = _stack_signal[_compound][_element][y_axis_tag]
-    #                         df[_compound + '/' + _element] = _y_axis
-    #
-    #             if all_isotopes:
-    #                 for _compound in _stack.keys():
-    #                     for _element in _stack[_compound]['elements']:
-    #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
-    #                             _y_axis = _stack_signal[_compound][_element][_isotope][y_axis_tag]
-    #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
-    #         else:
-    #             # export specified transmission or attenuation
-    #             for _path_to_export in items_to_export:
-    #                 _path_to_export = list(_path_to_export)
-    #                 _live_path = _stack_signal
-    #                 _label = "/".join(_path_to_export)
-    #                 while _path_to_export:
-    #                     _item = _path_to_export.pop(0)
-    #                     _live_path = _live_path[_item]
-    #                 _y_axis = _live_path[y_axis_tag]
-    #                 df[_label] = _y_axis
-    #     else:
-    #         # export sigma
-    #         _stack_sigma = self.stack_sigma
-    #         y_axis_tag = 'sigma_b'
-    #         if items_to_export is None:
-    #             for _compound in _stack.keys():
-    #                 for _element in _stack[_compound]['elements']:
-    #                     _y_axis = _stack_sigma[_compound][_element][y_axis_tag]
-    #                     df[_compound + '/' + _element + '/atoms_per_cm3'] = _stack[_compound]['atoms_per_cm3'][_element]
-    #                     df[_compound + '/' + _element] = _y_axis
-    #                     if all_isotopes:
-    #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
-    #                             _y_axis = _stack_sigma[_compound][_element][_isotope][y_axis_tag]
-    #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
-    #         else:
-    #             # export specified sigma
-    #             for _path_to_export in items_to_export:
-    #                 if len(_path_to_export) == 1:
-    #                     raise ValueError(
-    #                         "Getting total sigma of '{}' at layer level is not supported. "
-    #                         "If it is a single element layer, please follow ['layer', 'element'] format.".format(
-    #                             _path_to_export[0]))
-    #                 _path_to_export = list(_path_to_export)
-    #                 _live_path = _stack_sigma
-    #                 _label = "/".join(_path_to_export)
-    #                 while _path_to_export:
-    #                     _item = _path_to_export.pop(0)
-    #                     _live_path = _live_path[_item]
-    #                 _y_axis = _live_path[y_axis_tag]
-    #                 df[_label] = _y_axis
-    #
-    #     if filename is None:
-    #         df.to_clipboard(excel=True)
-    #     else:
-    #         df.to_csv(filename)
-    #
+        # def export(self, filename=None):
+        #     _x_axis = self.total_signal['energy_eV']
+        #     x_axis_label = None
+        #     df = pd.DataFrame()
+        #
+        #     """X-axis"""
+        #     # determine values and labels for x-axis with options from
+        #     # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
+        #     x_axis_label = 'Energy (eV)'
+        #     df[x_axis_label] = _x_axis
+        #
+        #     """Y-axis"""
+        #     df['Total_'+y_axis_tag] = _y_axis
+        #             # export based on specified level : layer|element|isotope
+        #             if all_layers:
+        #                 for _compound in _stack.keys():
+        #                     _y_axis = _stack_signal[_compound][y_axis_tag]
+        #                     df[_compound] = _y_axis
+        #
+        #             if all_elements:
+        #                 for _compound in _stack.keys():
+        #                     for _element in _stack[_compound]['elements']:
+        #                         _y_axis = _stack_signal[_compound][_element][y_axis_tag]
+        #                         df[_compound + '/' + _element] = _y_axis
+        #
+        #             if all_isotopes:
+        #                 for _compound in _stack.keys():
+        #                     for _element in _stack[_compound]['elements']:
+        #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
+        #                             _y_axis = _stack_signal[_compound][_element][_isotope][y_axis_tag]
+        #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
+        #         else:
+        #             # export specified transmission or attenuation
+        #             for _path_to_export in items_to_export:
+        #                 _path_to_export = list(_path_to_export)
+        #                 _live_path = _stack_signal
+        #                 _label = "/".join(_path_to_export)
+        #                 while _path_to_export:
+        #                     _item = _path_to_export.pop(0)
+        #                     _live_path = _live_path[_item]
+        #                 _y_axis = _live_path[y_axis_tag]
+        #                 df[_label] = _y_axis
+        #     else:
+        #         # export sigma
+        #         _stack_sigma = self.stack_sigma
+        #         y_axis_tag = 'sigma_b'
+        #         if items_to_export is None:
+        #             for _compound in _stack.keys():
+        #                 for _element in _stack[_compound]['elements']:
+        #                     _y_axis = _stack_sigma[_compound][_element][y_axis_tag]
+        #                     df[_compound + '/' + _element + '/atoms_per_cm3'] = _stack[_compound]['atoms_per_cm3'][_element]
+        #                     df[_compound + '/' + _element] = _y_axis
+        #                     if all_isotopes:
+        #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
+        #                             _y_axis = _stack_sigma[_compound][_element][_isotope][y_axis_tag]
+        #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
+        #         else:
+        #             # export specified sigma
+        #             for _path_to_export in items_to_export:
+        #                 if len(_path_to_export) == 1:
+        #                     raise ValueError(
+        #                         "Getting total sigma of '{}' at layer level is not supported. "
+        #                         "If it is a single element layer, please follow ['layer', 'element'] format.".format(
+        #                             _path_to_export[0]))
+        #                 _path_to_export = list(_path_to_export)
+        #                 _live_path = _stack_sigma
+        #                 _label = "/".join(_path_to_export)
+        #                 while _path_to_export:
+        #                     _item = _path_to_export.pop(0)
+        #                     _live_path = _live_path[_item]
+        #                 _y_axis = _live_path[y_axis_tag]
+        #                 df[_label] = _y_axis
+        #
+        #     if filename is None:
+        #         df.to_clipboard(excel=True)
+        #     else:
+        #         df.to_csv(filename)
+        #

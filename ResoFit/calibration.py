@@ -246,7 +246,7 @@ class Calibration(Simulation):
         if table is True:
             # ax2 = plt.subplot2grid(shape=(10, 7), loc=(0, 1), rowspan=4, colspan=5)
             # ax2.axis('off')
-            columns = self.calibrate_result.__dict__['var_names']
+            columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
             rows = ['Before', 'After']
             _row_before = []
             _row_after = []
@@ -254,9 +254,7 @@ class Calibration(Simulation):
                 _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
                 _row_before.append(self.params_to_calibrate.valuesdict()[_each])
             table = ax1.table(rowLabels=rows, colLabels=columns,  # colWidths=
-                              cellText=[[self.init_source_to_detector_m, self.init_offset_us],
-                                        [self.calibrated_source_to_detector_m,
-                                         self.calibrated_offset_us]],  # rows of data values
+                              cellText=[_row_before, _row_after],  # rows of data values
                               bbox=[0, -0.33, 1.0, 0.18]  # [left,bottom,width,height]
                               )
             # table.scale(0.5, 1)

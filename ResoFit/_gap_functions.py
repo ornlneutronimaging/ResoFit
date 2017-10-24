@@ -55,7 +55,7 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
     parvals = params.valuesdict()
     isotope_ratio_list = []
     for _isotope_index in range(len(formatted_isotope_list)):
-        isotope_ratio_list.append(parvals['isotope_ratio_'+formatted_isotope_list[_isotope_index]])
+        isotope_ratio_list.append(parvals[formatted_isotope_list[_isotope_index]])
 
     fitted_simulation.set_isotopic_ratio(layer=layer, element=layer, new_isotopic_ratio_list=isotope_ratio_list)
     simu_x, simu_y = fitted_simulation.xy_simu(angstrom=False, transmission=False)
