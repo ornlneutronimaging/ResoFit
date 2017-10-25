@@ -87,14 +87,14 @@ class FitResonance(Experiment):
                                     vary=density_vary_tag,
                                     min=0)
         # Print before
-        print("Params before '{}' fitting:".format(vary))
+        print("-------Fitting ({})-------\nParams before:".format(vary))
         self.params_for_fit.pretty_print()
         # Fitting
         self.fit_result = minimize(y_gap_for_fitting, self.params_for_fit, method='leastsq',
                                    args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
         # Print after
-        print("Params after '{}' fitting:".format(vary))
+        print("Params after:")
         self.fit_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_residual = self.fit_result.__dict__['residual']
@@ -170,14 +170,14 @@ class FitResonance(Experiment):
         self.params_for_iso_fit[_constraint_param].set(expr=_constraint)
 
         # Print params before
-        print("Params before 'isotope' fitting:")
+        print("-------Fitting (isotopic at.%)-------\nParams before:")
         self.params_for_iso_fit.pretty_print()
         # Fitting
         self.fitted_iso_result = minimize(y_gap_for_iso_fitting, self.params_for_iso_fit, method='leastsq',
                                           args=(self.exp_x_interp, self.exp_y_interp, layer, _formatted_isotope_list,
                                                 self.fitted_simulation, each_step))
         # Print params after
-        print("Params after 'isotope' fitting:")
+        print("Params after:")
         self.fitted_iso_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_iso_residual = self.fitted_iso_result.__dict__['residual']
@@ -208,6 +208,7 @@ class FitResonance(Experiment):
             # molar_conc_output[_each_layer] = {'Before_fit': start_molar_conc_value,
             #                                   'After_fit': molar_conc_value}
             print("{}\t{}\t{}".format(_each_layer, start_molar_conc_value, molar_conc_value))
+        print('\n')
 
         return self.fitted_layer.info
 
@@ -343,9 +344,9 @@ class FitResonance(Experiment):
             for _each in columns:
                 _split = _each.split('_')
                 if _split[0] == 'thickness':
-                    _name_to_show = r'$d_{' + _split[-1] + '}$' + ' (mm)'
+                    _name_to_show = r'$d_{\rm{' + _split[-1] + '}}$' + ' (mm)'
                 else:
-                    _name_to_show = r'$\rho_{' + _split[-1] + '}$' + ' (g/$cm^3$)'
+                    _name_to_show = r'$\rho_{\rm{' + _split[-1] + '}}$' + ' (g/cm$^3$)'
                 columns_to_show_dict[_each] = _name_to_show
             columns_to_show = list(columns_to_show_dict.values())
             rows = ['Before', 'After']
@@ -358,7 +359,14 @@ class FitResonance(Experiment):
             if self.fitted_iso_result is not None:
                 _iso_columns = list(self.fitted_iso_result.__dict__['params'].valuesdict().keys())
                 columns = columns + _iso_columns
-                columns_to_show = columns_to_show + _iso_columns
+                _iso_columns_to_show_dict = {}
+                for _each_iso in _iso_columns:
+                    _num_str = re.findall('\d+', _each_iso)[0]
+                    _name_str = _each_iso[0]
+                    _sup_name = r"$^{" + _num_str + "}$" + _name_str
+                    _iso_columns_to_show_dict[_each_iso] = _sup_name
+                _iso_columns_to_show = list(_iso_columns_to_show_dict.values())
+                columns_to_show = columns_to_show + _iso_columns_to_show
                 for _each in _iso_columns:
                     _row_after.append(round(self.fitted_iso_result.__dict__['params'].valuesdict()[_each], 3))
                     _row_before.append(round(self.params_for_iso_fit.valuesdict()[_each], 3))

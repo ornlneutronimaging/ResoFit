@@ -99,7 +99,7 @@ class Calibration(Simulation):
                                      vary=source_to_detector_vary_tag)
         self.params_to_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
         # Print before
-        print("Params before calibration:")
+        print("-------Calibration-------\nParams before:")
         self.params_to_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
         self.calibrate_result = minimize(y_gap_for_calibration, self.params_to_calibrate, method='leastsq',
@@ -107,7 +107,7 @@ class Calibration(Simulation):
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.experiment, self.baseline, each_step))
         # Print after
-        print("Params after calibration:")
+        print("Params after:")
         self.calibrate_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.calibrated_residual = self.calibrate_result.__dict__['residual']
@@ -219,7 +219,7 @@ class Calibration(Simulation):
 
             for _path_to_plot in items_to_plot:
                 if type(_path_to_plot) is not list:
-                    if '*' in _path_to_plot is True:
+                    if '*' in _path_to_plot:
                         pass
                     else:
                         _path_to_plot = shape_item_to_plot(_path_to_plot)

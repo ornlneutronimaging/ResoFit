@@ -35,7 +35,7 @@ baseline = True
 each_step = False
 before = False
 table = True
-fit_vary = 'thickness'
+fit_vary = 'none'
 
 repeat = 1
 source_to_detector_m = 16.293278721983177  # 16#16.445359069030175#16.447496101100739
