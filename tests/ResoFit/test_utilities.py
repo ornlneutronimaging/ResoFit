@@ -76,3 +76,10 @@ class TestRestructureInput(unittest.TestCase):
         name = 'U238'
         assert fit_util.shape_item_to_plot(name) == expected_path
 
+    def test_fill_iso_to_item_to_plot(self):
+        name = 'U*'
+        expected_path_list = [['U', 'U', '233-U'],
+                              ['U', 'U', '234-U'],
+                              ['U', 'U', '235-U'],
+                              ['U', 'U', '238-U']]
+        assert fit_util.fill_iso_to_item_to_plot(name) == expected_path_list

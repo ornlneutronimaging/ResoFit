@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import os
 import pprint
+import itertools
 import re
+from ImagingReso.resonance import Resonance
 
 
 def load_txt_csv(path_to_file):
@@ -86,6 +88,84 @@ def shape_item_to_plot(name):
     return _path_of_input
 
 
+# class ItemToPlot(object):
+#     def __int__(self, items_to_plot, o_reso):
+#         self.items_to_plot = items_to_plot
+#         self.o_reso = o_reso
+         
+        
+def fill_iso_to_item_to_plot(name, stack=None):
+    if '*' not in name:
+        raise ValueError("'*' is needed to retrieve all isotopes of '{}' ".format(name))
+    else:
+        ele_name = name.replace('*', '')
+        if stack is None:
+            o_reso = Resonance()
+            o_reso.add_layer(formula=ele_name,
+                             thickness=1)
+            stack = o_reso.stack
+        iso_list = stack[ele_name][ele_name]['isotopes']['list']
+        _path_to_iso = []
+        for _each_iso in iso_list:
+            _path_to_iso.append(shape_item_to_plot(_each_iso))
+    return _path_to_iso
+
+
+def remove_duplicates_in_list_of_lists(raw):
+    raw.sort()
+    cleaned_list = list(raw for raw, _ in itertools.groupby(raw))
+    return cleaned_list
+
+
+def data_for_items_to_plot(items_to_plot, o_reso):
+    # plot specified from 'items_to_plot'
+    _stack_signal = o_reso.stack_signal
+    y_axis_tag = 'attenuation'
+
+    # Format the input
+    _path_to_plot_list = []
+    for _raw_path_to_plot in items_to_plot:
+        if type(_raw_path_to_plot) is not list:
+            if '*' in _raw_path_to_plot:
+                _path_to_plot_list = _path_to_plot_list + fill_iso_to_item_to_plot(_raw_path_to_plot, o_reso.stack)
+            else:
+                _path_to_plot_list.append(shape_item_to_plot(_raw_path_to_plot))
+        else:
+            if len(_raw_path_to_plot) == 1:
+                _raw_path_to_plot = shape_item_to_plot(_raw_path_to_plot[0])
+            _path_to_plot_list.append(_raw_path_to_plot)
+    # Clean duplicates in list
+    _path_to_plot_list = remove_duplicates_in_list_of_lists(_path_to_plot_list)
+
+    # form dict
+    _y_axis_dict = {}
+    for _each_path in _path_to_plot_list:
+        _label = _each_path[-1]
+        if len(_each_path) == 3:
+            _y_axis_dict[_label] = _stack_signal[_each_path[0]][_each_path[1]][_each_path[2]][y_axis_tag]
+        elif len(_each_path) == 2:
+            _y_axis_dict[_label] = _stack_signal[_each_path[0]][_each_path[1]][y_axis_tag]
+        else:
+            raise ValueError("Format error of '{}', should be in the form of "
+                             "['layer', 'element'] or ['layer', 'element', 'isotope']")
+    return _y_axis_dict
+
+
+def set_plt(plt, x_max, fig_title, grid=False):
+    plt.set_xlim([0, x_max])
+    plt.set_ylim(ymax=1.01)
+    plt.set_title(fig_title)
+    plt.set_xlabel('Energy (eV)')
+    plt.set_ylabel('Neutron attenuation')
+    plt.legend(loc='best')
+    # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
+    # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)
+    if grid is True:
+        # ax1.set_xticks(np.arange(0, 100, 10))
+        # ax1.set_yticks(np.arange(0, 1., 0.1))
+        plt.grid()
+
+
 class Layer(object):
     def __init__(self):
         self.info = {}
@@ -130,15 +210,15 @@ class Layer(object):
         pprint.pprint(self.info)
 
 
-
-
 def a_new_decorator(a_func):
     @wraps(a_func)
     def wrapTheFunction():
         print("I am doing some boring work before executing a_func()")
         a_func()
         print("I am doing some boring work after executing a_func()")
+
     return wrapTheFunction
+
 
 @a_new_decorator
 def a_function_requiring_decoration():

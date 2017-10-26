@@ -10,7 +10,7 @@ from ResoFit._gap_functions import y_gap_for_fitting
 from ResoFit._gap_functions import y_gap_for_iso_fitting
 import periodictable as pt
 from ResoFit._utilities import Layer
-from ResoFit._utilities import shape_item_to_plot
+import ResoFit._utilities as fit_util
 import pandas as pd
 import pprint
 
@@ -307,31 +307,12 @@ class FitResonance(Experiment):
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
-            _stack_signal = self.fitted_simulation.o_reso.stack_signal
-            y_axis_tag = 'attenuation'
+            _signal_dict = fit_util.data_for_items_to_plot(items_to_plot=items_to_plot, o_reso=self.fitted_simulation.o_reso)
+            for _each_label in list(_signal_dict.keys()):
+                ax1.plot(simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
-            for _path_to_plot in items_to_plot:
-                if type(_path_to_plot) is not list:
-                    _path_to_plot = shape_item_to_plot(_path_to_plot)
-                _path_to_plot = list(_path_to_plot)
-                _live_path = _stack_signal
-                _label = _path_to_plot[-1]  # "/".join(_path_to_plot)
-                while _path_to_plot:
-                    _item = _path_to_plot.pop(0)
-                    _live_path = _live_path[_item]
-                _y_axis = _live_path[y_axis_tag]
-                ax1.plot(simu_x, _y_axis, '--', label=_label, linewidth=1, alpha=1)
-
-        ax1.set_xlim([0, self.energy_max])
-        ax1.set_ylim(ymax=1.01)
-        ax1.set_title(fig_title)
-        ax1.set_xlabel('Energy (eV)')
-        ax1.set_ylabel('Attenuation')
-        ax1.legend(loc='best')
-        if grid is True:
-            # ax1.set_xticks(np.arange(0, 100, 10))
-            # ax1.set_yticks(np.arange(0, 1., 0.1))
-            ax1.grid()
+        # Set plot limit and captions
+        fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)
 
         # Plot table
         if table is True:
