@@ -7,7 +7,6 @@ import pprint
 from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
 
-
 # Global parameters
 energy_min = 7
 energy_max = 150
@@ -45,6 +44,7 @@ table = True
 grid = True
 elements = True
 isotopes = True
+items_to_plot = ['Gd', 'U*', 'Gd*']
 
 repeat = 1
 source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
@@ -69,7 +69,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 # calibration.plot(before=before, items_to_plot=None)
-calibration.plot(before=before, items_to_plot=[['Gd'], ['238-U'], ['U', 'U', '235-U']])
+calibration.plot(before=before, items_to_plot=items_to_plot)
 # calibration.plot(before=before, items_to_plot=['Gd', 'U*', '235-U'])
 
 # # Fit the peak height
