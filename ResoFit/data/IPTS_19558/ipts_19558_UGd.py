@@ -43,7 +43,8 @@ each_step = False
 before = True
 table = True
 grid = True
-items_to_plot = ['238-U', '235-U', 'Gd']
+# items_to_plot = ['238-U', '235-U', 'Gd']
+items_to_plot = ['U-238', 'Gd-156', 'U']
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -85,8 +86,8 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_end=image_end,
                    baseline=baseline)
 fit_result = fit.fit(layer, vary='density', each_step=each_step)
-# # Fit isotope ratios
-# fit.fit_iso(layer=layer_1)
+# Fit isotope ratios
+fit.fit_iso(layer=layer_1)
 fit.molar_conc()
 fit.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
 

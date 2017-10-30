@@ -79,6 +79,8 @@ def shape_item_to_plot(name):
         if len(name) == 1:
             if name.isupper() is False:
                 name = name.upper()
+            _path_of_input.append(name)
+            _path_of_input.append(name)
         if len(name) == 2:
             if name[0].isupper() and name[1].islower() is True:
                 _path_of_input.append(name)
