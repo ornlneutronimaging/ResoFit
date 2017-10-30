@@ -57,7 +57,7 @@ class FitResonance(Experiment):
                                                               source_to_detector_m=self.calibrated_source_to_detector_m,
                                                               baseline=self.baseline)
 
-    def fit(self, raw_layer, vary='density', isotope=False, isotope_vary_tag_list=[], each_step=False):
+    def fit(self, raw_layer, vary='density', each_step=False):
         if vary not in ['density', 'thickness', 'none']:
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'none']")
         # Default vary is: 'density'

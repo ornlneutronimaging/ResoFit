@@ -42,7 +42,7 @@ class Experiment(object):
         # Error for 'repeat' int & >=1
         if isinstance(repeat, int) is False:
             raise ValueError("Repeat value must be an integer!")
-        if repeat < 1:
+        elif repeat < 1:
             raise ValueError("Repeat value must be an integer >= 1 !")
 
         self.spectra = load_txt_csv(self.spectra_path)
