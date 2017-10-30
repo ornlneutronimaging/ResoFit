@@ -28,7 +28,10 @@ setup(
         'pprint',
         'scipy',
         'lmfit',
-        'peakutils', 'matplotlib',
+        'peakutils',
+        'matplotlib',
+        'cerberus',
+
     ],
     dependency_links=[
     ],

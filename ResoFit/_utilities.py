@@ -5,6 +5,7 @@ import os
 import pprint
 import itertools
 import re
+from cerberus import Validator
 from ImagingReso.resonance import Resonance
 
 
@@ -94,8 +95,8 @@ def shape_item_to_plot(name):
 #     def __int__(self, items_to_plot, o_reso):
 #         self.items_to_plot = items_to_plot
 #         self.o_reso = o_reso
-         
-        
+
+
 def fill_iso_to_item_to_plot(name, stack=None):
     if '*' not in name:
         raise ValueError("'*' is needed to retrieve all isotopes of '{}' ".format(name))
@@ -173,9 +174,28 @@ class Layer(object):
         self.info = {}
 
     def add_layer(self, layer, thickness_mm, density_gcm3=None):
-        # raise error if input is not string.
-        if type(layer) is not str:
-            raise ValueError("Please enter layer as string. Example: 'Gd' or 'U'")
+
+        # Input Validation
+        _input = {'layer': layer,
+                  'thickness': thickness_mm,
+                  'density': density_gcm3,
+                  }
+
+        schema = {'layer': {'type': 'string',
+                            'required': True,
+                            },
+                  'thickness': {'type': 'number',
+                                'required': True,
+                                },
+                  'density': {'type': 'number',
+                              'required': True,
+                              'nullable': True,
+                              },
+                  }
+        v = Validator(schema)
+        if v.validate(_input) is False:
+            raise ValueError(v.errors)
+
         _formula = re.findall(r'([A-Z][a-z]*)(\d*)', layer)
         _elements = []
         for _element in _formula:
@@ -188,24 +208,32 @@ class Layer(object):
         if density_gcm3 is not None:
             self.info[layer] = {'layer': layer,
                                 'thickness': {'value': thickness_mm,
-                                              'units': 'mm'},
+                                              'units': 'mm',
+                                              },
                                 'density': {'value': density_gcm3,
-                                            'units': 'g/cm3'},
+                                            'units': 'g/cm3',
+                                            },
                                 'molar_mass': {'value': None,
-                                               'units': None},
+                                               'units': None,
+                                               },
                                 'molar_conc': {'value': None,
-                                               'units': None}
+                                               'units': None,
+                                               },
                                 }
         else:
             self.info[layer] = {'layer': layer,
                                 'thickness': {'value': thickness_mm,
-                                              'units': 'mm'},
+                                              'units': 'mm',
+                                              },
                                 'density': {'value': np.NaN,
-                                            'units': 'g/cm3'},
+                                            'units': 'g/cm3',
+                                            },
                                 'molar_mass': {'value': None,
-                                               'units': None},
+                                               'units': None,
+                                               },
                                 'molar_conc': {'value': None,
-                                               'units': None}
+                                               'units': None,
+                                               },
                                 }
 
     def show(self):
