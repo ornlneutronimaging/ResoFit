@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import os
+import pytest
 import ResoFit._utilities as fit_util
 
 
@@ -10,16 +11,17 @@ class TestLayer(unittest.TestCase):
         thickness_1 = 0.018
         density_1 = None
         layer_1 = 16
-        self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        # self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = []
-        self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = {}
-        self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = np.array
-        self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = 'U'
         thickness_1 = ''
-        self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
 
     def test_add_layer(self):
         layer_1 = 'Gd'
@@ -42,7 +44,7 @@ class TestLayer(unittest.TestCase):
                                                },
                                 }
                          }
-        self.assertEqual(layer.info, info_expected)
+        assert layer.info == info_expected
         density_1 = 7.9
         layer = fit_util.Layer()
         layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
@@ -61,7 +63,7 @@ class TestLayer(unittest.TestCase):
                                                },
                                 }
                          }
-        self.assertEqual(layer.info, info_expected)
+        assert layer.info == info_expected
 
 
 class TestRestructureInput(unittest.TestCase):
@@ -70,13 +72,13 @@ class TestRestructureInput(unittest.TestCase):
         name = 'Gd'
         assert fit_util.shape_item_to_plot(name) == expected_path
         name = 'GD'
-        self.assertRaises(ValueError, fit_util.shape_item_to_plot, name=name)
+        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
         name = 'gD'
-        self.assertRaises(ValueError, fit_util.shape_item_to_plot, name=name)
+        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
         name = 'GdO'
-        self.assertRaises(ValueError, fit_util.shape_item_to_plot, name=name)
+        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
         name = 'gd'
-        self.assertRaises(ValueError, fit_util.shape_item_to_plot, name=name)
+        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
 
     def test_isotope_format_1(self):
         name = '238-U'
