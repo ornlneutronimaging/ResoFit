@@ -237,7 +237,7 @@ class Calibration(Simulation):
             # ax2 = plt.subplot2grid(shape=(10, 7), loc=(0, 1), rowspan=4, colspan=5)
             # ax2.axis('off')
             columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
-            columns_to_show = [r'$L$ (m)', r'$\Delta$t ($\rm{\mu}$s)']
+            columns_to_show = [r'$L$ (m)', r'$\Delta t$ ($\rm{\mu}$s)']
             rows = ['Before', 'After']
             _row_before = []
             _row_after = []
