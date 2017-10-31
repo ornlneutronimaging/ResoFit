@@ -16,23 +16,6 @@ import pprint
 
 
 class FitResonance(Experiment):
-    fit_result = None
-    fitted_density_gcm3 = None
-    fitted_thickness_mm = None
-    fitted_residual = None
-    fitted_gap = None
-    fitted_fjac = None
-    fitted_layer = None
-    fitted_simulation = None
-    layer_list = None
-    raw_layer = None
-    fitted_iso_result = None
-    fitted_iso_residual = None
-    params_for_fit = None
-    params_for_iso_fit = None
-    isotope_stack = {}
-    sample_vary = None
-
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
                  folder, repeat=1, baseline=False,
@@ -56,6 +39,24 @@ class FitResonance(Experiment):
                                                               offset_us=self.calibrated_offset_us,
                                                               source_to_detector_m=self.calibrated_source_to_detector_m,
                                                               baseline=self.baseline)
+
+        self.fit_result = None
+        self.fitted_density_gcm3 = None
+        self.fitted_thickness_mm = None
+        self.fitted_residual = None
+        self.fitted_gap = None
+        self.fitted_fjac = None
+        self.fitted_layer = None
+        self.fitted_simulation = None
+        self.layer_list = None
+        self.raw_layer = None
+        self.fitted_iso_result = None
+        self.fitted_iso_residual = None
+        self.params_for_fit = None
+        self.params_for_iso_fit = None
+        self.isotope_stack = {}
+        self.sample_vary = None
+        self.df = None
 
     def fit(self, raw_layer, vary='density', each_step=False):
         if vary not in ['density', 'thickness', 'none']:
@@ -213,8 +214,30 @@ class FitResonance(Experiment):
         return self.fitted_layer.info
 
     def plot(self, error=True, table=True, grid=True, before=False, interp=False,
-             all_elements=False, all_isotopes=False, items_to_plot=None):
-        """"""
+             all_elements=False, all_isotopes=False, items_to_plot=None, save_fig=False):
+        """
+
+        :param error:
+        :type error:
+        :param table:
+        :type table:
+        :param grid:
+        :type grid:
+        :param before:
+        :type before:
+        :param interp:
+        :type interp:
+        :param all_elements:
+        :type all_elements:
+        :param all_isotopes:
+        :type all_isotopes:
+        :param items_to_plot:
+        :type items_to_plot:
+        :param save_fig:
+        :type save_fig:
+        :return:
+        :rtype:
+        """
         # Form signals from fitted_layer
         if self.fitted_simulation is None:
             self.fitted_simulation = Simulation(energy_min=self.energy_min,
@@ -238,6 +261,11 @@ class FitResonance(Experiment):
             raise ValueError("Vary type ['density'|'thickness'] is not set.")
         fig_title = 'Fitting result of sample (' + sample_name + ')'
 
+        # Create pd.DataFrame
+        self.df = pd.DataFrame()
+
+        # Clear any left plt
+        plt.close()
         if table is True:
             # plot table + graph
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
@@ -247,7 +275,11 @@ class FitResonance(Experiment):
 
         # Plot after fitting
         ax1.plot(simu_x, simu_y, 'b-', label=simu_label, linewidth=1)
-
+        # Save to df
+        _live_df_x_label = simu_label + '_eV'
+        _live_df_y_label = simu_label + '_attenuation'
+        self.df[_live_df_x_label] = simu_x
+        self.df[_live_df_y_label] = simu_y
         """Plot options"""
 
         # 1.
@@ -264,6 +296,11 @@ class FitResonance(Experiment):
             simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
             ax1.plot(simu_x, simu_y_before,
                      'c-.', label=simu_before_label, linewidth=1)
+            # Save to df
+            _live_df_x_label = simu_before_label + '_eV'
+            _live_df_y_label = simu_before_label + '_attenuation'
+            self.df[_live_df_x_label] = simu_x
+            self.df[_live_df_y_label] = simu_y_before
         # 2.
         if interp is True:
             # Plot exp. data (interpolated)
@@ -273,26 +310,54 @@ class FitResonance(Experiment):
                                                 offset_us=self.calibrated_offset_us,
                                                 source_to_detector_m=self.source_to_detector_m)
             ax1.plot(x_interp, y_interp, 'r-.', label=exp_interp_label, linewidth=1)
+            # Save to df
+            _live_df_x_label = exp_interp_label + '_eV'
+            _live_df_y_label = exp_interp_label + '_attenuation'
+            self.df[_live_df_x_label] = x_interp
+            self.df[_live_df_y_label] = y_interp
         else:
             # Plot exp. data (raw)
-            ax1.plot(self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
-                                source_to_detector_m=self.source_to_detector_m),
-                     self.y_raw(transmission=False, baseline=self.baseline),
-                     'rx', label=exp_label, markersize=2)
+            exp_x = self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
+                               source_to_detector_m=self.source_to_detector_m)
+            exp_y = self.y_raw(transmission=False, baseline=self.baseline)
+            ax1.plot(exp_x, exp_y, 'rx', label=exp_label, markersize=2)
+            # Save to df
+            _df = pd.DataFrame()
+            _live_df_x_label = exp_label + '_eV'
+            _live_df_y_label = exp_label + '_attenuation'
+            _df[_live_df_x_label] = exp_x
+            _df[_live_df_y_label] = exp_y
+            # Concatenate since the length of raw and simu are not the same
+            self.df = pd.concat([self.df, _df], axis=1)
+
         # 3.
         if error is True:
             # Plot fitting differences
-            ax1.plot(simu_x, self.fitted_residual - 0.2, 'g-', label='Diff.', linewidth=1, alpha=1)
+            error_label = 'Diff.'
+            _move_below_by = 0.2
+            moved_fitted_residual = self.fitted_residual - _move_below_by
+            ax1.plot(simu_x, moved_fitted_residual, 'g-', label=error_label, linewidth=1, alpha=1)
+            # Save to df
+            _live_df_x_label = error_label + '_eV'
+            _live_df_y_label = error_label + '_attenuation'
+            self.df[_live_df_x_label] = simu_x
+            self.df[_live_df_y_label] = moved_fitted_residual
         # 4.
         if all_elements is True:
             # show signal from each elements
             _stack_signal = self.fitted_simulation.o_reso.stack_signal
             _stack = self.fitted_simulation.o_reso.stack
             y_axis_tag = 'attenuation'
+
             for _layer in _stack.keys():
                 for _element in _stack[_layer]['elements']:
                     _y_axis = _stack_signal[_layer][_element][y_axis_tag]
                     ax1.plot(simu_x, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
+                    # Save to df
+                    _live_df_x_label = _element + '_eV'
+                    _live_df_y_label = _element + '_attenuation'
+                    self.df[_live_df_x_label] = simu_x
+                    self.df[_live_df_y_label] = _y_axis
         # 4.
         if all_isotopes is True:
             # show signal from each isotopes
@@ -304,12 +369,25 @@ class FitResonance(Experiment):
                     for _isotope in _stack[_layer][_element]['isotopes']['list']:
                         _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
                         ax1.plot(simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
+                        # Save to df
+                        _live_df_x_label = _isotope + '_eV'
+                        _live_df_y_label = _isotope + '_attenuation'
+                        self.df[_live_df_x_label] = simu_x
+                        self.df[_live_df_y_label] = _y_axis
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
-            _signal_dict = fit_util.data_for_items_to_plot(items_to_plot=items_to_plot, o_reso=self.fitted_simulation.o_reso)
+            y_axis_tag = 'attenuation'
+            items = fit_util.Items(o_reso=self.fitted_simulation.o_reso, items_list=items_to_plot)
+            shaped_items = items.shaped()
+            _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
+                # Save to df
+                _live_df_x_label = _each_label + '_eV'
+                _live_df_y_label = _each_label + '_attenuation'
+                self.df[_live_df_x_label] = simu_x
+                self.df[_live_df_y_label] = _signal_dict[_each_label]
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)
@@ -351,90 +429,24 @@ class FitResonance(Experiment):
                 for _each in _iso_columns:
                     _row_after.append(round(self.fitted_iso_result.__dict__['params'].valuesdict()[_each], 3))
                     _row_before.append(round(self.params_for_iso_fit.valuesdict()[_each], 3))
-            table = ax1.table(rowLabels=rows, colLabels=columns_to_show, cellText=[_row_before, _row_after], loc='upper right',
+            table = ax1.table(rowLabels=rows, colLabels=columns_to_show, cellText=[_row_before, _row_after],
+                              loc='upper right',
                               bbox=[0, -0.33, 1.0, 0.18])
             table.auto_set_font_size(False)
             table.set_fontsize(10)
             plt.tight_layout()
 
-        plt.show()
-        # plt.savefig('test.tiff')
+        if save_fig:
+            _sample_name = '_'.join(self.layer_list)
+            _filename = 'fitting_' + _sample_name + '.tiff'
+            plt.savefig(_filename, dpi=600, transparent=True)
+        else:
+            plt.show()
 
-        # def export(self, filename=None):
-        #     _x_axis = self.total_signal['energy_eV']
-        #     x_axis_label = None
-        #     df = pd.DataFrame()
-        #
-        #     """X-axis"""
-        #     # determine values and labels for x-axis with options from
-        #     # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        #     x_axis_label = 'Energy (eV)'
-        #     df[x_axis_label] = _x_axis
-        #
-        #     """Y-axis"""
-        #     df['Total_'+y_axis_tag] = _y_axis
-        #             # export based on specified level : layer|element|isotope
-        #             if all_layers:
-        #                 for _compound in _stack.keys():
-        #                     _y_axis = _stack_signal[_compound][y_axis_tag]
-        #                     df[_compound] = _y_axis
-        #
-        #             if all_elements:
-        #                 for _compound in _stack.keys():
-        #                     for _element in _stack[_compound]['elements']:
-        #                         _y_axis = _stack_signal[_compound][_element][y_axis_tag]
-        #                         df[_compound + '/' + _element] = _y_axis
-        #
-        #             if all_isotopes:
-        #                 for _compound in _stack.keys():
-        #                     for _element in _stack[_compound]['elements']:
-        #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
-        #                             _y_axis = _stack_signal[_compound][_element][_isotope][y_axis_tag]
-        #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
-        #         else:
-        #             # export specified transmission or attenuation
-        #             for _path_to_export in items_to_export:
-        #                 _path_to_export = list(_path_to_export)
-        #                 _live_path = _stack_signal
-        #                 _label = "/".join(_path_to_export)
-        #                 while _path_to_export:
-        #                     _item = _path_to_export.pop(0)
-        #                     _live_path = _live_path[_item]
-        #                 _y_axis = _live_path[y_axis_tag]
-        #                 df[_label] = _y_axis
-        #     else:
-        #         # export sigma
-        #         _stack_sigma = self.stack_sigma
-        #         y_axis_tag = 'sigma_b'
-        #         if items_to_export is None:
-        #             for _compound in _stack.keys():
-        #                 for _element in _stack[_compound]['elements']:
-        #                     _y_axis = _stack_sigma[_compound][_element][y_axis_tag]
-        #                     df[_compound + '/' + _element + '/atoms_per_cm3'] = _stack[_compound]['atoms_per_cm3'][_element]
-        #                     df[_compound + '/' + _element] = _y_axis
-        #                     if all_isotopes:
-        #                         for _isotope in _stack[_compound][_element]['isotopes']['list']:
-        #                             _y_axis = _stack_sigma[_compound][_element][_isotope][y_axis_tag]
-        #                             df[_compound + '/' + _element + '/' + _isotope] = _y_axis
-        #         else:
-        #             # export specified sigma
-        #             for _path_to_export in items_to_export:
-        #                 if len(_path_to_export) == 1:
-        #                     raise ValueError(
-        #                         "Getting total sigma of '{}' at layer level is not supported. "
-        #                         "If it is a single element layer, please follow ['layer', 'element'] format.".format(
-        #                             _path_to_export[0]))
-        #                 _path_to_export = list(_path_to_export)
-        #                 _live_path = _stack_sigma
-        #                 _label = "/".join(_path_to_export)
-        #                 while _path_to_export:
-        #                     _item = _path_to_export.pop(0)
-        #                     _live_path = _live_path[_item]
-        #                 _y_axis = _live_path[y_axis_tag]
-        #                 df[_label] = _y_axis
-        #
-        #     if filename is None:
-        #         df.to_clipboard(excel=True)
-        #     else:
-        #         df.to_csv(filename)
-        #
+    def export(self, filename=None):
+        if self.df is None:
+            raise ValueError("pd.DataFrame is empty, please run required step.")
+        elif filename is None:
+            self.df.to_clipboard(excel=True)
+        else:
+            self.df.to_csv(filename)

@@ -44,8 +44,8 @@ before = True
 table = True
 grid = True
 # items_to_plot = ['238-U', '235-U', 'Gd']
-# items_to_plot = ['U-238', 'Gd-156', 'U']
-items_to_plot = None
+items_to_plot = ['U-238', 'Gd-156', 'U']
+# items_to_plot = None
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -92,3 +92,4 @@ fit_result = fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
 fit.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
 
+# fit.export()

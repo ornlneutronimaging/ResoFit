@@ -136,7 +136,8 @@ class Calibration(Simulation):
         return self.calibrate_result
 
     def plot(self, table=True, grid=True, before=False, interp=False,
-             all_elements=False, all_isotopes=False, items_to_plot=None):
+             all_elements=False, all_isotopes=False, items_to_plot=None,
+             save_fig=False):
         """
 
         :param table:
@@ -153,6 +154,8 @@ class Calibration(Simulation):
         :type all_isotopes:
         :param items_to_plot:
         :type items_to_plot:
+        :param save_fig:
+        :type save_fig:
         :return:
         :rtype:
         """
@@ -166,6 +169,9 @@ class Calibration(Simulation):
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
         fig_title = 'Calibration result of sample (' + sample_name + ')'
+
+        # clear any left plt
+        plt.close()
 
         if table is True:
             # plot table + graph
@@ -218,7 +224,10 @@ class Calibration(Simulation):
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
-            _signal_dict = fit_util.data_for_items_to_plot(items_to_plot=items_to_plot, o_reso=self.o_reso)
+            y_axis_tag = 'attenuation'
+            items = fit_util.Items(o_reso=self.o_reso, items_list=items_to_plot)
+            shaped_items = items.shaped()
+            _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
@@ -246,5 +255,9 @@ class Calibration(Simulation):
             table.set_fontsize(10)
             plt.tight_layout()
 
-        plt.show()
-        # plt.savefig('test.tiff', dpi=300)
+        if save_fig:
+            _sample_name = '_'.join(self.layer_list)
+            _filename = 'calibration_' + _sample_name + '.tiff'
+            plt.savefig(_filename, dpi=600, transparent=True)
+        else:
+            plt.show()

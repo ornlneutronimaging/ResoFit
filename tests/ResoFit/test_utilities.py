@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pytest
 import ResoFit._utilities as fit_util
+from ResoFit.simulation import Simulation
 
 
 class TestLayer(unittest.TestCase):
@@ -18,6 +19,8 @@ class TestLayer(unittest.TestCase):
         layer_1 = {}
         pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = np.array
+        pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        layer_1 = 'UO3'
         pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = 'U'
         thickness_1 = ''
@@ -66,40 +69,91 @@ class TestLayer(unittest.TestCase):
         assert layer.info == info_expected
 
 
-class TestRestructureInput(unittest.TestCase):
-    def test_element(self):
-        expected_path = ['Gd', 'Gd']
-        name = 'Gd'
-        assert fit_util.shape_item_to_plot(name) == expected_path
-        name = 'GD'
-        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
-        name = 'gD'
-        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
-        name = 'GdO'
-        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
-        name = 'gd'
-        pytest.raises(ValueError, fit_util.shape_item_to_plot, name=name)
+class TestItems(unittest.TestCase):
+    layer_1 = 'U'
+    thickness_1 = 0.05
+    layer_2 = 'Gd'
+    thickness_2 = 0.05
+    simulation = Simulation()
+    simulation.add_layer(layer=layer_1, layer_thickness_mm=thickness_1)
+    simulation.add_layer(layer=layer_2, layer_thickness_mm=thickness_2)
+    items = fit_util.Items(simulation.o_reso)
 
-    def test_isotope_format_1(self):
+    def test_raises(self):
+        name = 'GD'
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+        name = 'gD'
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+        name = 'GdO'
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+        name = 'gd'
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+        name = ''
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+        name = []
+        pytest.raises(ValueError, fit_util._shape_items, name=name)
+
+    def test_isotope_format(self):
         name = '238-U'
         expected_path = ['U', 'U', '238-U']
-        assert fit_util.shape_item_to_plot(name) == expected_path
+        assert fit_util._shape_items(name) == expected_path
         name = '238U'
-        assert fit_util.shape_item_to_plot(name) == expected_path
+        assert fit_util._shape_items(name) == expected_path
         name = 'U-238'
-        assert fit_util.shape_item_to_plot(name) == expected_path
+        assert fit_util._shape_items(name) == expected_path
         name = 'U238'
-        assert fit_util.shape_item_to_plot(name) == expected_path
+        assert fit_util._shape_items(name) == expected_path
 
-    def test_fill_iso_to_item_to_plot(self):
+    def test_fill_iso_to_items(self):
         name = 'U*'
         expected_path_list = [['U', 'U', '233-U'],
                               ['U', 'U', '234-U'],
                               ['U', 'U', '235-U'],
                               ['U', 'U', '238-U']]
-        assert fit_util.fill_iso_to_item_to_plot(name) == expected_path_list
+        assert fit_util._fill_iso_to_items(name) == expected_path_list
+        name = 'U'
+        pytest.raises(ValueError, fit_util._fill_iso_to_items, name=name)
 
-    def test_shape_item_to_plot(self):
+    def test_shape_items(self):
         name = 'U'
         expected_path = ['U', 'U']
-        assert fit_util.shape_item_to_plot(name) == expected_path
+        assert fit_util._shape_items(name) == expected_path
+        name = 'u'
+        expected_path = ['U', 'U']
+        assert fit_util._shape_items(name) == expected_path
+        name = 'Gd'
+        expected_path = ['Gd', 'Gd']
+        assert fit_util._shape_items(name) == expected_path
+
+    def test_items_shaped(self):
+        _input = ['Gd', ['U'], 'U-238', 'U*']
+        expected = [['Gd', 'Gd'],
+                    ['U', 'U'],
+                    ['U', 'U', '233-U'],
+                    ['U', 'U', '234-U'],
+                    ['U', 'U', '235-U'],
+                    ['U', 'U', '238-U']]
+        obtained = self.items.shaped(_input)
+        assert obtained == expected
+
+    def test_items_original(self):
+        _input = [['Gd', 'Gd'],
+                  ['U', 'U'],
+                  ['U', 'U', '233-U'],
+                  ['U', 'U', '234-U'],
+                  ['U', 'U', '235-U'],
+                  ['U', 'U', '238-U']]
+        expected = [['Gd', 'Gd'],
+                    ['U', 'U'],
+                    ['U', 'U', '233-U'],
+                    ['U', 'U', '234-U'],
+                    ['U', 'U', '235-U'],
+                    ['U', 'U', '238-U']]
+        obtained = self.items.shaped(_input)
+        assert obtained == expected
+
+
+def test_get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14):
+    expected = 8.96
+    assert fit_util.get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g) == expected
+

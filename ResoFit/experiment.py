@@ -9,16 +9,6 @@ import matplotlib.pyplot as plt
 
 
 class Experiment(object):
-    source_to_detector_m = np.NaN
-    offset_us = np.NaN
-    spectra_path = ''
-    data_path = ''
-    spectra = pd.DataFrame
-    data = pd.DataFrame
-    slice_start = None
-    slice_end = None
-    spectra_file = None
-    data_file = None
 
     def __init__(self, spectra_file, data_file, folder, repeat=1):
         """
@@ -48,6 +38,16 @@ class Experiment(object):
         self.spectra = load_txt_csv(self.spectra_path)
         self.data = load_txt_csv(self.data_path)
         self.repeat = repeat
+        assert type(self.repeat) is int
+
+        # detector position (m) for the actual measurement
+        self.source_to_detector_m = 16.
+
+        # offset in time (us) for the actual measurement
+        self.offset_us = 0.
+
+        self.slice_start = None
+        self.slice_end = None
 
         # Error loading data and spectra
         if type(self.spectra[0][0]) is str:
@@ -65,19 +65,20 @@ class Experiment(object):
             raise ValueError(
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
 
-    def x_raw(self, angstrom=False, offset_us=0., source_to_detector_m=15.):
+    def x_raw(self, angstrom=False, **kwargs):
         """
         Get the 'x' in eV or angstrom with experimental parameters
         :param angstrom: bool to switch between eV and angstrom
-        :param offset_us: offset_us for the actual measurement
-        :param source_to_detector_m: detector position for the actual measurement
         :return: array
         """
-        self.offset_us = offset_us
-        self.source_to_detector_m = source_to_detector_m
+        if 'offset_us' in kwargs.keys():
+            self.offset_us = kwargs['offset_us']
+        if 'source_to_detector_m' in kwargs.keys():
+            self.source_to_detector_m = kwargs['source_to_detector_m']
+
         x_exp_raw = np.array(reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
-                                                offset_us=offset_us,
-                                                source_to_detector_m=source_to_detector_m))
+                                                offset_us=self.offset_us,
+                                                source_to_detector_m=self.source_to_detector_m))
         if angstrom is True:
             x_exp_raw = np.array(reso_utils.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
@@ -102,8 +103,8 @@ class Experiment(object):
 
         return y_exp_raw
 
-    def xy_scaled(self, energy_min, energy_max, energy_step, angstrom=False, transmission=False,
-                  offset_us=0, source_to_detector_m=15, baseline=False):
+    def xy_scaled(self, energy_min, energy_max, energy_step,
+                  angstrom=False, transmission=False, baseline=False, **kwargs):
         """
         Get interpolated x & y within the scaled range same as simulation
         :param baseline: boolean to remove baseline/background by detrend
@@ -112,15 +113,16 @@ class Experiment(object):
         :param energy_step:
         :param angstrom: True -> output the interpolated data with x-axis as wavelength in angstrom
         :param transmission:
-        :param offset_us:
-        :param source_to_detector_m:
         :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
         """
-        self.offset_us = offset_us
-        self.source_to_detector_m = source_to_detector_m
+        if 'offset_us' in kwargs.keys():
+            self.offset_us = kwargs['offset_us']
+        if 'source_to_detector_m' in kwargs.keys():
+            self.source_to_detector_m = kwargs['source_to_detector_m']
+
         x_exp_raw = reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
                                        offset_us=self.offset_us,
-                                       source_to_detector_m=source_to_detector_m)
+                                       source_to_detector_m=self.source_to_detector_m)
         _list = list(x_exp_raw)
         _x_max = _list[0]
         _x_min = _list[-1]
@@ -203,14 +205,11 @@ class Experiment(object):
                         df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
 
-    def plot_raw(self, offset_us=2.69, source_to_detector_m=16.45,
-                 energy_xmax=150, lambda_xmax=None,
+    def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,
-                 x_axis='energy', time_unit='us'):
+                 x_axis='energy', time_unit='us', **kwargs):
         """
         Display the loaded signal from data and spectra files.
-        :param offset_us:
-        :param source_to_detector_m:
         :param energy_xmax: maximum x-axis energy value to display
         :param lambda_xmax: maximum x-axis lambda value to display
         :param transmission: boolean. False -> show resonance peaks
@@ -226,6 +225,14 @@ class Experiment(object):
             raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
         x_axis_label = None
         x_exp_raw = None
+        if 'offset_us' in kwargs.keys():
+            self.offset_us = kwargs['offset_us']
+        if 'source_to_detector_m' in kwargs.keys():
+            self.source_to_detector_m = kwargs['source_to_detector_m']
+
+        # clear any left plt
+        plt.close()
+
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
@@ -239,10 +246,14 @@ class Experiment(object):
                 angstrom = True
                 if lambda_xmax is not None:
                     plt.xlim(xmin=0, xmax=lambda_xmax)
-            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=angstrom,
+                                   offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
 
         if x_axis in ['time', 'number']:
-            x_exp_raw = self.x_raw(angstrom=False, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=False,
+                                   offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
             if x_axis == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
@@ -276,16 +287,14 @@ class Experiment(object):
         plt.ylabel(y_axis_label)
         plt.legend(loc='best')
 
-    def export_raw(self, offset_us=2.69, source_to_detector_m=16.45,
-                   energy_xmax=150, lambda_xmax=None,
+    def export_raw(self, filename=None,
                    transmission=False, baseline=False,
-                   x_axis='energy', time_unit='us'):
+                   x_axis='energy', time_unit='us', **kwargs):
         """
-        Display the loaded signal from data and spectra files.
-        :param offset_us:
-        :param source_to_detector_m:
-        :param energy_xmax: maximum x-axis energy value to display
-        :param lambda_xmax: maximum x-axis lambda value to display
+        Export the calculated signal from data and spectra files.
+        :param filename: filename (with .csv suffix) you would like to save as
+                                None -> export to clipboard
+        :type filename: string.
         :param transmission: boolean. False -> show resonance peaks
                                       True -> show resonance dips
         :param baseline: boolean. True -> remove baseline by detrend
@@ -299,6 +308,12 @@ class Experiment(object):
             raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
         x_axis_label = None
         x_exp_raw = None
+        df = pd.DataFrame()
+        if 'offset_us' in kwargs.keys():
+            self.offset_us = kwargs['offset_us']
+        if 'source_to_detector_m' in kwargs.keys():
+            self.source_to_detector_m = kwargs['source_to_detector_m']
+
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
@@ -306,16 +321,13 @@ class Experiment(object):
             if x_axis == 'energy':
                 x_axis_label = 'Energy (eV)'
                 angstrom = False
-                plt.xlim(xmin=0, xmax=energy_xmax)
             else:
                 x_axis_label = u"Wavelength (\u212B)"
                 angstrom = True
-                if lambda_xmax is not None:
-                    plt.xlim(xmin=0, xmax=lambda_xmax)
-            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
 
         if x_axis in ['time', 'number']:
-            x_exp_raw = self.x_raw(angstrom=False, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=False, offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
             if x_axis == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
@@ -333,6 +345,8 @@ class Experiment(object):
         if x_axis_label is None:
             raise ValueError("x_axis_label does NOT exist, please check.")
 
+        df[x_axis_label] = x_exp_raw
+
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
@@ -341,10 +355,10 @@ class Experiment(object):
         else:
             y_axis_label = 'Neutron Attenuation'
         y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
+        df[y_axis_label] = y_exp_raw
 
-        # Plot
-        plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
-        plt.ylim(ymax=1.01)
-        plt.xlabel(x_axis_label)
-        plt.ylabel(y_axis_label)
-        plt.legend(loc='best')
+        # Export
+        if filename is None:
+            df.to_clipboard(excel=True)
+        else:
+            df.to_csv(filename)

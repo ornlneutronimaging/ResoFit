@@ -36,6 +36,7 @@ experiment1.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detecto
 experiment2.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
                      x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
                      lambda_xmax=lambda_xmax)
+experiment1.export_raw(offset_us=offset_us)
 
 # x1, y1 = experiment1.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 #                                energy_min=7, energy_max=150, energy_step=0.01)
