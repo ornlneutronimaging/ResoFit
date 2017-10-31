@@ -378,8 +378,8 @@ class FitResonance(Experiment):
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
             y_axis_tag = 'attenuation'
-            items = fit_util.Items(o_reso=self.fitted_simulation.o_reso, items_list=items_to_plot)
-            shaped_items = items.shaped()
+            items = fit_util.Items(o_reso=self.fitted_simulation.o_reso)
+            shaped_items = items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)

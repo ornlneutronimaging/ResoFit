@@ -48,7 +48,7 @@ class Simulation(object):
         self.simu_x = self.o_reso.total_signal['energy_eV']
         self.simu_y = self.o_reso.total_signal['attenuation']
 
-    def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list=[]):
+    def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list):
         """
         Set isotopic ratios for picked element and update x y values to pass
         :param layer:
@@ -57,6 +57,8 @@ class Simulation(object):
         :return: x in eV
                  y in attenuation
         """
+        if type(new_isotopic_ratio_list) is not list:
+            raise ValueError("{} is not a list".format(new_isotopic_ratio_list))
         # Check if layer exist
         if layer not in self.layer_list:
             raise ValueError('Layer {} does not exist.'.format(layer))
@@ -111,8 +113,8 @@ class Simulation(object):
 
         if items_to_export is not None:
             # Shape items
-            items = fit_util.Items(o_reso=self.o_reso, items_list=items_to_export)
-            items_to_export = items.shaped()
+            items = fit_util.Items(o_reso=self.o_reso)
+            items_to_export = items.shaped(items_list=items_to_export)
 
         self.o_reso.export(filename=filename,
                            x_axis=x_axis,
