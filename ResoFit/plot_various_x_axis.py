@@ -1,5 +1,5 @@
 from ImagingReso.resonance import Resonance
-
+import numpy as np
 # Global parameters
 _energy_min = 13
 _energy_max = 170

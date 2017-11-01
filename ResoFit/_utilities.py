@@ -192,6 +192,7 @@ class Layer(object):
                               'nullable': True,
                               },
                   }
+
         v = Validator(schema)
         if v.validate(_input) is False:
             raise ValueError(v.errors)

@@ -231,7 +231,7 @@ class Experiment(object):
             self.source_to_detector_m = kwargs['source_to_detector_m']
 
         # clear any left plt
-        plt.close()
+        # plt.close()
 
         """X-axis"""
         # determine values and labels for x-axis with options from

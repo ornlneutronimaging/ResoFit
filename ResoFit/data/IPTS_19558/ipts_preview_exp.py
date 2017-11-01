@@ -7,8 +7,8 @@ from ResoFit.experiment import Experiment
 import peakutils as pku
 
 folder = 'data/IPTS_19558/reso_data_19558'
-data_file1 = 'Gd_thin.csv'
-data_file2 = 'Gd_thick.csv'
+data_file1 = 'spheres.csv'
+data_file2 = 'spheres_background_1.csv'
 spectra_file = 'Image002_Spectra.txt'
 
 repeat = 1
@@ -38,10 +38,5 @@ experiment2.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detecto
                      lambda_xmax=lambda_xmax)
 # experiment1.export_raw(offset_us=offset_us)
 
-# x1, y1 = experiment1.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-#                                energy_min=7, energy_max=150, energy_step=0.01)
-# plt.plot(x1, y1, 'r.', label='interp1')
-# x2, y2 = experiment2.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-#                                energy_min=7, energy_max=150, energy_step=0.01)
-# plt.plot(x2, y2, 'k.', label='interp2')
+
 plt.show()

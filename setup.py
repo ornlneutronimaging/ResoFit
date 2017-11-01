@@ -13,7 +13,7 @@ def read_file(filename):
 
 setup(
     name="ResoFit",
-    version="0.0.4",
+    version="0.0.5",
     author="Yuxuan Zhang, Jean C. Bilheux",
     author_email="zhangy6@ornl.gov, bilheuxjm@ornl.gov",
     packages=find_packages(exclude=['tests', 'notebooks']),
