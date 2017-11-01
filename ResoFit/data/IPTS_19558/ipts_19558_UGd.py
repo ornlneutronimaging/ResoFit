@@ -39,12 +39,13 @@ image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
-before = True
+before = False
 table = True
 grid = True
 # items_to_plot = ['238-U', '235-U', 'Gd']
 # items_to_plot = ['U-238', 'Gd-156', 'U']
-items_to_plot = None
+items_to_plot = [layer_1, layer_2]
+# items_to_plot = None
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 
 
 class Experiment(object):
-
     def __init__(self, spectra_file, data_file, folder, repeat=1):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
@@ -64,6 +63,8 @@ class Experiment(object):
         if list(self.data[0][:4]) == [1, 2, 3, 4]:
             raise ValueError(
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
+        # raw image number saved
+        self.img_num = self.data.index.values
 
     def x_raw(self, angstrom=False, **kwargs):
         """
@@ -95,7 +96,7 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
 
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                _baseline = pku.baseline(y_exp_raw)
+                _baseline = pku.baseline(y_exp_raw, deg=7)
                 y_exp_raw = y_exp_raw - _baseline
         else:
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
@@ -144,7 +145,7 @@ class Experiment(object):
 
         if transmission is False:
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                _baseline = pku.baseline(y_interp)
+                _baseline = pku.baseline(y_interp, deg=7)
                 y_interp = y_interp - _baseline
         else:
             if baseline is True:
@@ -162,27 +163,32 @@ class Experiment(object):
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
         :return: pd.Dataframe. sliced self.spectra and self.data
         """
-        if slice_end is not None:
+        if slice_start and slice_end is not None:
+            if slice_start > slice_end:
+                raise ValueError(
+                    "The image number of 'start' ({}) can NOT be greater than 'end' ({}).".format(slice_start,
+                                                                                                  slice_end))
             if slice_end == slice_start:
                 raise ValueError(
                     "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start,
                                                                                                   slice_end))
+        if slice_end is not None:
             self.data.drop(self.data.index[slice_end:], inplace=True)
             self.spectra.drop(self.spectra.index[slice_end:], inplace=True)
             # No 'index reset needed' after drop
             self.slice_end = slice_end
+            # raw image number saved
+            self.img_num = self.data.index.values
         if slice_start is not None:
-            if slice_start == slice_end:
-                raise ValueError(
-                    "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start,
-                                                                                                  slice_end))
             self.data.drop(self.data.index[:slice_start], inplace=True)
             self.spectra.drop(self.spectra.index[:slice_start], inplace=True)
             self.slice_start = slice_start
+            # raw image number saved
+            self.img_num = self.data.index.values
             if reset_index is True:
                 self.spectra.reset_index(drop=True, inplace=True)
                 self.data.reset_index(drop=True, inplace=True)
-        return self.spectra[0], self.data[0]
+        # return self.spectra[0], self.data[0]
 
     def norm_to(self, file, reset_index=False):
         """
@@ -204,6 +210,9 @@ class Experiment(object):
                     if reset_index is True:
                         df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
+
+    def peak(self):
+        pass
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,
@@ -267,7 +276,7 @@ class Experiment(object):
 
             if x_axis == 'number':
                 x_axis_label = 'Image number (#)'
-                x_exp_raw = np.array(range(1, len(self.data[0]) + 1))
+                x_exp_raw = np.array(range(0, len(self.data[0])))
         if x_axis_label is None:
             raise ValueError("x_axis_label does NOT exist, please check.")
 
@@ -324,10 +333,12 @@ class Experiment(object):
             else:
                 x_axis_label = u"Wavelength (\u212B)"
                 angstrom = True
-            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
 
         if x_axis in ['time', 'number']:
-            x_exp_raw = self.x_raw(angstrom=False, offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
+            x_exp_raw = self.x_raw(angstrom=False, offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
             if x_axis == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'

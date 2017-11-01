@@ -1,4 +1,6 @@
 import re
+from builtins import ValueError
+
 import numpy as np
 import pandas as pd
 import ImagingReso._utilities as reso_util
@@ -105,6 +107,10 @@ class Simulation(object):
         else:
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
+
+    def peaks(self):
+        if len(self.layer_list) == 0:
+            raise ValueError("No layer has been added.")
 
     def __export(self, filename=None, x_axis='energy', y_axis='attenuation',
                  all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
