@@ -65,6 +65,8 @@ class Experiment(object):
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
         # raw image number saved
         self.img_num = self.data.index.values
+        self.raw_data = self.data
+        self.raw_spectra = self.spectra
 
     def x_raw(self, angstrom=False, **kwargs):
         """
@@ -188,6 +190,7 @@ class Experiment(object):
             if reset_index is True:
                 self.spectra.reset_index(drop=True, inplace=True)
                 self.data.reset_index(drop=True, inplace=True)
+
         # return self.spectra[0], self.data[0]
 
     def norm_to(self, file, reset_index=False):
