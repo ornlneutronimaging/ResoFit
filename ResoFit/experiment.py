@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-import ImagingReso._utilities as reso_utils
+import ImagingReso._utilities as reso_util
 import os
 from scipy.interpolate import interp1d
 import peakutils as pku
+import ResoFit._utilities as fit_util
 from ResoFit._utilities import load_txt_csv
 import matplotlib.pyplot as plt
 
@@ -79,11 +80,11 @@ class Experiment(object):
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
 
-        x_exp_raw = np.array(reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
-                                                offset_us=self.offset_us,
-                                                source_to_detector_m=self.source_to_detector_m))
+        x_exp_raw = np.array(reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
+                                               offset_us=self.offset_us,
+                                               source_to_detector_m=self.source_to_detector_m))
         if angstrom is True:
-            x_exp_raw = np.array(reso_utils.ev_to_angstroms(x_exp_raw))
+            x_exp_raw = np.array(reso_util.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
 
     def y_raw(self, transmission=False, baseline=False):
@@ -98,8 +99,7 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
 
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                _baseline = pku.baseline(y_exp_raw, deg=7)
-                y_exp_raw = y_exp_raw - _baseline
+                y_exp_raw = fit_util.rm_baseline(y_exp_raw)
         else:
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
                 raise ValueError("Baseline removal only works for peaks instead of dips!")
@@ -123,9 +123,9 @@ class Experiment(object):
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
 
-        x_exp_raw = reso_utils.s_to_ev(array=self.spectra[0],  # x in seconds
-                                       offset_us=self.offset_us,
-                                       source_to_detector_m=self.source_to_detector_m)
+        x_exp_raw = reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
+                                      offset_us=self.offset_us,
+                                      source_to_detector_m=self.source_to_detector_m)
         _list = list(x_exp_raw)
         _x_max = _list[0]
         _x_min = _list[-1]
@@ -142,19 +142,18 @@ class Experiment(object):
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
-        y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
+        y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
         y_interp = y_interp_function(x_interp)
 
         if transmission is False:
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                _baseline = pku.baseline(y_interp, deg=7)
-                y_interp = y_interp - _baseline
+                y_interp = fit_util.rm_baseline(y_interp)
         else:
             if baseline is True:
                 raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         if angstrom is True:
-            x_interp = reso_utils.ev_to_angstroms(x_interp)
+            x_interp = reso_util.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
     def slice(self, slice_start=None, slice_end=None, reset_index=False):
@@ -191,7 +190,7 @@ class Experiment(object):
                 self.spectra.reset_index(drop=True, inplace=True)
                 self.data.reset_index(drop=True, inplace=True)
 
-        # return self.spectra[0], self.data[0]
+                # return self.spectra[0], self.data[0]
 
     def norm_to(self, file, reset_index=False):
         """

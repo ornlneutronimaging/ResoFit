@@ -39,7 +39,7 @@ image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 baseline = True
 each_step = False
-before = False
+before = True
 table = True
 grid = True
 # items_to_plot = ['238-U', '235-U', 'Gd']
@@ -63,33 +63,33 @@ calibration = Calibration(data_file=data_file,
                           baseline=baseline)
 
 calibration.norm_to(norm_to_file)
-calibration.slice(slice_start=image_start, slice_end=image_end)
+calibration.slice(slice_start=300, slice_end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
 peak_dict = calibration.peaks(thres=0.25)
-calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
+calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
 
-# Fit sample density or thickness
-fit = FitResonance(spectra_file=spectra_file,
-                   data_file=data_file,
-                   folder=folder,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-fit_result = fit.fit(layer, vary='density', each_step=each_step)
-# Fit isotope ratios
-# fit.fit_iso(layer=layer_1)
-fit.molar_conc()
-fit.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
-
-# fit.export()
+# # Fit sample density or thickness
+# fit = FitResonance(spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    folder=folder,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# fit_result = fit.fit(layer, vary='density', each_step=each_step)
+# # Fit isotope ratios
+# # fit.fit_iso(layer=layer_1)
+# fit.molar_conc()
+# fit.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
+#
+# # fit.export()

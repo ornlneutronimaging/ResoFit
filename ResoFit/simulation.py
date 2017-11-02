@@ -135,25 +135,44 @@ class Simulation(object):
         print(len(peak_stack['energy_eV']))
         return peak_stack
 
+    def plot_simu(self, y_axis='attenuation', x_axis='energy', mixed=True, all_layers=False, all_elements=False,
+              all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
+              source_to_detector_m=16., lambda_max_angstroms=1, t_start_us=1):
+        if len(self.layer_list) == 0:
+            raise ValueError("No layer has been added.")
+        if items_to_plot is not None:
+            # shape format of items
+            items = fit_util.Items(o_reso=self.o_reso)
+            items_to_plot = items.shaped(items_list=items_to_plot)
 
-def __export(self, filename=None, x_axis='energy', y_axis='attenuation',
-             all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-             offset_us=0., source_to_detector_m=16.,
-             t_start_us=1, time_resolution_us=0.16, time_unit='us'):
-    if items_to_export is not None:
-        # Shape items
-        items = fit_util.Items(o_reso=self.o_reso)
-        items_to_export = items.shaped(items_list=items_to_export)
+        self.o_reso.plot(y_axis=y_axis, x_axis=x_axis, mixed=mixed,
+                         all_layers=all_layers, all_elements=all_elements,
+                         all_isotopes=all_isotopes, items_to_plot=items_to_plot,
+                         lambda_max_angstroms=lambda_max_angstroms,
+                         source_to_detector_m=source_to_detector_m,
+                         offset_us=offset_us,
+                         time_resolution_us=time_resolution_us,
+                         time_unit=time_unit,
+                         t_start_us=t_start_us)
 
-    self.o_reso.export(filename=filename,
-                       x_axis=x_axis,
-                       y_axis=y_axis,
-                       all_layers=all_layers,
-                       all_elements=all_elements,
-                       all_isotopes=all_isotopes,
-                       items_to_export=items_to_export,
-                       offset_us=offset_us,
-                       source_to_detector_m=source_to_detector_m,
-                       t_start_us=t_start_us,
-                       time_resolution_us=time_resolution_us,
-                       time_unit=time_unit)
+    def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
+                all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+                offset_us=0., source_to_detector_m=16.,
+                t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+        if items_to_export is not None:
+            # Shape items
+            items = fit_util.Items(o_reso=self.o_reso)
+            items_to_export = items.shaped(items_list=items_to_export)
+
+        self.o_reso.export(filename=filename,
+                           x_axis=x_axis,
+                           y_axis=y_axis,
+                           all_layers=all_layers,
+                           all_elements=all_elements,
+                           all_isotopes=all_isotopes,
+                           items_to_export=items_to_export,
+                           offset_us=offset_us,
+                           source_to_detector_m=source_to_detector_m,
+                           t_start_us=t_start_us,
+                           time_resolution_us=time_resolution_us,
+                           time_unit=time_unit)

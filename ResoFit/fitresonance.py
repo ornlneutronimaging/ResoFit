@@ -309,7 +309,7 @@ class FitResonance(Experiment):
                                                 angstrom=False, transmission=False, baseline=self.baseline,
                                                 offset_us=self.calibrated_offset_us,
                                                 source_to_detector_m=self.source_to_detector_m)
-            ax1.plot(x_interp, y_interp, 'r-.', label=exp_interp_label, linewidth=1)
+            ax1.plot(x_interp, y_interp, 'r:', label=exp_interp_label, linewidth=1)
             # Save to df
             _live_df_x_label = exp_interp_label + '_eV'
             _live_df_y_label = exp_interp_label + '_attenuation'
@@ -320,7 +320,11 @@ class FitResonance(Experiment):
             exp_x = self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                                source_to_detector_m=self.source_to_detector_m)
             exp_y = self.y_raw(transmission=False, baseline=self.baseline)
-            ax1.plot(exp_x, exp_y, 'rx', label=exp_label, markersize=2)
+            ax1.plot(exp_x, exp_y,
+                     linestyle='-', linewidth=1,
+                     marker='o', markersize=2,
+                     color='r', label=exp_label)
+
             # Save to df
             _df = pd.DataFrame()
             _live_df_x_label = exp_label + '_eV'

@@ -60,4 +60,12 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
     fitted_simulation.set_isotopic_ratio(layer=layer, element=layer, new_isotopic_ratio_list=isotope_ratio_list)
     simu_x, simu_y = fitted_simulation.xy_simu(angstrom=False, transmission=False)
     gap = (exp_y_interp - simu_y)  # ** 2
+
+    if each_step is True:
+        for each_iso in formatted_isotope_list:
+            print("{}: {}    chi^2: {}".format(
+                each_iso,
+                parvals[each_iso],
+                sum((exp_y_interp - simu_y) ** 2))
+            )
     return gap

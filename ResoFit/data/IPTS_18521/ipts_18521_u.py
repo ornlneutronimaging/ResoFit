@@ -42,8 +42,8 @@ baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 15.4318  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 15.2 #15.4318  # 16#16.445359069030175#16.447496101100739
+offset_us = 0 #2.7  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -63,7 +63,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.plot()
+calibration.plot(before=True)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -81,4 +81,5 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit.fit(layer, vary='density', each_step=each_step)
 fit.molar_conc()
+# fit.fit_iso(layer_1)
 fit.plot(error=True)

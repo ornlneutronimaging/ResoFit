@@ -72,6 +72,11 @@ def set_plt(plt, x_max, fig_title, grid=False):
         plt.grid()
 
 
+def rm_baseline(y, deg=7, max_it=None, tol=None):
+    baseline = pku.baseline(y=y, deg=deg, max_it=max_it, tol=tol)
+    return y - baseline
+
+
 class Items(object):
     def __init__(self, o_reso):
         self.o_reso = o_reso
@@ -96,15 +101,19 @@ class Items(object):
 
     def values(self, y_axis_type='attenuation'):
         # plot specified from 'items_to_plot'
-        _stack_signal = self.o_reso.stack_signal
+        if y_axis_type != 'sigma':
+            _stack = self.o_reso.stack_signal
+        else:
+            _stack = self.o_reso.stack_sigma
+            y_axis_type = 'sigma_b'
         y_axis_tag = y_axis_type
         _y_axis_dict = {}
         for _each_path in self.shaped_list:
             _label = _each_path[-1]
             if len(_each_path) == 3:
-                _y_axis_dict[_label] = _stack_signal[_each_path[0]][_each_path[1]][_each_path[2]][y_axis_tag]
+                _y_axis_dict[_label] = _stack[_each_path[0]][_each_path[1]][_each_path[2]][y_axis_tag]
             elif len(_each_path) == 2:
-                _y_axis_dict[_label] = _stack_signal[_each_path[0]][_each_path[1]][y_axis_tag]
+                _y_axis_dict[_label] = _stack[_each_path[0]][_each_path[1]][y_axis_tag]
             else:
                 raise ValueError("Format error of '{}', should be in the form of "
                                  "['layer', 'element'] or ['layer', 'element', 'isotope']")
@@ -246,14 +255,16 @@ class Peak(object):
         self.peaks = {}
         self.x = x
         self.y = y
+        if x is None:
+            self.x = np.array(range(0, len(y)))
 
-    def index(self, thres=0.015, min_dist=1):
+    def index(self, thres=0.015, min_dist=1, impr_reso=False):
         _index = pku.indexes(y=self.y, thres=thres, min_dist=min_dist)
         _peak_y = list(self.y[_index])
-        if self.x is None:
-            _peak_x = list(_index)
-        else:
+        if impr_reso is False:
             _peak_x = list(self.x[_index])
+        else:
+            _peak_x = pku.interpolate(self.x, self.y, ind=_index)
         peak_dict = {'x': _peak_x,
                      'y': _peak_y,
                      }

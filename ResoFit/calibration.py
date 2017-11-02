@@ -9,6 +9,7 @@ from lmfit import minimize
 from ResoFit._gap_functions import y_gap_for_calibration
 import ResoFit._utilities as fit_util
 import itertools
+import pandas as pd
 
 
 class Calibration(Simulation):
@@ -138,8 +139,8 @@ class Calibration(Simulation):
         if self.calibrate_result is not None:
             # print(self.exp_x_raw_calibrated)
             # print(self.exp_y_raw_calibrated)
-            _peak = fit_util.Peak(x=self.exp_x_interp_calibrated, y=self.exp_y_interp_calibrated)
-            self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist)
+            _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
+            self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist, impr_reso=True)
             print(self.exp_peaks)
         else:
             raise ValueError("Instrument params have not been calibrated.")
@@ -175,7 +176,7 @@ class Calibration(Simulation):
 
         simu_label = 'Ideal'
         exp_label = 'Exp'
-        exp_before_label = 'Exp_raw'
+        exp_before_label = 'Exp_init'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.layer_list)
         fig_title = 'Calibration result of sample (' + sample_name + ')'
@@ -201,17 +202,20 @@ class Calibration(Simulation):
             ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.y_raw(baseline=self.baseline),
-                     'cs', label=exp_before_label, markersize=2)
+                     linestyle='-', linewidth=1,
+                     marker='o', markersize=2,
+                     color='c', label=exp_before_label)
         # 2.
-        if interp is False:
-            # plot the calibrated raw data
-            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
-                     linestyle='-', marker='o', color='r', linewidth=1,
-                     label=exp_label, markersize=2)
-        else:
+        if interp is True:
             # plot the interpolated raw data
-            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r:', label=exp_interp_label,
-                     linewidth=1)
+            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
+                     'y:', label=exp_interp_label, linewidth=1)
+        # else:
+        # plot the calibrated raw data
+        ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
+                 linestyle='-', linewidth=1,
+                 marker='o', markersize=2,
+                 color='r', label=exp_label)
 
         # 3.
         if all_elements is True:
@@ -245,8 +249,8 @@ class Calibration(Simulation):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
         if self.exp_peaks is not None:
-            print(self.exp_peaks)
             ax1.plot(self.exp_peaks['x'], self.exp_peaks['y'], 'kx')
+            # ax1.plot(self.exp_peaks['x_interp'], self.exp_peaks['y'], 'r+')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)
