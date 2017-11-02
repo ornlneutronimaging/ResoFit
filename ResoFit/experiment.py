@@ -213,9 +213,11 @@ class Experiment(object):
                         df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
 
-    # def peaks(self):
-    #
-    #     pass
+    # def peaks(self, thres=0.015, min_dist=1):
+    #     _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
+    #     self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist, impr_reso=True)
+    #     print(self.exp_peaks)
+    #     return self.exp_peaks
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,

@@ -61,7 +61,7 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
-        self.exp_peaks = None
+        self.exp_peaks_cali = None
         self.raw_layer = raw_layer
 
     def norm_to(self, file):
@@ -135,16 +135,16 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def peaks(self, thres=0.015, min_dist=1):
+    def peaks(self, thres=0.015, min_dist=1, impr_reso=True):
         if self.calibrate_result is not None:
             # print(self.exp_x_raw_calibrated)
             # print(self.exp_y_raw_calibrated)
             _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
-            self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist, impr_reso=True)
-            print(self.exp_peaks)
+            self.exp_peaks_cali = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+            print(self.exp_peaks_cali)
         else:
             raise ValueError("Instrument params have not been calibrated.")
-        return self.exp_peaks
+        return self.exp_peaks_cali
 
     def plot(self, table=True, grid=True, before=False, interp=False,
              all_elements=False, all_isotopes=False, items_to_plot=None,
@@ -248,9 +248,9 @@ class Calibration(Simulation):
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
-        if self.exp_peaks is not None:
-            ax1.plot(self.exp_peaks['x'], self.exp_peaks['y'], 'kx')
-            # ax1.plot(self.exp_peaks['x_interp'], self.exp_peaks['y'], 'r+')
+        if self.exp_peaks_cali is not None:
+            ax1.plot(self.exp_peaks_cali['x'], self.exp_peaks_cali['y'], 'kx')
+            # ax1.plot(self.exp_peaks_cali['x_interp'], self.exp_peaks_cali['y'], 'r+')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

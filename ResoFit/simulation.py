@@ -109,7 +109,7 @@ class Simulation(object):
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
 
-    def peaks(self, isotope=False):
+    def peak_map(self, thres=0.015, min_dist=1, impr_reso=True, isotope=False):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         _stack_sigma = self.o_reso.stack_sigma
@@ -120,14 +120,17 @@ class Simulation(object):
             _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
             peak_stack[_ele] = {'sigma_b': _ele_sigma, }
             _peak = fit_util.Peak(x=_x_energy, y=_ele_sigma)
-            _peak_dict = _peak.index()
+            _peak_dict = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
             peak_stack[_ele]['peaks'] = _peak_dict
             if isotope is True:
                 for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                     _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
                     peak_stack[_ele][_iso] = {'sigma_b': _iso_sigma, }
                     _peak = fit_util.Peak(x=_x_energy, y=_iso_sigma)
-                    _peak_dict = _peak.index()
+                    print(2)
+                    print(_iso)
+                    _peak_dict = _peak.index(thres=0.5, min_dist=50, impr_reso=impr_reso)
+                    print(1)
                     peak_stack[_ele][_iso]['peaks'] = _peak_dict
 
         pprint.pprint(peak_stack)
@@ -136,8 +139,8 @@ class Simulation(object):
         return peak_stack
 
     def plot_simu(self, y_axis='attenuation', x_axis='energy', mixed=True, all_layers=False, all_elements=False,
-              all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
-              source_to_detector_m=16., lambda_max_angstroms=1, t_start_us=1):
+                  all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
+                  source_to_detector_m=16., lambda_max_angstroms=1, t_start_us=1):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         if items_to_plot is not None:
@@ -156,9 +159,9 @@ class Simulation(object):
                          t_start_us=t_start_us)
 
     def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
-                all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                offset_us=0., source_to_detector_m=16.,
-                t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+                    all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+                    offset_us=0., source_to_detector_m=16.,
+                    t_start_us=1, time_resolution_us=0.16, time_unit='us'):
         if items_to_export is not None:
             # Shape items
             items = fit_util.Items(o_reso=self.o_reso)
