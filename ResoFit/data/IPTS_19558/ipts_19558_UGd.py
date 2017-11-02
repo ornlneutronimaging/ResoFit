@@ -44,8 +44,8 @@ table = True
 grid = True
 # items_to_plot = ['238-U', '235-U', 'Gd']
 # items_to_plot = ['U-238', 'Gd-156', 'U']
-items_to_plot = [layer_1, layer_2]
-# items_to_plot = None
+# items_to_plot = [layer_1, layer_2]
+items_to_plot = None
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -69,7 +69,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-
+peak_dict = calibration.peaks(thres=0.25)
 calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot)
 
 # Fit sample density or thickness

@@ -7,6 +7,7 @@ import itertools
 import re
 from cerberus import Validator
 from ImagingReso.resonance import Resonance
+import peakutils as pku
 
 
 def load_txt_csv(path_to_file):
@@ -72,7 +73,6 @@ def set_plt(plt, x_max, fig_title, grid=False):
 
 
 class Items(object):
-
     def __init__(self, o_reso):
         self.o_reso = o_reso
         self.shaped_list = None
@@ -240,6 +240,24 @@ class Layer(object):
     def show(self):
         pprint.pprint(self.info)
 
+
+class Peak(object):
+    def __init__(self, y, x=None):
+        self.peaks = {}
+        self.x = x
+        self.y = y
+
+    def index(self, thres=0.015, min_dist=1):
+        _index = pku.indexes(y=self.y, thres=thres, min_dist=min_dist)
+        _peak_y = list(self.y[_index])
+        if self.x is None:
+            _peak_x = list(_index)
+        else:
+            _peak_x = list(self.x[_index])
+        peak_dict = {'x': _peak_x,
+                     'y': _peak_y,
+                     }
+        return peak_dict
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

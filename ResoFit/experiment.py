@@ -214,8 +214,9 @@ class Experiment(object):
                         df.reset_index(drop=True, inplace=True)
         self.data[0] = self.data[0] / df[0]
 
-    def peak(self):
-        pass
+    # def peaks(self):
+    #
+    #     pass
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,

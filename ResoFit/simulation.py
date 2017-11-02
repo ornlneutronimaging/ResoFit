@@ -6,10 +6,11 @@ import pandas as pd
 import ImagingReso._utilities as reso_util
 from ImagingReso.resonance import Resonance
 import ResoFit._utilities as fit_util
+import pprint
+import peakutils as pku
 
 
 class Simulation(object):
-
     # Input sample name or names as str, case sensitive
 
     def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01):
@@ -108,29 +109,51 @@ class Simulation(object):
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
 
-    def peaks(self):
+    def peaks(self, isotope=False):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
+        _stack_sigma = self.o_reso.stack_sigma
+        _layer_list = self.layer_list
+        _x_energy = _stack_sigma[_layer_list[0]][_layer_list[0]]['energy_eV']
+        peak_stack = {'energy_eV': _x_energy}
+        for _ele in _layer_list:
+            _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
+            peak_stack[_ele] = {'sigma_b': _ele_sigma, }
+            _peak = fit_util.Peak(x=_x_energy, y=_ele_sigma)
+            _peak_dict = _peak.index()
+            peak_stack[_ele]['peaks'] = _peak_dict
+            if isotope is True:
+                for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
+                    _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
+                    peak_stack[_ele][_iso] = {'sigma_b': _iso_sigma, }
+                    _peak = fit_util.Peak(x=_x_energy, y=_iso_sigma)
+                    _peak_dict = _peak.index()
+                    peak_stack[_ele][_iso]['peaks'] = _peak_dict
 
-    def __export(self, filename=None, x_axis='energy', y_axis='attenuation',
-                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                 offset_us=0., source_to_detector_m=16.,
-                 t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+        pprint.pprint(peak_stack)
+        print(len(peak_stack['U']['sigma_b']))
+        print(len(peak_stack['energy_eV']))
+        return peak_stack
 
-        if items_to_export is not None:
-            # Shape items
-            items = fit_util.Items(o_reso=self.o_reso)
-            items_to_export = items.shaped(items_list=items_to_export)
 
-        self.o_reso.export(filename=filename,
-                           x_axis=x_axis,
-                           y_axis=y_axis,
-                           all_layers=all_layers,
-                           all_elements=all_elements,
-                           all_isotopes=all_isotopes,
-                           items_to_export=items_to_export,
-                           offset_us=offset_us,
-                           source_to_detector_m=source_to_detector_m,
-                           t_start_us=t_start_us,
-                           time_resolution_us=time_resolution_us,
-                           time_unit=time_unit)
+def __export(self, filename=None, x_axis='energy', y_axis='attenuation',
+             all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+             offset_us=0., source_to_detector_m=16.,
+             t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+    if items_to_export is not None:
+        # Shape items
+        items = fit_util.Items(o_reso=self.o_reso)
+        items_to_export = items.shaped(items_list=items_to_export)
+
+    self.o_reso.export(filename=filename,
+                       x_axis=x_axis,
+                       y_axis=y_axis,
+                       all_layers=all_layers,
+                       all_elements=all_elements,
+                       all_isotopes=all_isotopes,
+                       items_to_export=items_to_export,
+                       offset_us=offset_us,
+                       source_to_detector_m=source_to_detector_m,
+                       t_start_us=t_start_us,
+                       time_resolution_us=time_resolution_us,
+                       time_unit=time_unit)

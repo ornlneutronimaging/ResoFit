@@ -60,6 +60,7 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
+        self.exp_peaks = None
         self.raw_layer = raw_layer
 
     def norm_to(self, file):
@@ -133,6 +134,17 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
+    def peaks(self, thres=0.015, min_dist=1):
+        if self.calibrate_result is not None:
+            # print(self.exp_x_raw_calibrated)
+            # print(self.exp_y_raw_calibrated)
+            _peak = fit_util.Peak(x=self.exp_x_interp_calibrated, y=self.exp_y_interp_calibrated)
+            self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist)
+            print(self.exp_peaks)
+        else:
+            raise ValueError("Instrument params have not been calibrated.")
+        return self.exp_peaks
+
     def plot(self, table=True, grid=True, before=False, interp=False,
              all_elements=False, all_isotopes=False, items_to_plot=None,
              save_fig=False):
@@ -193,11 +205,14 @@ class Calibration(Simulation):
         # 2.
         if interp is False:
             # plot the calibrated raw data
-            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated, 'rx', label=exp_label, markersize=2)
+            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
+                     linestyle='-', marker='o', color='r', linewidth=1,
+                     label=exp_label, markersize=2)
         else:
             # plot the interpolated raw data
-            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r-.', label=exp_interp_label,
+            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated, 'r:', label=exp_interp_label,
                      linewidth=1)
+
         # 3.
         if all_elements is True:
             # show signal from each elements
@@ -228,6 +243,10 @@ class Calibration(Simulation):
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
+
+        if self.exp_peaks is not None:
+            print(self.exp_peaks)
+            ax1.plot(self.exp_peaks['x'], self.exp_peaks['y'], 'kx')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

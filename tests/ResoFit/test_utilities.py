@@ -153,7 +153,38 @@ class TestItems(unittest.TestCase):
         assert obtained == expected
 
 
+class TestPeaks(unittest.TestCase):
+    energy_min = 7
+    energy_max = 150
+    energy_step = 0.01
+    simulation = Simulation(energy_min=energy_min,
+                            energy_max=energy_max,
+                            energy_step=energy_step)
+    simulation.add_layer(layer='U', layer_thickness_mm=0.05)
+
+    def test_indexes(self):
+        x = self.simulation.o_reso.stack_sigma['U']['U']['energy_eV']
+        y = self.simulation.o_reso.stack_sigma['U']['U']['sigma_b']
+        peak = fit_util.Peak(y=y, x=x)
+        peak_dict = peak.index()
+        peak_dict_expected = {'x': [20.87, 36.68, 66.03, 80.75, 102.57, 116.91],
+                              'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
+                                    6022.95871716, 2003.92456704],
+                              }
+        assert peak_dict['x'] == pytest.approx(peak_dict_expected['x'])
+        assert peak_dict['y'] == pytest.approx(peak_dict_expected['y'])
+
+        peak = fit_util.Peak(y=y)
+        peak_dict = peak.index()
+        peak_dict_expected = {'x': [1387, 2968, 5903, 7375, 9557, 10991],
+                              'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
+                                    6022.95871716, 2003.92456704],
+                              }
+        assert peak_dict['x'] == pytest.approx(peak_dict_expected['x'])
+        assert peak_dict['y'] == pytest.approx(peak_dict_expected['y'])
+        # assert peak_dict == pytest.approx(peak_dict_expected)
+
+
 def test_get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14):
     expected = 8.96
     assert fit_util.get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g) == expected
-
