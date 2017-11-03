@@ -1,18 +1,18 @@
-import matplotlib.pyplot as plt
-import peakutils as pku
-from lmfit import Parameters
-from ResoFit.experiment import Experiment
-from ResoFit.simulation import Simulation
-import numpy as np
-from lmfit import minimize
 import re
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import periodictable as pt
+from lmfit import Parameters
+from lmfit import minimize
+
+import ResoFit._utilities as fit_util
 from ResoFit._gap_functions import y_gap_for_fitting
 from ResoFit._gap_functions import y_gap_for_iso_fitting
-import periodictable as pt
 from ResoFit._utilities import Layer
-import ResoFit._utilities as fit_util
-import pandas as pd
-import pprint
+from ResoFit.experiment import Experiment
+from ResoFit.simulation import Simulation
 
 
 class FitResonance(Experiment):

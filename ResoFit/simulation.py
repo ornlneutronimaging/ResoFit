@@ -1,6 +1,4 @@
 import re
-from builtins import ValueError
-
 import numpy as np
 import pandas as pd
 import ImagingReso._utilities as reso_util
@@ -115,27 +113,24 @@ class Simulation(object):
         _stack_sigma = self.o_reso.stack_sigma
         _layer_list = self.layer_list
         _x_energy = _stack_sigma[_layer_list[0]][_layer_list[0]]['energy_eV']
-        peak_stack = {'energy_eV': _x_energy}
+        # peak_stack = {'energy_eV': _x_energy}
+        peak_stack = {}
         for _ele in _layer_list:
             _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
-            peak_stack[_ele] = {'sigma_b': _ele_sigma, }
+            # peak_stack[_ele] = {'sigma_b': _ele_sigma, }
+            peak_stack[_ele] = {}
             _peak = fit_util.Peak(x=_x_energy, y=_ele_sigma)
             _peak_dict = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-            peak_stack[_ele]['peaks'] = _peak_dict
+            peak_stack[_ele]['peak'] = _peak_dict
             if isotope is True:
                 for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                     _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
                     peak_stack[_ele][_iso] = {'sigma_b': _iso_sigma, }
                     _peak = fit_util.Peak(x=_x_energy, y=_iso_sigma)
-                    print(2)
-                    print(_iso)
                     _peak_dict = _peak.index(thres=0.5, min_dist=50, impr_reso=impr_reso)
-                    print(1)
-                    peak_stack[_ele][_iso]['peaks'] = _peak_dict
-
+                    peak_stack[_ele][_iso]['peak'] = _peak_dict
+        # print(peak_stack)
         pprint.pprint(peak_stack)
-        print(len(peak_stack['U']['sigma_b']))
-        print(len(peak_stack['energy_eV']))
         return peak_stack
 
     def plot_simu(self, y_axis='attenuation', x_axis='energy', mixed=True, all_layers=False, all_elements=False,

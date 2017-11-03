@@ -166,22 +166,22 @@ class TestPeaks(unittest.TestCase):
         x = self.simulation.o_reso.stack_sigma['U']['U']['energy_eV']
         y = self.simulation.o_reso.stack_sigma['U']['U']['sigma_b']
         peak = fit_util.Peak(y=y, x=x)
-        peak_dict = peak.index()
-        peak_dict_expected = {'x': [20.87, 36.68, 66.03, 80.75, 102.57, 116.91],
-                              'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
-                                    6022.95871716, 2003.92456704],
-                              }
-        assert peak_dict['x'] == pytest.approx(peak_dict_expected['x'])
-        assert peak_dict['y'] == pytest.approx(peak_dict_expected['y'])
+        peak_df = peak.index(thres=0.015, min_dist=1)
+        peak_df_expected = {'x': [20.87, 36.68, 66.03, 80.75, 102.57, 116.91],
+                            'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
+                                  6022.95871716, 2003.92456704],
+                            }
+        assert peak_df['x'].tolist() == pytest.approx(peak_df_expected['x'])
+        assert peak_df['y'].tolist() == pytest.approx(peak_df_expected['y'])
 
         peak = fit_util.Peak(y=y)
-        peak_dict = peak.index()
-        peak_dict_expected = {'x': [1387, 2968, 5903, 7375, 9557, 10991],
-                              'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
-                                    6022.95871716, 2003.92456704],
-                              }
-        assert peak_dict['x'] == pytest.approx(peak_dict_expected['x'])
-        assert peak_dict['y'] == pytest.approx(peak_dict_expected['y'])
+        peak_df = peak.index(thres=0.015, min_dist=1)
+        peak_df_expected = {'x': [1387, 2968, 5903, 7375, 9557, 10991],
+                            'y': [9801.18472032, 13337.61249583, 4356.43078352, 276.22478464,
+                                  6022.95871716, 2003.92456704],
+                            }
+        assert peak_df['x'].tolist() == pytest.approx(peak_df_expected['x'])
+        assert peak_df['y'].tolist() == pytest.approx(peak_df_expected['y'])
         # assert peak_dict == pytest.approx(peak_dict_expected)
 
 

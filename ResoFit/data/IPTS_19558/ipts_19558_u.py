@@ -44,7 +44,8 @@ table = True
 grid = True
 elements = True
 isotopes = True
-items_to_plot = ['Gd', 'U*', 'Gd*']
+# items_to_plot = ['Gd', 'U*', 'Gd*']
+items_to_plot = None
 
 repeat = 1
 source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739

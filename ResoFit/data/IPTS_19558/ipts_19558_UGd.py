@@ -9,7 +9,7 @@ from ResoFit._utilities import Layer
 
 # Global parameters
 energy_min = 7
-energy_max = 150
+energy_max = 200
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 # layer = 'UGd'
@@ -69,7 +69,8 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-peak_dict = calibration.peaks(thres=0.25)
+peak_df = calibration.find_peak(thres=0.15, min_dist=2)
+calibration.peak_map(thres=0.15, min_dist=2)
 calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
 
 # # Fit sample density or thickness

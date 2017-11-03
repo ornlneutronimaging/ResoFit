@@ -1,16 +1,17 @@
+import os
+
+import ImagingReso._utilities as reso_util
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import ImagingReso._utilities as reso_util
-import os
 from scipy.interpolate import interp1d
-import peakutils as pku
+
 import ResoFit._utilities as fit_util
 from ResoFit._utilities import load_txt_csv
-import matplotlib.pyplot as plt
 
 
 class Experiment(object):
-    def __init__(self, spectra_file, data_file, folder, repeat=1):
+    def __init__(self, spectra_file, data_file, folder, repeat=1, baseline=False):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
@@ -45,9 +46,10 @@ class Experiment(object):
 
         # offset in time (us) for the actual measurement
         self.offset_us = 0.
-
+        self.baseline = baseline
         self.slice_start = None
         self.slice_end = None
+        self.peak_df_raw = None
 
         # Error loading data and spectra
         if type(self.spectra[0][0]) is str:
@@ -64,10 +66,19 @@ class Experiment(object):
         if list(self.data[0][:4]) == [1, 2, 3, 4]:
             raise ValueError(
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
-        # raw image number saved
-        self.img_num = self.data.index.values
+        # store raw data (df)
         self.raw_data = self.data
         self.raw_spectra = self.spectra
+
+        # convert transmission into attenuation
+        self.data[0] = 1 - self.data[0]
+
+        # remove baseline
+        if self.baseline is True:
+            self.data[0] = fit_util.rm_baseline(self.data[0])
+
+        # raw image number saved
+        self.img_num = self.data.index.values
 
     def x_raw(self, angstrom=False, **kwargs):
         """
@@ -94,15 +105,21 @@ class Experiment(object):
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
-        y_exp_raw = np.array(self.data[0]) / self.repeat
-        if transmission is False:
-            y_exp_raw = 1 - y_exp_raw
+        if baseline is True:
+            if self.baseline is True:
+                baseline = False
+        assert type(baseline) == bool
+        assert type(transmission) == bool
 
-            if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                y_exp_raw = fit_util.rm_baseline(y_exp_raw)
-        else:
+        y_exp_raw = np.array(self.data[0]) / self.repeat
+
+        if transmission is True:
+            y_exp_raw = 1 - y_exp_raw
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
                 raise ValueError("Baseline removal only works for peaks instead of dips!")
+        else:
+            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+                y_exp_raw = fit_util.rm_baseline(y_exp_raw)
 
         return y_exp_raw
 
@@ -122,6 +139,11 @@ class Experiment(object):
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
+        if baseline is True:
+            if self.baseline is True:
+                baseline = False
+        assert type(baseline) == bool
+        assert type(transmission) == bool
 
         x_exp_raw = reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
                                       offset_us=self.offset_us,
@@ -137,7 +159,7 @@ class Experiment(object):
                 "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
 
         y_exp_raw = np.array(self.data[0]) / self.repeat
-        if transmission is False:
+        if transmission is True:
             y_exp_raw = 1 - y_exp_raw
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
@@ -145,12 +167,12 @@ class Experiment(object):
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
         y_interp = y_interp_function(x_interp)
 
-        if transmission is False:
+        if transmission is True:
             if baseline is True:  # baseline removal only works for peaks instead of dips currently
-                y_interp = fit_util.rm_baseline(y_interp)
+                raise ValueError("Baseline removal only works for peaks instead of dips!")
         else:
             if baseline is True:
-                raise ValueError("Baseline removal only works for peaks instead of dips!")
+                y_interp = fit_util.rm_baseline(y_interp)
 
         if angstrom is True:
             x_interp = reso_util.ev_to_angstroms(x_interp)
@@ -211,13 +233,31 @@ class Experiment(object):
                     df.drop(df.index[:self.slice_start], inplace=True)
                     if reset_index is True:
                         df.reset_index(drop=True, inplace=True)
+        # convert transmission into attenuation
+        df[0] = 1 - df[0]
         self.data[0] = self.data[0] / df[0]
 
-    # def peaks(self, thres=0.015, min_dist=1):
-    #     _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
-    #     self.exp_peaks = _peak.index(thres=thres, min_dist=min_dist, impr_reso=True)
-    #     print(self.exp_peaks)
-    #     return self.exp_peaks
+    def find_peak(self, thres=0.15, min_dist=2, impr_reso=False):
+        # print(self.exp_x_raw_calibrated)
+        # print(self.exp_y_raw_calibrated)
+        _y = self.data[0]
+        _index_gap = 0
+        if self.baseline is False:
+            _y = fit_util.rm_baseline(self.data[0])
+        if self.slice_start is not None:
+            _y.reset_index(drop=True, inplace=True)
+            _index_gap = self.slice_start
+        _peak = fit_util.Peak(x=_y.index.values+_index_gap, y=_y)
+        print(self.spectra[0])
+        print(self.data[0])
+        _peak_df = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        # _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
+        # _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
+        # _peak_df.reset_index(drop=True, inplace=True)
+        self.peak_df_raw = _peak_df
+        print(self.peak_df_raw)
+
+        return self.peak_df_raw
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  transmission=False, baseline=False,
@@ -243,7 +283,9 @@ class Experiment(object):
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
-
+        if baseline is True:
+            if self.baseline is True:
+                baseline = False
         # clear any left plt
         # plt.close()
 
@@ -281,7 +323,7 @@ class Experiment(object):
 
             if x_axis == 'number':
                 x_axis_label = 'Image number (#)'
-                x_exp_raw = np.array(range(0, len(self.data[0])))
+                x_exp_raw = self.data.index.values
         if x_axis_label is None:
             raise ValueError("x_axis_label does NOT exist, please check.")
 
@@ -327,6 +369,9 @@ class Experiment(object):
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
+        if baseline is True:
+            if self.baseline is True:
+                baseline = False
 
         """X-axis"""
         # determine values and labels for x-axis with options from

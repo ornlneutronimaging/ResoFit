@@ -61,7 +61,7 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
-        self.exp_peaks_cali = None
+        self.exp_peak_df = None
         self.raw_layer = raw_layer
 
     def norm_to(self, file):
@@ -135,16 +135,21 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def peaks(self, thres=0.015, min_dist=1, impr_reso=True):
+    def find_peak(self, thres=0.15, min_dist=2, impr_reso=True):
         if self.calibrate_result is not None:
             # print(self.exp_x_raw_calibrated)
             # print(self.exp_y_raw_calibrated)
             _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
-            self.exp_peaks_cali = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-            print(self.exp_peaks_cali)
+            _peak_df = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+            _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
+            _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
+            _peak_df.reset_index(drop=True, inplace=True)
+            self.exp_peak_df = _peak_df
+            print(self.exp_peak_df)
+
         else:
             raise ValueError("Instrument params have not been calibrated.")
-        return self.exp_peaks_cali
+        return self.exp_peak_df
 
     def plot(self, table=True, grid=True, before=False, interp=False,
              all_elements=False, all_isotopes=False, items_to_plot=None,
@@ -248,9 +253,10 @@ class Calibration(Simulation):
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
-        if self.exp_peaks_cali is not None:
-            ax1.plot(self.exp_peaks_cali['x'], self.exp_peaks_cali['y'], 'kx')
-            # ax1.plot(self.exp_peaks_cali['x_interp'], self.exp_peaks_cali['y'], 'r+')
+        if self.exp_peak_df is not None:
+            ax1.plot(self.exp_peak_df['x'], self.exp_peak_df['y'], 'kx', label='Peak')
+            # ax1.plot(self.exp_peak_df['x'], self.exp_peak_df['y'], 'kx', label=None)
+            # ax1.plot(self.exp_peak_df['x_interp'], self.exp_peak_df['y'], 'r+')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

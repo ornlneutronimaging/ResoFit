@@ -1,13 +1,13 @@
-from functools import wraps
-import pandas as pd
-import numpy as np
+import itertools
 import os
 import pprint
-import itertools
 import re
-from cerberus import Validator
-from ImagingReso.resonance import Resonance
+
+import numpy as np
+import pandas as pd
 import peakutils as pku
+from ImagingReso.resonance import Resonance
+from cerberus import Validator
 
 
 def load_txt_csv(path_to_file):
@@ -246,7 +246,7 @@ class Layer(object):
                                                },
                                 }
 
-    def show(self):
+    def pprint(self):
         pprint.pprint(self.info)
 
 
@@ -264,11 +264,18 @@ class Peak(object):
         if impr_reso is False:
             _peak_x = list(self.x[_index])
         else:
-            _peak_x = pku.interpolate(self.x, self.y, ind=_index)
+            _peak_x = list(pku.interpolate(self.x, self.y, ind=_index))
         peak_dict = {'x': _peak_x,
                      'y': _peak_y,
                      }
-        return peak_dict
+        peak_df = pd.DataFrame()
+        peak_df['x'] = _peak_x
+        peak_df['y'] = _peak_y
+        peak_df.sort_values(['x'], inplace=True)
+        peak_df.reset_index(inplace=True, drop=True)
+
+        return peak_df
+        # return peak_dict
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)
