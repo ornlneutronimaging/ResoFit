@@ -170,7 +170,7 @@ class Calibration(Simulation):
 
         return self.exp_peak_df
 
-    def peak_index(self, thres=0.15, min_dist=2, impr_reso=True):
+    def index_peak(self, thres=0.15, min_dist=2, impr_reso=True):
         self.find_peak(thres=thres, min_dist=min_dist, impr_reso=False)
         self.peak_map(thres=thres, min_dist=min_dist, impr_reso=True, isotope=False)
 
