@@ -71,7 +71,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 peak_df = calibration.find_peak(thres=0.15, min_dist=2)
 calibration.peak_map(thres=0.15, min_dist=2)
-calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
+# calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
 
 # # Fit sample density or thickness
 # fit = FitResonance(spectra_file=spectra_file,

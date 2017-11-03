@@ -43,9 +43,11 @@ class Experiment(object):
 
         # detector position (m) for the actual measurement
         self.source_to_detector_m = 16.
-
         # offset in time (us) for the actual measurement
         self.offset_us = 0.
+        self.calibrated_offset_us = None
+        self.calibrated_source_to_detector_m = None
+
         self.baseline = baseline
         self.slice_start = None
         self.slice_end = None
@@ -67,8 +69,8 @@ class Experiment(object):
             raise ValueError(
                 "Duplicated index column was found in '{}', please remove duplicated column".format(data_file))
         # store raw data (df)
-        self.raw_data = self.data
-        self.raw_spectra = self.spectra
+        self.data_raw = self.data
+        self.spectra_raw = self.spectra
 
         # convert transmission into attenuation
         self.data[0] = 1 - self.data[0]
@@ -238,24 +240,47 @@ class Experiment(object):
         self.data[0] = self.data[0] / df[0]
 
     def find_peak(self, thres=0.15, min_dist=2, impr_reso=False):
+        """
+        find and return x and y of detected peak in pd.DataFrame
+        x is image number from data file. type (int)
+        y is attenuation
+        :param thres:
+        :type thres:
+        :param min_dist:
+        :type min_dist:
+        :param impr_reso:
+        :type impr_reso:
+        :return:
+        :rtype:
+        """
         # print(self.exp_x_raw_calibrated)
         # print(self.exp_y_raw_calibrated)
         _y = self.data[0]
+        _x = self.spectra[0]
         _index_gap = 0
         if self.baseline is False:
             _y = fit_util.rm_baseline(self.data[0])
         if self.slice_start is not None:
             _y.reset_index(drop=True, inplace=True)
+            _x.reset_index(drop=True, inplace=True)
             _index_gap = self.slice_start
-        _peak = fit_util.Peak(x=_y.index.values+_index_gap, y=_y)
-        print(self.spectra[0])
-        print(self.data[0])
-        _peak_df = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        _peak_num = fit_util.Peak(x=_y.index.values+_index_gap, y=_y)
+        _peak_num_df = _peak_num.index(thres=thres, min_dist=min_dist, impr_reso=False)
+        _peak_time = fit_util.Peak(x=_x, y=_y)
+        _peak_time_df = _peak_time.index(thres=thres, min_dist=min_dist, impr_reso=False)
+        # assert _peak_num_df['y'] == _peak_time_df['y']
         # _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
         # _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
         # _peak_df.reset_index(drop=True, inplace=True)
+        _peak_df = pd.DataFrame()
+        _peak_df['y'] = _peak_num_df['y']
+        _peak_df['x'] = _peak_num_df['x']
+        _peak_df['x_s'] = _peak_time_df['x']
+        if len(_peak_df['y']) < 1:
+            raise ValueError("No peak has been detected.")
         self.peak_df_raw = _peak_df
-        print(self.peak_df_raw)
+
+        # print(self.peak_df_raw)
 
         return self.peak_df_raw
 
