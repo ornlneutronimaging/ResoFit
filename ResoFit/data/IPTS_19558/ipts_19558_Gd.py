@@ -22,7 +22,7 @@ layer_1 = 'U'
 thickness_1 = 0.018
 density_1 = None
 layer_2 = 'Gd'
-thickness_2 = 0.08
+thickness_2 = 0.150
 density_2 = None
 # layer_3 = 'Cd'
 # thickness_3 = 0.015
@@ -33,7 +33,7 @@ layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
 folder = 'data/IPTS_19558/reso_data_19558'
-data_file = 'Gd_div.csv'
+data_file = 'Gd_thick.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
@@ -44,7 +44,7 @@ table = True
 grid = True
 elements = True
 isotopes = True
-fit_vary = 'thickness'
+fit_vary = 'none'
 
 repeat = 1
 source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
@@ -68,7 +68,9 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.plot(before=False, all_elements=False)
+calibration.find_peak(thres=0.10, min_dist=25)
+calibration.index_peak(thres=0.10, min_dist=25)
+calibration.plot(before=False, all_elements=False, peak='all')
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -86,5 +88,6 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
+fit.index_peak(thres=0.10, min_dist=25)
 # fit.fit_iso(layer=layer_2)
 fit.plot()
