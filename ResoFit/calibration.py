@@ -1,16 +1,14 @@
+import ImagingReso._utilities as reso_util
 import matplotlib.pyplot as plt
-import peakutils as pku
 from lmfit import Parameters
-from scipy.interpolate import interp1d
+from lmfit import minimize
+
+import ResoFit._utilities as fit_util
+from ResoFit._gap_functions import y_gap_for_calibration
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
-import numpy as np
-from lmfit import minimize
-from ResoFit._gap_functions import y_gap_for_calibration
-import ResoFit._utilities as fit_util
-import itertools
+from math import isclose
 import pandas as pd
-import ImagingReso._utilities as reso_util
 
 
 class Calibration(Simulation):
@@ -62,7 +60,7 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
-        # self.exp_peak_df = None
+        self.exp_peak_df = None
         self.raw_layer = raw_layer
 
     def norm_to(self, file):
@@ -139,41 +137,53 @@ class Calibration(Simulation):
     def find_peak(self, thres=0.15, min_dist=2, impr_reso=True):
         # load detected peak with x in image number
         if self.experiment.peak_df_raw is None:
-            _peak_df_raw = self.experiment.find_peak(thres=thres, min_dist=min_dist, impr_reso=False)
+            peak_df_raw = self.experiment.find_peak(thres=thres, min_dist=min_dist, impr_reso=False)
         else:
-            _peak_df_raw = self.experiment.peak_df_raw
+            peak_df_raw = self.experiment.peak_df_raw
 
         # _peak_df_raw['x_time_s'] =
         if self.calibrate_result is None:
             raise ValueError("Instrument params have not been calibrated.")
         else:
-            # _time_list = []
-            # for _img_num in _peak_df_raw['x']:
-            #     _time = self.experiment.spectra_raw[0].iloc[_img_num]
-            #     _time_list.append(_time)
-            # _peak_df_raw['x_s'] = _time_list
-            _peak_df_raw['x_eV'] = reso_util.s_to_ev(array=_peak_df_raw['x_s'],
-                                                     source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                     offset_us=self.calibrated_offset_us)
+            peak_df_raw['x_ev'] = reso_util.s_to_ev(array=peak_df_raw['x_s'],
+                                                    source_to_detector_m=self.calibrated_source_to_detector_m,
+                                                    offset_us=self.calibrated_offset_us)
 
-            print(_peak_df_raw)
-
-            # print(self.exp_x_raw_calibrated)
-            # print(self.exp_y_raw_calibrated)
-            _peak = fit_util.Peak(x=self.exp_x_raw_calibrated, y=self.exp_y_raw_calibrated)
-            _peak_df = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-            _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
-            _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
-            _peak_df.reset_index(drop=True, inplace=True)
-            self.exp_peak_df = _peak_df
-            # print(self.exp_peak_df)
+            peak_df_raw.drop(peak_df_raw[peak_df_raw.x_ev < self.energy_min].index, inplace=True)
+            peak_df_raw.drop(peak_df_raw[peak_df_raw.x_ev > self.energy_max].index, inplace=True)
+            peak_df_raw.reset_index(drop=True, inplace=True)
+            self.exp_peak_df = peak_df_raw
+            print(self.exp_peak_df)
 
         return self.exp_peak_df
 
-    def index_peak(self, thres=0.15, min_dist=2, impr_reso=True):
-        self.find_peak(thres=thres, min_dist=min_dist, impr_reso=False)
-        self.peak_map(thres=thres, min_dist=min_dist, impr_reso=True, isotope=False)
+    # def index_peak(self, thres=0.15, min_dist=2, impr_reso=True):
+    #     _exp_peak_df = self.find_peak(thres=thres, min_dist=min_dist, impr_reso=False)
+    #     _exp_peaks = _exp_peak_df['x_ev']
+    #     _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=True, isotope=False)
+    #     _ele_list = list()
+    #     peak_dict_indexed = {}
+    #     for _ele in _peak_map.keys():
+    #         _simu_peak_list = _peak_map[_ele]['peak']
+    #         peak_dict_indexed[_ele] = []
+    #         for _each_peak in _exp_peaks:
+    #             # _index = min(range(len(_simu_peak_list)), key=lambda i: abs(_simu_peak_list[i]-_each_peak))
+    #             # _matched_peak = min(enumerate(_simu_peak_list), key=lambda i: abs(_simu_peak_list[i]-_each_peak))
+    #             _matched_peak = min(_simu_peak_list, key=lambda i: abs(i-_each_peak))
+    #             # _matched_peak = min(_simu_peak_list, key=lambda x: abs(x-_each_peak))
+    #             peak_dict_indexed[_ele].append(_matched_peak[0])
+    #     print(peak_dict_indexed)
+    #     return peak_dict_indexed
+    #     # isclose(a, b, rel_tol=1e-9, abs_tol=0.0)
 
+    def index_peak(self, thres=0.015, min_dist=1, impr_reso=True, isotope=False):
+        _df = pd.DataFrame()
+        _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=True, isotope=False)
+        _df['x'] = self.exp_peak_df['x_ev']
+        _df['y'] = self.exp_peak_df['y']
+
+        print(_df)
+        return _df
 
     def plot(self, table=True, grid=True, before=False, interp=False,
              all_elements=False, all_isotopes=False, items_to_plot=None,
@@ -278,7 +288,7 @@ class Calibration(Simulation):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
         if self.exp_peak_df is not None:
-            ax1.plot(self.exp_peak_df['x'], self.exp_peak_df['y'], 'kx', label='Peak')
+            ax1.plot(self.exp_peak_df['x_ev'], self.exp_peak_df['y'], 'kx', label='Peak')
             # ax1.plot(self.exp_peak_df['x'], self.exp_peak_df['y'], 'kx', label=None)
             # ax1.plot(self.exp_peak_df['x_interp'], self.exp_peak_df['y'], 'r+')
 

@@ -8,6 +8,7 @@ import pandas as pd
 import peakutils as pku
 from ImagingReso.resonance import Resonance
 from cerberus import Validator
+from math import isclose
 
 
 def load_txt_csv(path_to_file):
@@ -178,6 +179,9 @@ def _rm_duplicated_items(raw):
     return cleaned_list
 
 
+# def almostequatl
+
+
 class Layer(object):
     def __init__(self):
         self.info = {}
@@ -258,7 +262,7 @@ class Peak(object):
         if x is None:
             self.x = np.array(range(0, len(y)))
 
-    def index(self, thres=0.015, min_dist=1, impr_reso=False):
+    def find(self, thres=0.015, min_dist=1, impr_reso=False):
         _index = pku.indexes(y=self.y, thres=thres, min_dist=min_dist)
         _peak_y = list(self.y[_index])
         if impr_reso is False:
@@ -276,6 +280,29 @@ class Peak(object):
 
         return peak_df
         # return peak_dict
+
+    def index(self, peak_df, peak_map):
+        assert type(peak_map) == dict
+        _names = peak_map.keys()
+        peak_map_indexed = {}
+        _df = pd.DataFrame()
+        for _peak_name in _names:
+            _peak_x = peak_map[_peak_name]['peak']['x']
+            _peak_y = peak_map[_peak_name]['peak']['y']
+            _x_indexed_list = []
+            _y_indexed_list = []
+            for _each_x in peak_df['x']:
+                for _ind in range(len(_peak_x)):
+                    if isclose(_peak_x[_ind], _each_x, rel_tol=1e-3):
+                        _x_indexed_list.append(_peak_x[_ind])
+                        _y_indexed_list.append(_peak_y[_ind])
+            _df['x'] = _x_indexed_list
+            _df['y_ideal'] = _y_indexed_list
+            _df['y'] = peak_df['y']
+            peak_map_indexed[_peak_name] = _df
+
+        return peak_map_indexed
+
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

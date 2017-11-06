@@ -120,14 +120,14 @@ class Simulation(object):
             # peak_stack[_ele] = {'sigma_b': _ele_sigma, }
             peak_stack[_ele] = {}
             _peak = fit_util.Peak(x=_x_energy, y=_ele_sigma)
-            _peak_dict = _peak.index(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+            _peak_dict = _peak.find(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
             peak_stack[_ele]['peak'] = _peak_dict
             if isotope is True:
                 for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                     _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
                     peak_stack[_ele][_iso] = {'sigma_b': _iso_sigma, }
                     _peak = fit_util.Peak(x=_x_energy, y=_iso_sigma)
-                    _peak_dict = _peak.index(thres=0.5, min_dist=50, impr_reso=impr_reso)
+                    _peak_dict = _peak.find(thres=0.5, min_dist=50, impr_reso=impr_reso)
                     peak_stack[_ele][_iso]['peak'] = _peak_dict
         # print(peak_stack)
         pprint.pprint(peak_stack)

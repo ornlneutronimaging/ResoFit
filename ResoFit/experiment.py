@@ -265,9 +265,9 @@ class Experiment(object):
             _x.reset_index(drop=True, inplace=True)
             _index_gap = self.slice_start
         _peak_num = fit_util.Peak(x=_y.index.values+_index_gap, y=_y)
-        _peak_num_df = _peak_num.index(thres=thres, min_dist=min_dist, impr_reso=False)
+        _peak_num_df = _peak_num.find(thres=thres, min_dist=min_dist, impr_reso=False)
         _peak_time = fit_util.Peak(x=_x, y=_y)
-        _peak_time_df = _peak_time.index(thres=thres, min_dist=min_dist, impr_reso=False)
+        _peak_time_df = _peak_time.find(thres=thres, min_dist=min_dist, impr_reso=False)
         # assert _peak_num_df['y'] == _peak_time_df['y']
         # _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
         # _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)

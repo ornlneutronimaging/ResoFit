@@ -1,15 +1,9 @@
-from ResoFit.calibration import Calibration
-from ResoFit.fitresonance import FitResonance
-from ResoFit.experiment import Experiment
-import matplotlib.pyplot as plt
-import numpy as np
-import pprint
-from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
+from ResoFit.calibration import Calibration
 
 # Global parameters
 energy_min = 7
-energy_max = 200
+energy_max = 150
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 # layer = 'UGd'
@@ -70,8 +64,10 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 peak_df = calibration.find_peak(thres=0.15, min_dist=2)
-calibration.peak_map(thres=0.15, min_dist=2)
-calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
+calibration.index_peak()
+# calibration.index_peak(thres=0.15, min_dist=2)
+
+# calibration.plot(before=before, table=table, grid=grid, items_to_plot=items_to_plot, interp=True)
 # calibration.index_peak()
 # # Fit sample density or thickness
 # fit = FitResonance(spectra_file=spectra_file,
