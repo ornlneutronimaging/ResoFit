@@ -113,25 +113,25 @@ class Simulation(object):
         _stack_sigma = self.o_reso.stack_sigma
         _layer_list = self.layer_list
         _x_energy = _stack_sigma[_layer_list[0]][_layer_list[0]]['energy_eV']
-        # peak_stack = {'energy_eV': _x_energy}
-        peak_stack = {}
+        # peak_dict = {'energy_eV': _x_energy}
+        peak_dict = {}
         for _ele in _layer_list:
             _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
-            # peak_stack[_ele] = {'sigma_b': _ele_sigma, }
-            peak_stack[_ele] = {}
-            _peak = fit_util.Peak(x=_x_energy, y=_ele_sigma)
-            _peak_dict = _peak.find(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-            peak_stack[_ele]['peak'] = _peak_dict
+            # peak_dict[_ele] = {'sigma_b': _ele_sigma, }
+            peak_dict[_ele] = {}
+            _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_sigma,
+                                          thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+            peak_dict[_ele]['peak'] = _peak_df
             if isotope is True:
                 for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                     _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
-                    peak_stack[_ele][_iso] = {'sigma_b': _iso_sigma, }
-                    _peak = fit_util.Peak(x=_x_energy, y=_iso_sigma)
-                    _peak_dict = _peak.find(thres=0.5, min_dist=50, impr_reso=impr_reso)
-                    peak_stack[_ele][_iso]['peak'] = _peak_dict
-        # print(peak_stack)
-        pprint.pprint(peak_stack)
-        return peak_stack
+                    peak_dict[_ele][_iso] = {'sigma_b': _iso_sigma, }
+                    _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_sigma,
+                                                  thres=0.5, min_dist=50, impr_reso=impr_reso)
+                    peak_dict[_ele][_iso]['peak'] = _peak_df
+        # print(peak_dict)
+        # pprint.pprint(peak_dict)
+        return peak_dict
 
     def plot_simu(self, y_axis='attenuation', x_axis='energy', mixed=True, all_layers=False, all_elements=False,
                   all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,

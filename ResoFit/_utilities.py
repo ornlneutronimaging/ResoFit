@@ -254,55 +254,85 @@ class Layer(object):
         pprint.pprint(self.info)
 
 
-class Peak(object):
-    def __init__(self, y, x=None):
-        self.peaks = {}
-        self.x = x
-        self.y = y
-        if x is None:
-            self.x = np.array(range(0, len(y)))
+def find_peak(y, x=None, thres=0.015, min_dist=1, impr_reso=False):
+    if x is None:
+        x = np.array(range(0, len(y)))
+    _index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
+    _peak_y = list(y[_index])
+    if impr_reso is False:
+        _peak_x = list(x[_index])
+    else:
+        _peak_x = list(pku.interpolate(x, y, ind=_index))
+    peak_dict = {'x': _peak_x,
+                 'y': _peak_y,
+                 }
+    peak_df = pd.DataFrame()
+    peak_df['x'] = _peak_x
+    peak_df['y'] = _peak_y
+    peak_df.sort_values(['x'], inplace=True)
+    peak_df.reset_index(inplace=True, drop=True)
 
-    def find(self, thres=0.015, min_dist=1, impr_reso=False):
-        _index = pku.indexes(y=self.y, thres=thres, min_dist=min_dist)
-        _peak_y = list(self.y[_index])
-        if impr_reso is False:
-            _peak_x = list(self.x[_index])
-        else:
-            _peak_x = list(pku.interpolate(self.x, self.y, ind=_index))
-        peak_dict = {'x': _peak_x,
-                     'y': _peak_y,
-                     }
-        peak_df = pd.DataFrame()
-        peak_df['x'] = _peak_x
-        peak_df['y'] = _peak_y
-        peak_df.sort_values(['x'], inplace=True)
-        peak_df.reset_index(inplace=True, drop=True)
+    return peak_df
+    # return peak_dict
 
-        return peak_df
-        # return peak_dict
 
-    def index(self, peak_df, peak_map):
-        assert type(peak_map) == dict
-        _names = peak_map.keys()
-        peak_map_indexed = {}
+def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.6e-3):
+    # if type(peak_map) == dict is False:
+    num_peak_detected = len(peak_df[x_name])
+    num_peak_indexed = 0
+    _names = peak_map.keys()
+    peak_map_indexed = {}
+    for _peak_name in _names:
         _df = pd.DataFrame()
-        for _peak_name in _names:
-            _peak_x = peak_map[_peak_name]['peak']['x']
-            _peak_y = peak_map[_peak_name]['peak']['y']
-            _x_indexed_list = []
-            _y_indexed_list = []
-            for _each_x in peak_df['x']:
-                for _ind in range(len(_peak_x)):
-                    if isclose(_peak_x[_ind], _each_x, rel_tol=1e-3):
-                        _x_indexed_list.append(_peak_x[_ind])
-                        _y_indexed_list.append(_peak_y[_ind])
-            _df['x'] = _x_indexed_list
-            _df['y_ideal'] = _y_indexed_list
-            _df['y'] = peak_df['y']
-            peak_map_indexed[_peak_name] = _df
+        _df_ideal = pd.DataFrame()
+        peak_map_indexed[_peak_name] = {}
+        _peak_x = peak_map[_peak_name]['peak']['x']
+        _peak_y = peak_map[_peak_name]['peak']['y']
+        _x_indexed_list = []
+        _x_num_indexed_list = []
+        _x_s_indexed_list = []
+        _y_indexed_list = []
+        _x_ideal_list = []
+        _y_ideal_list = []
+        for _i in range(len(peak_df[x_name])):
+            for _j in range(len(_peak_x)):
+                if isclose(_peak_x[_j], peak_df[x_name][_i], rel_tol=rel_tol):
+                    _y_indexed_list.append(peak_df['y'][_i])
+                    _x_indexed_list.append(peak_df[x_name][_i])
+                    _x_ideal_list.append(_peak_x[_j])
+                    _y_ideal_list.append(_peak_y[_j])
+                    if 'x_num' in peak_df.columns:
+                        _x_num_indexed_list.append(peak_df['x_num'][_i])
+                    if 'x_s' in peak_df.columns:
+                        _x_s_indexed_list.append(peak_df['x_s'][_i])
+        # print(_x_indexed_list)
+        # print(_x_ideal_list)
+        # print(_y_indexed_list)
+        # print(_y_ideal_list)
+        num_peak_indexed += len(_x_indexed_list)
+        _df[x_name] = _x_indexed_list
+        _df['y'] = _y_indexed_list
+        if 'x_num' in peak_df.columns:
+            _df['x_num'] = _x_num_indexed_list
+        if 'x_s' in peak_df.columns:
+            _df['x_s'] = _x_s_indexed_list
 
-        return peak_map_indexed
+        _df_ideal['x'] = _x_ideal_list
+        _df_ideal['y'] = _y_ideal_list
+        print(_df)
+        print(_df_ideal)
+        peak_map_indexed[_peak_name]['exp'] = _df
+        peak_map_indexed[_peak_name]['ideal'] = _df_ideal
+    print(num_peak_detected)
+    print(num_peak_indexed)
+    print(peak_map_indexed)
 
+    return peak_map_indexed
+
+
+class Peak(object):
+    def __init__(self):
+        pass
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

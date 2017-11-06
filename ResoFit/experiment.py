@@ -239,7 +239,7 @@ class Experiment(object):
         df[0] = 1 - df[0]
         self.data[0] = self.data[0] / df[0]
 
-    def find_peak(self, thres=0.15, min_dist=2, impr_reso=False):
+    def find_peak(self, thres=0.15, min_dist=2):
         """
         find and return x and y of detected peak in pd.DataFrame
         x is image number from data file. type (int)
@@ -264,17 +264,17 @@ class Experiment(object):
             _y.reset_index(drop=True, inplace=True)
             _x.reset_index(drop=True, inplace=True)
             _index_gap = self.slice_start
-        _peak_num = fit_util.Peak(x=_y.index.values+_index_gap, y=_y)
-        _peak_num_df = _peak_num.find(thres=thres, min_dist=min_dist, impr_reso=False)
-        _peak_time = fit_util.Peak(x=_x, y=_y)
-        _peak_time_df = _peak_time.find(thres=thres, min_dist=min_dist, impr_reso=False)
+        _peak_num_df = fit_util.find_peak(x=_y.index.values + _index_gap, y=_y,
+                                          thres=thres, min_dist=min_dist, impr_reso=False)
+        _peak_time_df = fit_util.find_peak(x=_x, y=_y,
+                                           thres=thres, min_dist=min_dist, impr_reso=False)
         # assert _peak_num_df['y'] == _peak_time_df['y']
         # _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
         # _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
         # _peak_df.reset_index(drop=True, inplace=True)
         _peak_df = pd.DataFrame()
         _peak_df['y'] = _peak_num_df['y']
-        _peak_df['x'] = _peak_num_df['x']
+        _peak_df['x_num'] = _peak_num_df['x']
         _peak_df['x_s'] = _peak_time_df['x']
         if len(_peak_df['y']) < 1:
             raise ValueError("No peak has been detected.")
