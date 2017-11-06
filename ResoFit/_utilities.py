@@ -263,23 +263,19 @@ def find_peak(y, x=None, thres=0.015, min_dist=1, impr_reso=False):
         _peak_x = list(x[_index])
     else:
         _peak_x = list(pku.interpolate(x, y, ind=_index))
-    peak_dict = {'x': _peak_x,
-                 'y': _peak_y,
-                 }
     peak_df = pd.DataFrame()
     peak_df['x'] = _peak_x
     peak_df['y'] = _peak_y
     peak_df.sort_values(['x'], inplace=True)
     peak_df.reset_index(inplace=True, drop=True)
-
     return peak_df
-    # return peak_dict
 
 
-def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.6e-3):
+def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
     # if type(peak_map) == dict is False:
     num_peak_detected = len(peak_df[x_name])
     num_peak_indexed = 0
+    peak_indexed = []
     _names = peak_map.keys()
     peak_map_indexed = {}
     for _peak_name in _names:
@@ -305,10 +301,6 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.6e-3):
                         _x_num_indexed_list.append(peak_df['x_num'][_i])
                     if 'x_s' in peak_df.columns:
                         _x_s_indexed_list.append(peak_df['x_s'][_i])
-        # print(_x_indexed_list)
-        # print(_x_ideal_list)
-        # print(_y_indexed_list)
-        # print(_y_ideal_list)
         num_peak_indexed += len(_x_indexed_list)
         _df[x_name] = _x_indexed_list
         _df['y'] = _y_indexed_list
@@ -319,14 +311,9 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.6e-3):
 
         _df_ideal['x'] = _x_ideal_list
         _df_ideal['y'] = _y_ideal_list
-        print(_df)
-        print(_df_ideal)
         peak_map_indexed[_peak_name]['exp'] = _df
         peak_map_indexed[_peak_name]['ideal'] = _df_ideal
-    print(num_peak_detected)
-    print(num_peak_indexed)
-    print(peak_map_indexed)
-
+    # pprint.pprint(peak_map_indexed)
     return peak_map_indexed
 
 

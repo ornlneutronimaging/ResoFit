@@ -132,13 +132,13 @@ class TestExperiment(unittest.TestCase):
 
     def test_y_raw(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
-        _y_returned = experiment.y_raw(transmission=True)
+        _y_returned = experiment.y_raw(transmission=True, baseline=False)
         _y_expected = np.array([ 1.003423,  1.008694,  1.008373,  1.004356,  1.008168,  1.016091])
         self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-3], _y_expected[-3], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-4], _y_expected[-4], delta=0.000001)
-        _y_returned = experiment.y_raw(transmission=False)
+        _y_returned = experiment.y_raw(transmission=False, baseline=False)
         _y_expected = np.array([-0.003423, -0.008694, -0.008373, -0.004356, -0.008168, -0.016091])
         self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)

@@ -5,6 +5,7 @@ from lmfit import minimize
 
 import ResoFit._utilities as fit_util
 from ResoFit._gap_functions import y_gap_for_calibration
+from ResoFit._gap_functions import y_gap_for_adv_calibration
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 from math import isclose
@@ -60,7 +61,8 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
-        self.exp_peak_df = None
+        self.peak_df_scaled = None
+        self.peak_map_full = None
         self.raw_layer = raw_layer
         self.peak_map_indexed = None
 
@@ -105,7 +107,9 @@ class Calibration(Simulation):
         print("-------Calibration-------\nParams before:")
         self.params_to_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
-        self.calibrate_result = minimize(y_gap_for_calibration, self.params_to_calibrate, method='leastsq',
+        self.calibrate_result = minimize(y_gap_for_calibration,
+                                         self.params_to_calibrate,
+                                         method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.experiment, self.baseline, each_step))
@@ -153,26 +157,104 @@ class Calibration(Simulation):
             peak_df_raw.drop(peak_df_raw[peak_df_raw.x < self.energy_min].index, inplace=True)
             peak_df_raw.drop(peak_df_raw[peak_df_raw.x > self.energy_max].index, inplace=True)
             peak_df_raw.reset_index(drop=True, inplace=True)
-            self.exp_peak_df = peak_df_raw
-            print(self.exp_peak_df)
+            self.peak_df_scaled = peak_df_raw
 
-        return self.exp_peak_df
+        return self.peak_df_scaled
 
-    def index_peak(self, thres=0.015, min_dist=1, impr_reso=True, isotope=False):
-        # _df = pd.DataFrame()
-        _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=True, isotope=False)
-        # _df['x'] = self.exp_peak_df['x_ev']
-        # _df['y'] = self.exp_peak_df['y']
-        self.peak_map_indexed = fit_util.index_peak(peak_df=self.exp_peak_df, peak_map=_peak_map)
-
-        # print(_df)
+    def index_peak(self, thres=0.15, min_dist=2, impr_reso=True, isotope=False):
+        _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
+        self.peak_map_full = _peak_map
+        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=5e-3)
         return self.peak_map_indexed
 
-    def plot(self, table=True, grid=True, before=False, interp=False,
-             all_elements=False, all_isotopes=False, items_to_plot=None,
+    # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
+    #     """
+    #     calibrate the instrumental parameters: source-to-detector-distance & detector delay
+    #     based on peak positions obtained from the instrument parameters after Calibration.calibrate().
+    #
+    #     :param thres:
+    #     :type thres:
+    #     :param min_dist:
+    #     :type min_dist:
+    #     :param vary: vary one of or both of 'source_to_detector' and 'offset' to calibrate (default: 'all')
+    #     :type vary:
+    #     :param each_step: True -> show values and chi^2 of each step
+    #     :type each_step: boolean.
+    #     :return: calibration result
+    #     :rtype: lmfit MinimizerResult
+    #     """
+    #     if self.peak_map_indexed is None:
+    #         raise ValueError('Calibrate must be run before running advanced calibration.')
+    #     # self.init_source_to_detector_m = source_to_detector_m
+    #     # self.init_offset_us = offset_us
+    #     if vary not in ['source_to_detector', 'offset', 'all', 'none']:
+    #         raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all' 'none']")
+    #     ideal_x = []
+    #     for _ele in self.peak_map_indexed.keys():
+    #         ideal_x = ideal_x + list(self.peak_map_indexed[_ele]['ideal']['x'])
+    #     sorted(ideal_x)
+    #     print(ideal_x)
+    #
+    #     source_to_detector_vary_tag = True
+    #     offset_vary_tag = True
+    #     if vary == 'source_to_detector':
+    #         offset_vary_tag = False
+    #     if vary == 'offset':
+    #         source_to_detector_vary_tag = False
+    #     if vary == 'none':
+    #         source_to_detector_vary_tag = False
+    #         offset_vary_tag = False
+    #     self.params_to_calibrate = Parameters()
+    #     self.params_to_calibrate.add('source_to_detector_m',
+    #                                  value=self.calibrated_source_to_detector_m,
+    #                                  vary=source_to_detector_vary_tag)
+    #     self.params_to_calibrate.add('offset_us',
+    #                                  value=self.calibrated_offset_us,
+    #                                  vary=offset_vary_tag)
+    #     # Print before
+    #     print("-------Calibration(advanced)-------\nParams before:")
+    #     self.params_to_calibrate.pretty_print()
+    #     # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
+    #     self.calibrate_result = minimize(y_gap_for_adv_calibration,
+    #                                      self.params_to_calibrate,
+    #                                      method='leastsq',
+    #                                      args=(ideal_x, thres, min_dist,
+    #                                            self.experiment, each_step))
+    #     # Print after
+    #     print("Params after:")
+    #     self.calibrate_result.__dict__['params'].pretty_print()
+    #     # Print chi^2
+    #     self.calibrated_residual = self.calibrate_result.__dict__['residual']
+    #     print("Calibration chi^2 : {}\n".format(sum(self.calibrated_residual ** 2)))
+    #     self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
+    #     self.calibrated_source_to_detector_m = \
+    #         self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
+    #
+    #     # Save the calibrated experimental x & y in Calibration class
+    #     self.exp_x_raw_calibrated = self.experiment.x_raw(angstrom=False,
+    #                                                       offset_us=self.calibrated_offset_us,
+    #                                                       source_to_detector_m=self.calibrated_source_to_detector_m)
+    #     self.exp_y_raw_calibrated = self.experiment.y_raw(transmission=False, baseline=self.baseline)
+    #
+    #     self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
+    #         energy_min=self.energy_min,
+    #         energy_max=self.energy_max,
+    #         energy_step=self.energy_step,
+    #         offset_us=self.calibrated_offset_us,
+    #         source_to_detector_m=self.calibrated_source_to_detector_m,
+    #         baseline=self.baseline)
+    #
+    #     return self.calibrate_result
+
+    def plot(self, table=True, grid=True, before=False, interp=False, total=False,
+             all_elements=False, all_isotopes=False, items_to_plot=None, peak='indexed',
              save_fig=False):
         """
 
+        :param peak:
+        :type peak:
+        :param total:
+        :type total:
         :param table:
         :type table:
         :param grid:
@@ -195,7 +277,8 @@ class Calibration(Simulation):
         if all_elements is True:
             if len(self.layer_list) == 1:
                 raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
-
+        if peak not in ['indexed', 'all']:
+            raise ValueError("'peak=' must be one of ['indexed', 'full'].")
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_init'
@@ -206,15 +289,16 @@ class Calibration(Simulation):
         # clear any left plt
         plt.close()
 
+        # plot table + graph
         if table is True:
-            # plot table + graph
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
+        # plot graph only
         else:
-            # plot graph only
             ax1 = plt.subplot(111)
 
         # Plot simulated total signal
-        ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
+        if total is True:
+            ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
 
@@ -232,12 +316,12 @@ class Calibration(Simulation):
             # plot the interpolated raw data
             ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
                      'y:', label=exp_interp_label, linewidth=1)
-        # else:
-        # plot the calibrated raw data
-        ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
-                 linestyle='-', linewidth=1,
-                 marker='o', markersize=2,
-                 color='r', label=exp_label)
+        else:
+            # plot the calibrated raw data
+            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
+                     linestyle='-', linewidth=1,
+                     marker='o', markersize=2,
+                     color='r', label=exp_label)
 
         # 3.
         if all_elements is True:
@@ -265,21 +349,26 @@ class Calibration(Simulation):
             # plot specified from 'items_to_plot'
             y_axis_tag = 'attenuation'
             items = fit_util.Items(o_reso=self.o_reso)
-            shaped_items = items.shaped(items_list=items_to_plot)
+            items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
-        if self.peak_map_indexed is None:
-            if self.exp_peak_df is not None:
-                ax1.plot(self.exp_peak_df['x_ev'], self.exp_peak_df['y'], 'kx', label='Peak')
-        else:
+        if self.peak_map_indexed is not None:
+            ax1.set_ylim(ymin=-0.1)
             for _ele_name in self.peak_map_indexed.keys():
-                ax1.plot(self.peak_map_indexed[_ele_name]['exp']['x'],
-                         self.peak_map_indexed[_ele_name]['exp']['y'], 'x', label=_ele_name + '_Peak')
-
-            # ax1.plot(self.exp_peak_df['x'], self.exp_peak_df['y'], 'kx', label=None)
-            # ax1.plot(self.exp_peak_df['x_interp'], self.exp_peak_df['y'], 'r+')
+                if peak is 'all':
+                    ax1.plot(self.peak_map_full[_ele_name]['peak']['x'],
+                             [-0.05] * len(self.peak_map_full[_ele_name]['peak']['x']),
+                             '|', ms=10,
+                             label=_ele_name)
+                elif peak is 'indexed':
+                    ax1.plot(self.peak_map_indexed[_ele_name]['exp']['x'],
+                             [-0.05] * len(self.peak_map_indexed[_ele_name]['exp']['x']),
+                             '|', ms=8,
+                             label=_ele_name)
+                else:
+                    pass
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

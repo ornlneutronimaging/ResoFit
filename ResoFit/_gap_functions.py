@@ -1,4 +1,5 @@
 from ResoFit.simulation import Simulation
+import ImagingReso._utilities as reso_util
 
 
 def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment,
@@ -21,6 +22,24 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
         print("source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
                                                                               offset_us,
                                                                               sum((exp_y - simu_y) ** 2)))
+    return gap
+
+
+def y_gap_for_adv_calibration(params, ideal_x, thres, min_dist, experiment, each_step=False):
+    # Unpack Parameters:
+    parvals = params.valuesdict()
+    source_to_detector_m = parvals['source_to_detector_m']
+    offset_us = parvals['offset_us']
+    exp_peak_df = experiment.find_peak(thres=thres, min_dist=min_dist)
+    exp_x = reso_util.s_to_ev(array=exp_peak_df['x_s'],
+                              source_to_detector_m=source_to_detector_m,
+                              offset_us=offset_us)
+    sorted(exp_x)
+    gap = (exp_x - ideal_x)  # ** 2
+    if each_step is True:
+        print("source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
+                                                                              offset_us,
+                                                                              sum((exp_x - ideal_x) ** 2)))
     return gap
 
 

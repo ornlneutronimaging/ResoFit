@@ -107,7 +107,7 @@ class Simulation(object):
             _y = self.o_reso.total_signal['attenuation']
         return _x, _y
 
-    def peak_map(self, thres=0.015, min_dist=1, impr_reso=True, isotope=False):
+    def peak_map(self, thres=0.15, min_dist=1, impr_reso=True, isotope=False):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         _stack_sigma = self.o_reso.stack_sigma

@@ -45,8 +45,8 @@ class Experiment(object):
         self.source_to_detector_m = 16.
         # offset in time (us) for the actual measurement
         self.offset_us = 0.
-        self.calibrated_offset_us = None
-        self.calibrated_source_to_detector_m = None
+        # self.calibrated_offset_us = None
+        # self.calibrated_source_to_detector_m = None
 
         self.baseline = baseline
         self.slice_start = None
@@ -75,10 +75,6 @@ class Experiment(object):
         # convert transmission into attenuation
         self.data[0] = 1 - self.data[0]
 
-        # remove baseline
-        if self.baseline is True:
-            self.data[0] = fit_util.rm_baseline(self.data[0])
-
         # raw image number saved
         self.img_num = self.data.index.values
 
@@ -100,16 +96,17 @@ class Experiment(object):
             x_exp_raw = np.array(reso_util.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
 
-    def y_raw(self, transmission=False, baseline=False):
+    def y_raw(self, transmission=False, baseline=None):
         """
         Get the 'y' in eV or angstrom with experimental parameters
         :param transmission: bool to switch between transmission and attenuation
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
-        if baseline is True:
-            if self.baseline is True:
-                baseline = False
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
         assert type(baseline) == bool
         assert type(transmission) == bool
 
@@ -117,16 +114,16 @@ class Experiment(object):
 
         if transmission is True:
             y_exp_raw = 1 - y_exp_raw
-            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
                 raise ValueError("Baseline removal only works for peaks instead of dips!")
         else:
-            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw)
 
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
-                  angstrom=False, transmission=False, baseline=False, **kwargs):
+                  angstrom=False, transmission=False, baseline=None, **kwargs):
         """
         Get interpolated x & y within the scaled range same as simulation
         :param baseline: boolean to remove baseline/background by detrend
@@ -141,10 +138,11 @@ class Experiment(object):
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
-        if baseline is True:
-            if self.baseline is True:
-                baseline = False
-        assert type(baseline) == bool
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
+        assert type(_baseline) == bool
         assert type(transmission) == bool
 
         x_exp_raw = reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
@@ -170,10 +168,10 @@ class Experiment(object):
         y_interp = y_interp_function(x_interp)
 
         if transmission is True:
-            if baseline is True:  # baseline removal only works for peaks instead of dips currently
+            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
                 raise ValueError("Baseline removal only works for peaks instead of dips!")
         else:
-            if baseline is True:
+            if _baseline is True:
                 y_interp = fit_util.rm_baseline(y_interp)
 
         if angstrom is True:
@@ -244,18 +242,17 @@ class Experiment(object):
         find and return x and y of detected peak in pd.DataFrame
         x is image number from data file. type (int)
         y is attenuation
+        Note: impr_reso for finding peak is disable here to make sure the output image_num is integer
         :param thres:
         :type thres:
         :param min_dist:
         :type min_dist:
-        :param impr_reso:
-        :type impr_reso:
+
         :return:
         :rtype:
         """
-        # print(self.exp_x_raw_calibrated)
-        # print(self.exp_y_raw_calibrated)
-        _y = self.data[0]
+        # remove baseline
+        _y = fit_util.rm_baseline(self.data[0])
         _x = self.spectra[0]
         _index_gap = 0
         if self.baseline is False:
@@ -279,8 +276,6 @@ class Experiment(object):
         if len(_peak_df['y']) < 1:
             raise ValueError("No peak has been detected.")
         self.peak_df_raw = _peak_df
-
-        # print(self.peak_df_raw)
 
         return self.peak_df_raw
 
@@ -311,8 +306,6 @@ class Experiment(object):
         if baseline is True:
             if self.baseline is True:
                 baseline = False
-        # clear any left plt
-        # plt.close()
 
         """X-axis"""
         # determine values and labels for x-axis with options from
