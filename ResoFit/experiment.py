@@ -51,8 +51,9 @@ class Experiment(object):
         self.baseline = baseline
         self.slice_start = None
         self.slice_end = None
-        self.peak_df_raw = None
-        self.peak_df_scaled = None
+        # self.peak_df_raw = None
+        # self.peak_df_scaled = None
+        self.o_peak = None
 
         # Error loading data and spectra
         if type(self.spectra[0][0]) is str:
@@ -269,35 +270,63 @@ class Experiment(object):
             _y.reset_index(drop=True, inplace=True)
             _x.reset_index(drop=True, inplace=True)
             _index_gap = self.slice_start
-        _peak_num_df = fit_util.find_peak(x=_y.index.values + _index_gap, y=_y,
-                                          thres=thres, min_dist=min_dist, impr_reso=False)
-        _peak_time_df = fit_util.find_peak(x=_x, y=_y,
-                                           thres=thres, min_dist=min_dist, impr_reso=False)
-        # assert _peak_num_df['y'] == _peak_time_df['y']
-        # _peak_df.drop(_peak_df[_peak_df.x < self.energy_min].index, inplace=True)
-        # _peak_df.drop(_peak_df[_peak_df.x > self.energy_max].index, inplace=True)
-        # _peak_df.reset_index(drop=True, inplace=True)
-        _peak_df = pd.DataFrame()
-        _peak_df['y'] = _peak_num_df['y']
-        _peak_df['x_num'] = _peak_num_df['x']
-        _peak_df['x_s'] = _peak_time_df['x']
-        if len(_peak_df['y']) < 1:
+
+        self.o_peak = fit_util.Peak()
+        self.o_peak.find(x=_y.index.values + _index_gap, y=_y,
+                         x_name='x_num', y_name='y',
+                         thres=thres, min_dist=min_dist, impr_reso=False)
+        self.o_peak.add_x_col(x=_x, y=_y,
+                              x_name='x_s', y_name='y',
+                              thres=thres, min_dist=min_dist, impr_reso=False)
+
+        # _peak_num_df = fit_util.find_peak(x=_y.index.values + _index_gap, y=_y,
+        #                                   thres=thres, min_dist=min_dist, impr_reso=False)
+        # _peak_time_df = fit_util.find_peak(x=_x, y=_y,
+        #                                    thres=thres, min_dist=min_dist, impr_reso=False)
+        # _peak_df = pd.DataFrame()
+        # _peak_df['y'] = _peak_num_df['y']
+        # _peak_df['x_num'] = _peak_num_df['x']
+        # _peak_df['x_s'] = _peak_time_df['x']
+        # print(_peak_df == peak.peak_df)
+        # print(_peak_df)
+        # print(len(peak.peak_df))
+        # self.peak_df_raw = _peak_df
+        if len(self.o_peak.peak_df) < 1:
             raise ValueError("No peak has been detected.")
-        self.peak_df_raw = _peak_df
-        return self.peak_df_raw
+        print(self.o_peak.peak_df)
+        return self.o_peak.peak_df
 
-    def scale_peak_on_ev(self, energy_min, energy_max,
-                         calibrated_source_to_detector_m, calibrated_offset_us):
-        assert self.peak_df_raw is not None
-        _peak_df_raw = self.peak_df_raw
-        _peak_df_raw['x'] = reso_util.s_to_ev(array=_peak_df_raw['x_s'],
-                                              source_to_detector_m=calibrated_source_to_detector_m,
-                                              offset_us=calibrated_offset_us)
+    def scale_peak_with_ev(self, energy_min, energy_max,
+                           calibrated_source_to_detector_m, calibrated_offset_us):
+        """
 
-        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x < energy_min].index, inplace=True)
-        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x > energy_max].index, inplace=True)
-        _peak_df_raw.reset_index(drop=True, inplace=True)
-        self.peak_df_scaled = _peak_df_raw
+        :param energy_min:
+        :type energy_min:
+        :param energy_max:
+        :type energy_max:
+        :param calibrated_source_to_detector_m:
+        :type calibrated_source_to_detector_m:
+        :param calibrated_offset_us:
+        :type calibrated_offset_us:
+        :return:
+        :rtype:
+        """
+        self.o_peak.add_ev_and_scale(energy_min=energy_min, energy_max=energy_max,
+                                     calibrated_source_to_detector_m=calibrated_source_to_detector_m,
+                                     calibrated_offset_us=calibrated_offset_us)
+        assert self.o_peak.peak_df_scaled is not None
+
+        # _peak_df_raw = self.peak_df_raw
+        # _peak_df_raw['x'] = reso_util.s_to_ev(array=_peak_df_raw['x_s'],
+        #                                       source_to_detector_m=calibrated_source_to_detector_m,
+        #                                       offset_us=calibrated_offset_us)
+        #
+        # _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x < energy_min].index, inplace=True)
+        # _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x > energy_max].index, inplace=True)
+        # _peak_df_raw.reset_index(drop=True, inplace=True)
+        # self.peak_df_scaled = _peak_df_raw
+
+        return self.o_peak.peak_df_scaled
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  y_type='attenuation', baseline=False,

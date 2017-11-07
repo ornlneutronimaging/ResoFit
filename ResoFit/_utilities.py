@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import peakutils as pku
 from ImagingReso.resonance import Resonance
+import ImagingReso._utilities as reso_util
 from cerberus import Validator
 
 
@@ -271,8 +272,8 @@ def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_r
     else:
         _peak_x = list(pku.interpolate(x, y, ind=_index))
     peak_df = pd.DataFrame()
-    peak_df[x_name] = _peak_x
     peak_df[y_name] = _peak_y
+    peak_df[x_name] = _peak_x
     peak_df.sort_values([x_name], inplace=True)
     peak_df.reset_index(inplace=True, drop=True)
     return peak_df
@@ -326,11 +327,14 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
 
 class Peak(object):
     def __init__(self):
-        self.peak_df = None
-        self.peak_indexed_map = None
         self.thres = None
         self.min_dist = None
         self.impr_reso = None
+
+        self.peak_df = None
+        self.peak_df_scaled = None
+        self.peak_map_full = None
+        self.peak_map_indexed = None
 
     def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
         self.thres = thres
@@ -339,21 +343,34 @@ class Peak(object):
         self.peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
                                  thres=thres, min_dist=min_dist, impr_reso=impr_reso)
 
-    def find_to_add(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+    def add_x_col(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
         _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
                              thres=thres, min_dist=min_dist, impr_reso=impr_reso)
         _x_name = x_name
-        if _x_name in self.peak_df.columns():
+        if _x_name in self.peak_df.columns:
             _x_name += '0'
         _len_before = len(self.peak_df.columns)
         self.peak_df[_x_name] = _peak_df[x_name]
         _len_after = len(self.peak_df.columns)
         assert _len_after > _len_before
 
-    def index(self, peak_map, x_name='x', rel_tol=3.5e-3):
+    def add_ev_and_scale(self, calibrated_source_to_detector_m, calibrated_offset_us,
+                         energy_min, energy_max,
+                         _from='x_s', _to='x'):
+        self.peak_df[_to] = reso_util.s_to_ev(array=self.peak_df[_from],
+                                              source_to_detector_m=calibrated_source_to_detector_m,
+                                              offset_us=calibrated_offset_us)
+        _peak_df_scaled = self.peak_df
+        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
+        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
+        _peak_df_scaled.reset_index(drop=True, inplace=True)
+        self.peak_df_scaled = _peak_df_scaled
+
+    def index(self, peak_map, rel_tol=5e-3):
         if self.peak_df is None:
             raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
-        self.peak_indexed_map = index_peak(self.peak_df, peak_map, x_name=x_name, rel_tol=rel_tol)
+        assert self.peak_df_scaled is not None
+        self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
     def analyze(self):
         model = lmfit.models.GaussianModel()

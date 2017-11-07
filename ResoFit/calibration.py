@@ -10,6 +10,7 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 from math import isclose
 import pandas as pd
+from ResoFit._utilities import Peak
 
 
 class Calibration(Simulation):
@@ -62,6 +63,7 @@ class Calibration(Simulation):
         self.calibrated_residual = None
         self.params_to_calibrate = None
         self.raw_layer = raw_layer
+
         self.peak_df_scaled = None
         self.peak_map_full = None
         self.peak_map_indexed = None
@@ -144,23 +146,26 @@ class Calibration(Simulation):
         if self.calibrate_result is None:
             raise ValueError("Instrument params have not been calibrated.")
         else:
-            if self.experiment.peak_df_raw is None:
+            if self.experiment.o_peak is None:
                 self.experiment.find_peak(thres=thres, min_dist=min_dist)
-            self.experiment.scale_peak_on_ev(energy_min=self.energy_min,
-                                             energy_max=self.energy_max,
-                                             calibrated_offset_us=self.calibrated_offset_us,
-                                             calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
-            self.peak_df_scaled = self.experiment.peak_df_scaled
-
-        return self.peak_df_scaled
+                self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
+                                                   energy_max=self.energy_max,
+                                                   calibrated_offset_us=self.calibrated_offset_us,
+                                                   calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+        assert self.experiment.o_peak.peak_df_scaled is not None
+        self.peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+        return self.experiment.o_peak.peak_df_scaled
 
     def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
-        if self.peak_df_scaled is None:
+        if self.experiment.o_peak is None:
             self.find_peak(thres=thres, min_dist=min_dist)
-        assert self.peak_df_scaled is not None
         _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
+        self.experiment.o_peak.peak_map_full = _peak_map
         self.peak_map_full = _peak_map
-        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=rel_tol)
+        # _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+        self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
+        # self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=rel_tol)
+        self.peak_map_indexed = self.experiment.o_peak.peak_map_indexed
         return self.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):

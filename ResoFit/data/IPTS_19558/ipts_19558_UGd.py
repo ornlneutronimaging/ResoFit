@@ -70,24 +70,24 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 # calibration.find_peak()
 calibration.index_peak(thres=0.12, min_dist=25)
-model = lmfit.models.GaussianModel()
-y = calibration.exp_y_interp_calibrated
-x = calibration.exp_x_interp_calibrated
-pars = model.make_params()
-# print(pars)
-pars['center'].set(20, min=14, max=25)
-pars['amplitude'].set(2000)
-pars['sigma'].set(15)
-out = model.fit(y, pars, x=x)
-# pprint.pprint(out.__dict__)
-print(out.fit_report())
-plt.plot(x, out.best_fit, 'c-')
-plt.plot(x, y, '*')
-plt.show()
+# model = lmfit.models.GaussianModel()
+# y = calibration.exp_y_interp_calibrated
+# x = calibration.exp_x_interp_calibrated
+# pars = model.make_params()
+# # print(pars)
+# pars['center'].set(20, min=14, max=25)
+# pars['amplitude'].set(2000)
+# pars['sigma'].set(15)
+# out = model.fit(y, pars, x=x)
+# # pprint.pprint(out.__dict__)
+# print(out.fit_report())
+# plt.plot(x, out.best_fit, 'c-')
+# plt.plot(x, y, '*')
+# plt.show()
 calibration.plot(before=before, table=table, peak=peak,
                  grid=grid, items_to_plot=items_to_plot, interp=False)
-print(calibration.peak_map_indexed)
-print(calibration.peak_df_scaled)
+# print(calibration.peak_map_indexed)
+# print(calibration.peak_df_scaled)
 
 # # Fit sample density or thickness
 # fit = FitResonance(spectra_file=spectra_file,
