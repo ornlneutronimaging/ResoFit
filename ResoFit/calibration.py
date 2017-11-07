@@ -5,7 +5,7 @@ from lmfit import minimize
 
 import ResoFit._utilities as fit_util
 from ResoFit._gap_functions import y_gap_for_calibration
-from ResoFit._gap_functions import y_gap_for_adv_calibration
+# from ResoFit._gap_functions import y_gap_for_adv_calibration
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 from math import isclose
@@ -118,16 +118,16 @@ class Calibration(Simulation):
         self.calibrate_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.calibrated_residual = self.calibrate_result.__dict__['residual']
-        print("Calibration chi^2 : {}\n".format(sum(self.calibrated_residual ** 2)))
+        print("Calibration chi^2 : {}\n".format(self.calibrate_result.__dict__['chisqr']))
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
 
         # Save the calibrated experimental x & y in Calibration class
-        self.exp_x_raw_calibrated = self.experiment.x_raw(angstrom=False,
+        self.exp_x_raw_calibrated = self.experiment.x_raw(x_type='energy',
                                                           offset_us=self.calibrated_offset_us,
                                                           source_to_detector_m=self.calibrated_source_to_detector_m)
-        self.exp_y_raw_calibrated = self.experiment.y_raw(transmission=False, baseline=self.baseline)
+        self.exp_y_raw_calibrated = self.experiment.y_raw(y_type='attenuation', baseline=self.baseline)
 
         self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
             energy_min=self.energy_min,
@@ -162,6 +162,9 @@ class Calibration(Simulation):
         return self.peak_df_scaled
 
     def index_peak(self, thres=0.15, min_dist=2, impr_reso=True, isotope=False):
+        if self.peak_df_scaled is None:
+            self.find_peak(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        assert self.peak_df_scaled is not None
         _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
         self.peak_map_full = _peak_map
         self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=5e-3)

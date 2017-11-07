@@ -66,8 +66,8 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.find_peak(thres=0.12, min_dist=25)
-calibration.index_peak()
+# calibration.find_peak()
+calibration.index_peak(thres=0.12, min_dist=25)
 calibration.plot(before=before, table=table, peak=peak,
                  grid=grid, items_to_plot=items_to_plot, interp=False)
 

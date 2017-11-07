@@ -2,13 +2,14 @@ import itertools
 import os
 import pprint
 import re
+from math import isclose
 
+import lmfit
 import numpy as np
 import pandas as pd
 import peakutils as pku
 from ImagingReso.resonance import Resonance
 from cerberus import Validator
-from math import isclose
 
 
 def load_txt_csv(path_to_file):
@@ -319,7 +320,20 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
 
 class Peak(object):
     def __init__(self):
-        pass
+        self.peak_df = None
+        self.peak_indexed_map = None
+
+    def find(self, y, x=None, thres=0.015, min_dist=1, impr_reso=False):
+        self.peak_df = find_peak(y=y, x=x, thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+
+    def index(self, peak_map, x_name='x', rel_tol=3.5e-3):
+        if self.peak_df is None:
+            raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
+        self.peak_indexed_map = index_peak(self.peak_df, peak_map, x_name=x_name, rel_tol=rel_tol)
+
+    def analyze(self):
+        model = lmfit.models.GaussianModel()
+
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

@@ -186,7 +186,7 @@ class FitResonance(Experiment):
         self.fitted_iso_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_iso_residual = self.fitted_iso_result.__dict__['residual']
-        print("Fit iso chi^2 : {}\n".format(sum(self.fitted_iso_residual ** 2)))
+        print("Fit iso chi^2 : {}\n".format(self.fitted_iso_result.__dict__['chisqr']))
 
         return
 
@@ -235,6 +235,9 @@ class FitResonance(Experiment):
         self.peak_map_full = _peak_map
         self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=5e-3)
         return self.peak_map_indexed
+
+    def analyze_peak(self):
+        pass
 
     def plot(self, error=True, table=True, grid=True, before=False, interp=False, total=True,
              all_elements=False, all_isotopes=False, items_to_plot=None, peak='indexed',
@@ -352,7 +355,7 @@ class FitResonance(Experiment):
             # Plot exp. data (raw)
             exp_x = self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
                                source_to_detector_m=self.calibrated_source_to_detector_m)
-            exp_y = self.y_raw(transmission=False, baseline=self.baseline)
+            exp_y = self.y_raw(y_type='attenuation', baseline=self.baseline)
             ax1.plot(exp_x, exp_y,
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,

@@ -11,8 +11,8 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
                                         energy_max=energy_max,
                                         energy_step=energy_step,
-                                        angstrom=False,
-                                        transmission=False,
+                                        x_type='energy',
+                                        y_type='attenuation',
                                         offset_us=offset_us,
                                         source_to_detector_m=source_to_detector_m,
                                         baseline=baseline)

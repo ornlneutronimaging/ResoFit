@@ -6,7 +6,7 @@ import numpy as np
 import pprint
 from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
-
+import lmfit
 
 # Global parameters
 energy_min = 7
@@ -68,26 +68,33 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.find_peak(thres=0.10, min_dist=25)
-calibration.index_peak(thres=0.10, min_dist=25)
-calibration.plot(before=False, all_elements=False, peak='all')
-
-# Fit the peak height
-fit = FitResonance(spectra_file=spectra_file,
-                   data_file=data_file,
-                   folder=folder,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
-fit.molar_conc()
-fit.index_peak(thres=0.10, min_dist=25)
-# fit.fit_iso(layer=layer_2)
+# pprint.pprint(calibrate_result.show_candidates())
+peak_df = calibration.find_peak(thres=0.10, min_dist=25)
+peak_map = calibration.index_peak(thres=0.10, min_dist=25)
+model = lmfit.models.GaussianModel()
+model.guess(peak_df['y'], x=peak_df['x'])
+fit = model.fit(peak_df['y'], x=peak_df['x'])
 fit.plot()
+plt.show()
+
+# calibration.plot(before=False, all_elements=False, peak='all')
+#
+# # Fit the peak height
+# fit = FitResonance(spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    folder=folder,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
+# fit.molar_conc()
+# fit.index_peak(thres=0.10, min_dist=25)
+# # fit.fit_iso(layer=layer_2)
+# fit.plot(peak='all')

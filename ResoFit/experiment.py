@@ -73,17 +73,19 @@ class Experiment(object):
         self.spectra_raw = self.spectra
 
         # convert transmission into attenuation
-        self.data[0] = 1 - self.data[0]
+        # self.data[0] = 1 - self.data[0]
 
         # raw image number saved
         self.img_num = self.data.index.values
 
-    def x_raw(self, angstrom=False, **kwargs):
+    def x_raw(self, x_type='energy', **kwargs):
         """
         Get the 'x' in eV or angstrom with experimental parameters
-        :param angstrom: bool to switch between eV and angstrom
+        :param x_type: bool to switch between eV and angstrom
         :return: array
         """
+        if x_type not in ['energy', 'lambda']:
+            raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
         if 'offset_us' in kwargs.keys():
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
@@ -92,46 +94,47 @@ class Experiment(object):
         x_exp_raw = np.array(reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
                                                offset_us=self.offset_us,
                                                source_to_detector_m=self.source_to_detector_m))
-        if angstrom is True:
+        if x_type == 'lambda':
             x_exp_raw = np.array(reso_util.ev_to_angstroms(x_exp_raw))
         return x_exp_raw
 
-    def y_raw(self, transmission=False, baseline=None):
+    def y_raw(self, y_type='attenuation', baseline=None):
         """
         Get the 'y' in eV or angstrom with experimental parameters
-        :param transmission: bool to switch between transmission and attenuation
+        :param y_type: bool to switch between transmission and attenuation
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
+        if y_type not in ['attenuation', 'transmission']:
+            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
         assert type(baseline) == bool
-        assert type(transmission) == bool
 
         y_exp_raw = np.array(self.data[0]) / self.repeat
 
-        if transmission is True:
+        if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
             if _baseline is True:  # baseline removal only works for peaks instead of dips currently
-                raise ValueError("Baseline removal only works for peaks instead of dips!")
-        else:
-            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw)
+        elif y_type == 'transmission':
+            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
+                raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
-                  angstrom=False, transmission=False, baseline=None, **kwargs):
+                  x_type='energy', y_type='attenuation', baseline=None, **kwargs):
         """
         Get interpolated x & y within the scaled range same as simulation
         :param baseline: boolean to remove baseline/background by detrend
         :param energy_min:
         :param energy_max:
         :param energy_step:
-        :param angstrom: True -> output the interpolated data with x-axis as wavelength in angstrom
-        :param transmission:
+        :param x_type:
+        :param y_type:
         :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
         """
         if 'offset_us' in kwargs.keys():
@@ -142,8 +145,11 @@ class Experiment(object):
             _baseline = self.baseline
         else:
             _baseline = baseline
+        if x_type not in ['energy', 'lambda']:
+            raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
+        if y_type not in ['attenuation', 'transmission']:
+            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
         assert type(_baseline) == bool
-        assert type(transmission) == bool
 
         x_exp_raw = reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
                                       offset_us=self.offset_us,
@@ -159,7 +165,7 @@ class Experiment(object):
                 "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
 
         y_exp_raw = np.array(self.data[0]) / self.repeat
-        if transmission is True:
+        if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
@@ -167,14 +173,14 @@ class Experiment(object):
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
         y_interp = y_interp_function(x_interp)
 
-        if transmission is True:
+        if y_type == 'attenuation':
             if _baseline is True:  # baseline removal only works for peaks instead of dips currently
-                raise ValueError("Baseline removal only works for peaks instead of dips!")
-        else:
-            if _baseline is True:
                 y_interp = fit_util.rm_baseline(y_interp)
+        elif y_type == 'transmission':
+            if _baseline is True:
+                raise ValueError("Baseline removal only works for peaks instead of dips!")
 
-        if angstrom is True:
+        if x_type == 'lambda':
             x_interp = reso_util.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
@@ -234,7 +240,6 @@ class Experiment(object):
                     if reset_index is True:
                         df.reset_index(drop=True, inplace=True)
         # convert transmission into attenuation
-        df[0] = 1 - df[0]
         self.data[0] = self.data[0] / df[0]
 
     def find_peak(self, thres=0.15, min_dist=2):
