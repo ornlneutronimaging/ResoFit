@@ -52,6 +52,7 @@ class Experiment(object):
         self.slice_start = None
         self.slice_end = None
         self.peak_df_raw = None
+        self.peak_df_scaled = None
 
         # Error loading data and spectra
         if type(self.spectra[0][0]) is str:
@@ -256,12 +257,14 @@ class Experiment(object):
         :return:
         :rtype:
         """
+        # convert to peaks
+        _y = 1 - self.data[0]
         # remove baseline
-        _y = fit_util.rm_baseline(self.data[0])
+        _y = fit_util.rm_baseline(_y)
         _x = self.spectra[0]
         _index_gap = 0
-        if self.baseline is False:
-            _y = fit_util.rm_baseline(self.data[0])
+        # if self.baseline is False:
+        #     _y = fit_util.rm_baseline(self.data[0])
         if self.slice_start is not None:
             _y.reset_index(drop=True, inplace=True)
             _x.reset_index(drop=True, inplace=True)
@@ -281,27 +284,41 @@ class Experiment(object):
         if len(_peak_df['y']) < 1:
             raise ValueError("No peak has been detected.")
         self.peak_df_raw = _peak_df
-
         return self.peak_df_raw
 
+    def scale_peak_on_ev(self, energy_min, energy_max,
+                         calibrated_source_to_detector_m, calibrated_offset_us):
+        assert self.peak_df_raw is not None
+        _peak_df_raw = self.peak_df_raw
+        _peak_df_raw['x'] = reso_util.s_to_ev(array=_peak_df_raw['x_s'],
+                                              source_to_detector_m=calibrated_source_to_detector_m,
+                                              offset_us=calibrated_offset_us)
+
+        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x < energy_min].index, inplace=True)
+        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x > energy_max].index, inplace=True)
+        _peak_df_raw.reset_index(drop=True, inplace=True)
+        self.peak_df_scaled = _peak_df_raw
+
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
-                 transmission=False, baseline=False,
-                 x_axis='energy', time_unit='us', **kwargs):
+                 y_type='attenuation', baseline=False,
+                 x_type='energy', time_unit='us', **kwargs):
         """
         Display the loaded signal from data and spectra files.
         :param energy_xmax: maximum x-axis energy value to display
         :param lambda_xmax: maximum x-axis lambda value to display
-        :param transmission: boolean. False -> show resonance peaks
+        :param y_type: boolean. False -> show resonance peaks
                                       True -> show resonance dips
         :param baseline: boolean. True -> remove baseline by detrend
-        :param x_axis: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
+        :param x_type: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
         :param time_unit: string. Must be either 's' or 'us' or 'ns'
         :return: display raw data signals
         """
-        if x_axis not in ['energy', 'lambda', 'time', 'number']:
+        if x_type not in ['energy', 'lambda', 'time', 'number']:
             raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
         if time_unit not in ['s', 'us', 'ns']:
             raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
+        if y_type not in ['attenuation', 'transmission']:
+            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
         x_axis_label = None
         x_exp_raw = None
         if 'offset_us' in kwargs.keys():
@@ -315,8 +332,8 @@ class Experiment(object):
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        if x_axis in ['energy', 'lambda']:
-            if x_axis == 'energy':
+        if x_type in ['energy', 'lambda']:
+            if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
                 angstrom = False
                 plt.xlim(xmin=0, xmax=energy_xmax)
@@ -329,11 +346,11 @@ class Experiment(object):
                                    offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
 
-        if x_axis in ['time', 'number']:
+        if x_type in ['time', 'number']:
             x_exp_raw = self.x_raw(angstrom=False,
                                    offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
-            if x_axis == 'time':
+            if x_type == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
                     x_exp_raw = self.spectra[0]
@@ -344,7 +361,7 @@ class Experiment(object):
                     x_axis_label = 'Time (ns)'
                     x_exp_raw = 1e9 * self.spectra[0]
 
-            if x_axis == 'number':
+            if x_type == 'number':
                 x_axis_label = 'Image number (#)'
                 x_exp_raw = self.data.index.values
         if x_axis_label is None:
@@ -353,11 +370,11 @@ class Experiment(object):
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
-        if transmission:
+        if y_type == 'transmission':
             y_axis_label = 'Neutron Transmission'
         else:
             y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=baseline)
 
         # Plot
         plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
@@ -367,21 +384,21 @@ class Experiment(object):
         plt.legend(loc='best')
 
     def export_raw(self, filename=None,
-                   transmission=False, baseline=False,
-                   x_axis='energy', time_unit='us', **kwargs):
+                   y_type='attenuation', baseline=False,
+                   x_type='energy', time_unit='us', **kwargs):
         """
         Export the calculated signal from data and spectra files.
         :param filename: filename (with .csv suffix) you would like to save as
                                 None -> export to clipboard
         :type filename: string.
-        :param transmission: boolean. False -> show resonance peaks
+        :param y_type: boolean. False -> show resonance peaks
                                       True -> show resonance dips
         :param baseline: boolean. True -> remove baseline by detrend
-        :param x_axis: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
+        :param x_type: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
         :param time_unit: string. Must be either 's' or 'us' or 'ns'
         :return: display raw data signals
         """
-        if x_axis not in ['energy', 'lambda', 'time', 'number']:
+        if x_type not in ['energy', 'lambda', 'time', 'number']:
             raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
         if time_unit not in ['s', 'us', 'ns']:
             raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
@@ -399,8 +416,8 @@ class Experiment(object):
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        if x_axis in ['energy', 'lambda']:
-            if x_axis == 'energy':
+        if x_type in ['energy', 'lambda']:
+            if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
                 angstrom = False
             else:
@@ -409,10 +426,10 @@ class Experiment(object):
             x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
 
-        if x_axis in ['time', 'number']:
+        if x_type in ['time', 'number']:
             x_exp_raw = self.x_raw(angstrom=False, offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
-            if x_axis == 'time':
+            if x_type == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
                     x_exp_raw = self.spectra[0]
@@ -423,7 +440,7 @@ class Experiment(object):
                     x_axis_label = 'Time (ns)'
                     x_exp_raw = 1e9 * self.spectra[0]
 
-            if x_axis == 'number':
+            if x_type == 'number':
                 x_axis_label = 'Image number (#)'
                 x_exp_raw = np.array(range(1, len(self.data[0]) + 1))
         if x_axis_label is None:
@@ -434,11 +451,11 @@ class Experiment(object):
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
-        if transmission:
+        if y_type == 'transmission':
             y_axis_label = 'Neutron Transmission'
         else:
             y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(transmission=transmission, baseline=baseline)
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=baseline)
         df[y_axis_label] = y_exp_raw
 
         # Export

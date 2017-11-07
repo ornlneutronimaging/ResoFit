@@ -61,9 +61,9 @@ class Calibration(Simulation):
         self.baseline = baseline
         self.calibrated_residual = None
         self.params_to_calibrate = None
+        self.raw_layer = raw_layer
         self.peak_df_scaled = None
         self.peak_map_full = None
-        self.raw_layer = raw_layer
         self.peak_map_indexed = None
 
     def norm_to(self, file):
@@ -139,35 +139,28 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def find_peak(self, thres=0.15, min_dist=2, impr_reso=True):
+    def find_peak(self, thres=0.15, min_dist=2):
         # load detected peak with x in image number
-        if self.experiment.peak_df_raw is None:
-            peak_df_raw = self.experiment.find_peak(thres=thres, min_dist=min_dist)
-        else:
-            peak_df_raw = self.experiment.peak_df_raw
-
-        # _peak_df_raw['x_time_s'] =
         if self.calibrate_result is None:
             raise ValueError("Instrument params have not been calibrated.")
         else:
-            peak_df_raw['x'] = reso_util.s_to_ev(array=peak_df_raw['x_s'],
-                                                 source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                 offset_us=self.calibrated_offset_us)
-
-            peak_df_raw.drop(peak_df_raw[peak_df_raw.x < self.energy_min].index, inplace=True)
-            peak_df_raw.drop(peak_df_raw[peak_df_raw.x > self.energy_max].index, inplace=True)
-            peak_df_raw.reset_index(drop=True, inplace=True)
-            self.peak_df_scaled = peak_df_raw
+            if self.experiment.peak_df_raw is None:
+                self.experiment.find_peak(thres=thres, min_dist=min_dist)
+            self.experiment.scale_peak_on_ev(energy_min=self.energy_min,
+                                             energy_max=self.energy_max,
+                                             calibrated_offset_us=self.calibrated_offset_us,
+                                             calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+            self.peak_df_scaled = self.experiment.peak_df_scaled
 
         return self.peak_df_scaled
 
-    def index_peak(self, thres=0.15, min_dist=2, impr_reso=True, isotope=False):
+    def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
         if self.peak_df_scaled is None:
-            self.find_peak(thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+            self.find_peak(thres=thres, min_dist=min_dist)
         assert self.peak_df_scaled is not None
         _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
         self.peak_map_full = _peak_map
-        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=5e-3)
+        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=rel_tol)
         return self.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
@@ -358,6 +351,9 @@ class Calibration(Simulation):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
         if self.peak_map_indexed is not None:
+            ax1.plot(self.peak_df_scaled['x'],
+                     self.peak_df_scaled['y'],
+                     'kx', label='_nolegend_')
             ax1.set_ylim(ymin=-0.1)
             for _ele_name in self.peak_map_indexed.keys():
                 if peak is 'all':

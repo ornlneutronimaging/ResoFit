@@ -58,7 +58,6 @@ class FitResonance(Experiment):
         self.isotope_stack = {}
         self.sample_vary = None
         self.df = None
-        self.peak_df_scaled = None
         self.peak_map_full = None
         self.peak_map_indexed = None
 
@@ -217,23 +216,24 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def index_peak(self, thres=0.15, min_dist=1, isotope=False):
+    def index_peak(self, thres=0.15, min_dist=1, rel_tol=5e-3, isotope=False):
         if self.peak_df_raw is None:
-            self.peak_df_raw = self.find_peak(thres=thres, min_dist=min_dist)
-        _peak_df_raw = self.peak_df_raw
-        _peak_df_raw['x'] = reso_util.s_to_ev(array=_peak_df_raw['x_s'],
-                                              source_to_detector_m=self.calibrated_source_to_detector_m,
-                                              offset_us=self.calibrated_offset_us)
+            self.find_peak(thres=thres, min_dist=min_dist)
+        assert self.peak_df_raw is not None
+        self.scale_peak_on_ev(energy_min=self.energy_min,
+                              energy_max=self.energy_max,
+                              calibrated_offset_us=self.calibrated_offset_us,
+                              calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+        assert self.peak_df_scaled is not None
 
-        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x < self.energy_min].index, inplace=True)
-        _peak_df_raw.drop(_peak_df_raw[_peak_df_raw.x > self.energy_max].index, inplace=True)
-        _peak_df_raw.reset_index(drop=True, inplace=True)
-        self.peak_df_scaled = _peak_df_raw
-
-        _peak_map = self.fitted_simulation.peak_map(thres=thres, min_dist=min_dist, impr_reso=True,
+        _peak_map = self.fitted_simulation.peak_map(thres=thres,
+                                                    min_dist=min_dist,
+                                                    impr_reso=True,
                                                     isotope=isotope)
         self.peak_map_full = _peak_map
-        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=5e-3)
+        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled,
+                                                    peak_map=_peak_map,
+                                                    rel_tol=rel_tol)
         return self.peak_map_indexed
 
     def analyze_peak(self):
@@ -430,6 +430,9 @@ class FitResonance(Experiment):
                 self.df[_live_df_y_label] = _signal_dict[_each_label]
 
         if self.peak_map_indexed is not None:
+            ax1.plot(self.peak_df_scaled['x'],
+                     self.peak_df_scaled['y'],
+                     'kx', label='_nolegend_')
             # ax1.set_ylim(ymin=-0.1)
             for _ele_name in self.peak_map_indexed.keys():
                 if peak is 'all':

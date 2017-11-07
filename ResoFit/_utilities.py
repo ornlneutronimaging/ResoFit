@@ -74,6 +74,12 @@ def set_plt(plt, x_max, fig_title, grid=False):
         plt.grid()
 
 
+# def peak_plt(plt, peak_df, peak_map_indexed, peak):
+#     plt.plot(self.peak_df_scaled['x'],
+#                      self.peak_df_scaled['y'],
+#                      'kx', label='_nolegend_')
+
+
 def rm_baseline(y, deg=7, max_it=None, tol=None):
     baseline = pku.baseline(y=y, deg=deg, max_it=max_it, tol=tol)
     return y - baseline
@@ -255,7 +261,7 @@ class Layer(object):
         pprint.pprint(self.info)
 
 
-def find_peak(y, x=None, thres=0.015, min_dist=1, impr_reso=False):
+def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
     if x is None:
         x = np.array(range(0, len(y)))
     _index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
@@ -265,9 +271,9 @@ def find_peak(y, x=None, thres=0.015, min_dist=1, impr_reso=False):
     else:
         _peak_x = list(pku.interpolate(x, y, ind=_index))
     peak_df = pd.DataFrame()
-    peak_df['x'] = _peak_x
-    peak_df['y'] = _peak_y
-    peak_df.sort_values(['x'], inplace=True)
+    peak_df[x_name] = _peak_x
+    peak_df[y_name] = _peak_y
+    peak_df.sort_values([x_name], inplace=True)
     peak_df.reset_index(inplace=True, drop=True)
     return peak_df
 
@@ -322,9 +328,27 @@ class Peak(object):
     def __init__(self):
         self.peak_df = None
         self.peak_indexed_map = None
+        self.thres = None
+        self.min_dist = None
+        self.impr_reso = None
 
-    def find(self, y, x=None, thres=0.015, min_dist=1, impr_reso=False):
-        self.peak_df = find_peak(y=y, x=x, thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+    def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        self.thres = thres
+        self.min_dist = min_dist
+        self.impr_reso = impr_reso
+        self.peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
+                                 thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+
+    def find_to_add(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
+                             thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        _x_name = x_name
+        if _x_name in self.peak_df.columns():
+            _x_name += '0'
+        _len_before = len(self.peak_df.columns)
+        self.peak_df[_x_name] = _peak_df[x_name]
+        _len_after = len(self.peak_df.columns)
+        assert _len_after > _len_before
 
     def index(self, peak_map, x_name='x', rel_tol=3.5e-3):
         if self.peak_df is None:
@@ -333,7 +357,7 @@ class Peak(object):
 
     def analyze(self):
         model = lmfit.models.GaussianModel()
-
+        pass
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

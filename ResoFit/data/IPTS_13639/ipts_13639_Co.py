@@ -6,6 +6,7 @@ import numpy as np
 import pprint
 from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
+import lmfit
 
 # Global parameters
 energy_min = 15
@@ -59,27 +60,54 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak()
-calibration.plot(before=before, table=table, peak='all')
+calibration.index_peak(thres=0.5, min_dist=50)
+# peak_df = calibration.peak_df_scaled
 
+model = lmfit.models.GaussianModel()
+y = calibration.exp_y_interp_calibrated
+x = calibration.exp_x_interp_calibrated
+pars = model.make_params()
+# print(pars)
+pars['center'].set(135, min=100, max=150)
+pars['amplitude'].set(2000, min=10)
+pars['sigma'].set(15, min=3)
+out = model.fit(y, pars, x=x)
+pprint.pprint(out.__dict__)
+print(out.fit_report())
+plt.plot(x, out.best_fit, 'k-')
+plt.plot(x, y, '-')
+plt.show()
 
-# Fit the peak height
-fit = FitResonance(folder=folder,
-                   spectra_file=spectra_file,
-                   data_file=data_file,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
-fit.molar_conc()
-# fit.fit_iso(layer=layer_1)
-fit.index_peak()
-fit.plot(before=before, table=table, peak='all')
+# pars = mod.make_params()
+# pars['peak_amplitude'].value = 3.0
+# pars['peak_center'].value = 6.0
+# pars['peak_sigma'].value = 2.0
+# pars['bkg_intercept'].value = 0.0
+# pars['bkg_slope'].value = 0.0
+# print( out.fit_report())
 
+# fit = model.fit(calibration.exp_y_interp_calibrated, x=calibration.exp_x_interp_calibrated)
+# plt.show()
+# calibration.plot(before=before, table=table, peak='all')
+#
+#
+# # Fit the peak height
+# fit = FitResonance(folder=folder,
+#                    spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
+# fit.molar_conc()
+# # fit.fit_iso(layer=layer_1)
+# fit.index_peak(thres=0.5, min_dist=50)
+# fit.plot(before=before, table=table, peak='all')
+#
