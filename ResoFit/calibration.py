@@ -141,31 +141,27 @@ class Calibration(Simulation):
 
         return self.calibrate_result
 
-    def find_peak(self, thres=0.15, min_dist=2):
+    def __find_peak(self, thres=0.15, min_dist=2):
         # load detected peak with x in image number
         if self.calibrate_result is None:
             raise ValueError("Instrument params have not been calibrated.")
-        else:
-            if self.experiment.o_peak is None:
-                self.experiment.find_peak(thres=thres, min_dist=min_dist)
-                self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
-                                                   energy_max=self.energy_max,
-                                                   calibrated_offset_us=self.calibrated_offset_us,
-                                                   calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+        self.experiment.find_peak(thres=thres, min_dist=min_dist)
+        self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
+                                           energy_max=self.energy_max,
+                                           calibrated_offset_us=self.calibrated_offset_us,
+                                           calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
         assert self.experiment.o_peak.peak_df_scaled is not None
-        # self.peak_df_scaled = self.experiment.o_peak.peak_df_scaled
         return self.experiment.o_peak.peak_df_scaled
 
     def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
         if self.experiment.o_peak is None:
-            self.find_peak(thres=thres, min_dist=min_dist)
+            self.__find_peak(thres=thres, min_dist=min_dist)
+        # find peak map using Simulation.peak_map()
         _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
+        # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
-        # self.peak_map_full = _peak_map
-        # _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+        # index using Peak()
         self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
-        # self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=rel_tol)
-        # self.peak_map_indexed = self.experiment.o_peak.peak_map_indexed
         return self.experiment.o_peak.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
@@ -374,8 +370,17 @@ class Calibration(Simulation):
                              [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
                              label=_ele_name)
-                else:
-                    pass
+                # if 'peak_span' in _peak_map_indexed[_ele_name].keys():
+                #     _time_s = _peak_map_indexed[_ele_name]['peak_span']['time_s']
+                #     _data_point_x = reso_util.s_to_ev(array=_time_s,
+                #                                       offset_us=self.calibrated_offset_us,
+                #                                       source_to_detector_m=self.calibrated_source_to_detector_m)
+                #     _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['attenuation']
+                #     ax1.plot(_data_point_x,
+                #              _data_point_y,
+                #              '<',
+                #              label='_nolegend_')
+
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

@@ -11,6 +11,7 @@ import peakutils as pku
 from ImagingReso.resonance import Resonance
 import ImagingReso._utilities as reso_util
 from cerberus import Validator
+import matplotlib.pyplot as plt
 
 
 def load_txt_csv(path_to_file):
@@ -271,6 +272,13 @@ def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_r
         _peak_x = list(x[_index])
     else:
         _peak_x = list(pku.interpolate(x, y, ind=_index))
+
+    # data_df = pd.DataFrame()
+    # data_df[y_name] = y
+    # data_df[x_name] = x
+    # data_df.sort_values([x_name], inplace=True)
+    # data_df.reset_index(inplace=True, drop=True)
+
     peak_df = pd.DataFrame()
     peak_df[y_name] = _peak_y
     peak_df[x_name] = _peak_x
@@ -280,10 +288,7 @@ def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_r
 
 
 def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
-    # if type(peak_map) == dict is False:
-    num_peak_detected = len(peak_df[x_name])
     num_peak_indexed = 0
-    peak_indexed = []
     _names = peak_map.keys()
     peak_map_indexed = {}
     for _peak_name in _names:
@@ -309,6 +314,7 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
                         _x_num_indexed_list.append(peak_df['x_num'][_i])
                     if 'x_s' in peak_df.columns:
                         _x_s_indexed_list.append(peak_df['x_s'][_i])
+                        # _peak_name_list.append(_peak_name)
         num_peak_indexed += len(_x_indexed_list)
         _df[x_name] = _x_indexed_list
         _df['y'] = _y_indexed_list
@@ -337,16 +343,47 @@ class Peak(object):
         self.peak_map_indexed = None
         self.y = None
         self.x = None
+        self.x_s = None
+
+        self.shape_report = None
+
+        self.prefix_list = None
 
     def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        """
+        find peaks in 1d data and return peaks detected using pd.DataFrame
+        :param y: 1d data
+        :type y: array
+        :param x:
+        :type x: array (optional)
+        :param x_name:
+        :type x_name:
+        :param y_name:
+        :type y_name:
+        :param thres:
+        :type thres:
+        :param min_dist:
+        :type min_dist:
+        :param impr_reso:
+        :type impr_reso:
+        :return:
+        :rtype:
+        """
         self.y = y
+        if x is None:
+            x = np.array(range(0, len(y)))
+        self.x = x
         self.thres = thres
         self.min_dist = min_dist
         self.impr_reso = impr_reso
         self.peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
                                  thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        return self.peak_df
 
     def add_x_col(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        if x_name == 'x_s':
+            self.x_s = x
+
         _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
                              thres=thres, min_dist=min_dist, impr_reso=impr_reso)
         _x_name = x_name
@@ -375,22 +412,85 @@ class Peak(object):
         assert self.peak_df_scaled is not None
         self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
-    def analyze(self):
-        model = lmfit.models.GaussianModel()
+    def analyze(self, report=False):
         _y = self.y
         _x = self.x
-        pars = model.make_params()
-        # print(pars)
-        pars['center'].set(20, min=14, max=25)
-        pars['amplitude'].set(2000)
-        pars['sigma'].set(15)
-        out = model.fit(y, pars, x=x)
+        _peak_map_indexed = self.peak_map_indexed
+        model = lmfit.models.GaussianModel(prefix='bkg_')
+        pars = model.guess(_y, x=_x)
+        self.prefix_list = []
+        for _ele in _peak_map_indexed.keys():
+            for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
+                _prefix = _ele + '_' + str(_ind) + '_'
+                _model = lmfit.models.LorentzianModel(prefix=_prefix)
+                _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
+                pars.update(_model.make_params())
+                pars[_prefix + 'amplitude'].value = 3.0
+                pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
+                pars[_prefix + 'sigma'].value = 2.0
+                model += _model
+                self.prefix_list.append(_prefix)
+        _out = model.fit(_y, pars, x=_x)
+        self.shape_report = _out
+        self._fwhm()
+        self._fill_img_num_to_peak_map_indexed()
+        # plt.plot(_x, out.best_fit, 'k-')
+        # plt.plot(_x, _y, '*')
+        # plt.show()
+        if report is True:
+            print(_out.fit_report())
+
+    def _fwhm(self):
+        _fwhm_df = pd.DataFrame()
+        # generate ele list for _fwhm_df
+        _ele_list = [_ele_name.split('_')[0] for _ele_name in self.prefix_list]
+        _prefix_list = self.prefix_list
+        _values = self.shape_report.__dict__['params'].valuesdict()
+        pars_center_name = [_i + 'center' for _i in _prefix_list]
+        pars_fwhm_name = [_i + 'fwhm' for _i in _prefix_list]
+        pars_center_value = [_values[_name] for _name in pars_center_name]
+        pars_fwhm_value = [_values[_name] for _name in pars_fwhm_name]
+        _fwhm_df['ele_name'] = _ele_list
+        _fwhm_df['center_val'] = pars_center_value
+        _fwhm_df['fwhm_val'] = pars_fwhm_value
+        _fwhm_df.sort_values(['center_val'], inplace=True)
+        _fwhm_df.reset_index(inplace=True, drop=True)
+        self.fwhm_df = _fwhm_df
+        print(_fwhm_df)
+
+    def _fill_img_num_to_peak_map_indexed(self):
+        if self.x_s is None:
+            raise ValueError("Column of x in time (s) has not been added.")
+        _peak_map_indexed = self.peak_map_indexed
+        _fwhm_df = self.fwhm_df
+        for _ele in _peak_map_indexed.keys():
+            _peak_map_indexed[_ele]['peak_span'] = {}
+            _img_number_list = []
+            # _data_point_x_list = []
+            # _data_point_y_list = []
+            for _ind in range(len(_fwhm_df)):
+                if _fwhm_df['ele_name'][_ind] == _ele:
+                    half_fwhm = _fwhm_df['fwhm_val'][_ind] / 2
+                    _min = _fwhm_df['center_val'][_ind] - half_fwhm
+                    _max = _fwhm_df['center_val'][_ind] + half_fwhm
+                    _min = int(np.floor(_min))
+                    _max = int(np.ceil(_max)) + 1
+                    _img_number_list += [a for a in range(_min, _max)]
+                    # _data_point_x_list += list(self.x_s.iloc[_img_number_list])
+                    # _data_point_y_list += list(self.y.iloc[_img_number_list])
+            _peak_map_indexed[_ele]['peak_span']['img_num'] = _img_number_list
+            # _peak_map_indexed[_ele]['peak_span']['time_s'] = _data_point_x_list
+            # _peak_map_indexed[_ele]['peak_span']['attenuation'] = _data_point_y_list
+        self.peak_map_indexed = _peak_map_indexed
+        # print(type(self.x_i))
+        # for each_center in pars_list_center:
+        #
+        # pprint.pprint(_values['U_0_sigma'])
+        # print(pars_list_fwhm)
+
         # pprint.pprint(out.__dict__)
-        print(out.fit_report())
-        plt.plot(x, out.best_fit, 'c-')
-        plt.plot(x, y, '*')
-        plt.show()
-        pass
+        # print(out.fit_report())
+        # pass
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)
