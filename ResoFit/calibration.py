@@ -153,6 +153,24 @@ class Calibration(Simulation):
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
+    def __fill_peak_span(self):
+        """
+        fill peak_span in energy(eV) and time(s) to self.peak_map_indexed
+        :return:
+        :rtype:
+        """
+        assert all(self.experiment.spectra.index == self.experiment.data.index)
+        _x = self.experiment.spectra[0]
+        _y = self.experiment.data[0]
+        for _keys in self.experiment.o_peak.peak_map_indexed.keys():
+            _live_location = self.experiment.o_peak.peak_map_indexed[_keys]['peak_span']
+            _img_num_list = _live_location['img_num']
+            _live_location['time_s'] = list(_x.iloc[_img_num_list])
+            _live_location['energy_ev'] = reso_util.s_to_ev(array=list(_y.iloc[_img_num_list]),
+                                                            offset_us=self.calibrated_offset_us,
+                                                            source_to_detector_m=self.calibrated_source_to_detector_m)
+            _live_location['y'] = list(_y.iloc[_img_num_list])
+
     def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres, min_dist=min_dist)
@@ -162,6 +180,8 @@ class Calibration(Simulation):
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
         self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
+        self.experiment.o_peak.analyze()
+        self.__fill_peak_span()
         return self.experiment.o_peak.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
@@ -370,16 +390,13 @@ class Calibration(Simulation):
                              [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
                              label=_ele_name)
-                # if 'peak_span' in _peak_map_indexed[_ele_name].keys():
-                #     _time_s = _peak_map_indexed[_ele_name]['peak_span']['time_s']
-                #     _data_point_x = reso_util.s_to_ev(array=_time_s,
-                #                                       offset_us=self.calibrated_offset_us,
-                #                                       source_to_detector_m=self.calibrated_source_to_detector_m)
-                #     _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['attenuation']
-                #     ax1.plot(_data_point_x,
-                #              _data_point_y,
-                #              '<',
-                #              label='_nolegend_')
+                if 'peak_span' in _peak_map_indexed[_ele_name].keys():
+                    _data_point_x = _peak_map_indexed[_ele_name]['peak_span']['energy_ev']
+                    _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['y']
+                    ax1.plot(_data_point_x,
+                             _data_point_y,
+                             '<',
+                             label='_nolegend_')
 
 
         # Set plot limit and captions

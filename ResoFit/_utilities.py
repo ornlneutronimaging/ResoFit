@@ -465,9 +465,8 @@ class Peak(object):
         _fwhm_df = self.fwhm_df
         for _ele in _peak_map_indexed.keys():
             _peak_map_indexed[_ele]['peak_span'] = {}
-            _img_number_list = []
-            # _data_point_x_list = []
-            # _data_point_y_list = []
+            _img_num_list = []
+            _peak_span_df = pd.DataFrame()
             for _ind in range(len(_fwhm_df)):
                 if _fwhm_df['ele_name'][_ind] == _ele:
                     half_fwhm = _fwhm_df['fwhm_val'][_ind] / 2
@@ -475,10 +474,9 @@ class Peak(object):
                     _max = _fwhm_df['center_val'][_ind] + half_fwhm
                     _min = int(np.floor(_min))
                     _max = int(np.ceil(_max)) + 1
-                    _img_number_list += [a for a in range(_min, _max)]
-                    # _data_point_x_list += list(self.x_s.iloc[_img_number_list])
-                    # _data_point_y_list += list(self.y.iloc[_img_number_list])
-            _peak_map_indexed[_ele]['peak_span']['img_num'] = _img_number_list
+                    _img_num_list += [a for a in range(_min, _max)]
+            _peak_span_df['img_num'] = _img_num_list
+            _peak_map_indexed[_ele]['peak_span'] = _peak_span_df
             # _peak_map_indexed[_ele]['peak_span']['time_s'] = _data_point_x_list
             # _peak_map_indexed[_ele]['peak_span']['attenuation'] = _data_point_y_list
         self.peak_map_indexed = _peak_map_indexed

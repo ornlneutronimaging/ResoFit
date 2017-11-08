@@ -260,10 +260,9 @@ class Experiment(object):
         _y = 1 - self.data[0]
         # remove baseline
         _y = fit_util.rm_baseline(_y)
-        _x = self.spectra[0]
+        _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
         _index_gap = 0
-        # if self.baseline is False:
-        #     _y = fit_util.rm_baseline(self.data[0])
+        # Note: weirdly, indexes have to be reset here to get correct peak locations
         if self.slice_start is not None:
             _y.reset_index(drop=True, inplace=True)
             _x.reset_index(drop=True, inplace=True)

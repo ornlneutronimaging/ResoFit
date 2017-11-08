@@ -72,8 +72,6 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 # calibration.find_peak()
 calibration.index_peak(thres=0.13, min_dist=21)
 
-calibration.experiment.o_peak.analyze()
-
 pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 pprint.pprint(calibration.experiment.o_peak.peak_df_scaled)
 
