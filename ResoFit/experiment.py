@@ -51,8 +51,6 @@ class Experiment(object):
         self.baseline = baseline
         self.slice_start = None
         self.slice_end = None
-        # self.peak_df_raw = None
-        # self.peak_df_scaled = None
         self.o_peak = None
 
         # Error loading data and spectra
@@ -293,7 +291,6 @@ class Experiment(object):
         # self.peak_df_raw = _peak_df
         if len(self.o_peak.peak_df) < 1:
             raise ValueError("No peak has been detected.")
-        print(self.o_peak.peak_df)
         return self.o_peak.peak_df
 
     def scale_peak_with_ev(self, energy_min, energy_max,

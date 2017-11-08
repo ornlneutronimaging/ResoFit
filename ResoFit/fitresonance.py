@@ -13,7 +13,6 @@ from ResoFit._gap_functions import y_gap_for_iso_fitting
 from ResoFit._utilities import Layer
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
-import ImagingReso._utilities as reso_util
 
 
 class FitResonance(Experiment):
@@ -58,8 +57,8 @@ class FitResonance(Experiment):
         self.isotope_stack = {}
         self.sample_vary = None
         self.df = None
-        self.peak_map_full = None
-        self.peak_map_indexed = None
+        # self.peak_map_full = None
+        # self.peak_map_indexed = None
 
     def fit(self, raw_layer, vary='density', each_step=False):
         if vary not in ['density', 'thickness', 'none']:
@@ -217,24 +216,23 @@ class FitResonance(Experiment):
         return self.fitted_layer.info
 
     def index_peak(self, thres=0.15, min_dist=1, rel_tol=5e-3, isotope=False):
-        if self.peak_df_raw is None:
+        if self.o_peak is None:
             self.find_peak(thres=thres, min_dist=min_dist)
-        assert self.peak_df_raw is not None
-        self.scale_peak_on_ev(energy_min=self.energy_min,
-                              energy_max=self.energy_max,
-                              calibrated_offset_us=self.calibrated_offset_us,
-                              calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
-        assert self.peak_df_scaled is not None
+        self.scale_peak_with_ev(energy_min=self.energy_min,
+                                energy_max=self.energy_max,
+                                calibrated_offset_us=self.calibrated_offset_us,
+                                calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+        assert self.o_peak.peak_df is not None
+        assert self.o_peak.peak_df_scaled is not None
 
         _peak_map = self.fitted_simulation.peak_map(thres=thres,
                                                     min_dist=min_dist,
                                                     impr_reso=True,
                                                     isotope=isotope)
-        self.peak_map_full = _peak_map
-        self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled,
-                                                    peak_map=_peak_map,
-                                                    rel_tol=rel_tol)
-        return self.peak_map_indexed
+        self.o_peak.peak_map_full = _peak_map
+        self.o_peak.index(peak_map=_peak_map,
+                          rel_tol=rel_tol)
+        return self.o_peak.peak_map_indexed
 
     def analyze_peak(self):
         pass
@@ -429,20 +427,23 @@ class FitResonance(Experiment):
                 self.df[_live_df_x_label] = simu_x
                 self.df[_live_df_y_label] = _signal_dict[_each_label]
 
-        if self.peak_map_indexed is not None:
-            ax1.plot(self.peak_df_scaled['x'],
-                     self.peak_df_scaled['y'],
+        if self.o_peak.peak_map_indexed is not None:
+            _peak_df_scaled = self.o_peak.peak_df_scaled
+            _peak_map_indexed = self.o_peak.peak_map_indexed
+            _peak_map_full = self.o_peak.peak_map_full
+            ax1.plot(_peak_df_scaled['x'],
+                     _peak_df_scaled['y'],
                      'kx', label='_nolegend_')
             # ax1.set_ylim(ymin=-0.1)
-            for _ele_name in self.peak_map_indexed.keys():
+            for _ele_name in _peak_map_indexed.keys():
                 if peak is 'all':
-                    ax1.plot(self.peak_map_full[_ele_name]['peak']['x'],
-                             [-0.05] * len(self.peak_map_full[_ele_name]['peak']['x']),
+                    ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
+                             [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
                              '|', ms=10,
                              label=_ele_name)
                 else:
-                    ax1.plot(self.peak_map_indexed[_ele_name]['exp']['x'],
-                             [-0.05] * len(self.peak_map_indexed[_ele_name]['exp']['x']),
+                    ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
+                             [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
                              label=_ele_name)
 

@@ -335,8 +335,11 @@ class Peak(object):
         self.peak_df_scaled = None
         self.peak_map_full = None
         self.peak_map_indexed = None
+        self.y = None
+        self.x = None
 
     def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        self.y = y
         self.thres = thres
         self.min_dist = min_dist
         self.impr_reso = impr_reso
@@ -374,6 +377,19 @@ class Peak(object):
 
     def analyze(self):
         model = lmfit.models.GaussianModel()
+        _y = self.y
+        _x = self.x
+        pars = model.make_params()
+        # print(pars)
+        pars['center'].set(20, min=14, max=25)
+        pars['amplitude'].set(2000)
+        pars['sigma'].set(15)
+        out = model.fit(y, pars, x=x)
+        # pprint.pprint(out.__dict__)
+        print(out.fit_report())
+        plt.plot(x, out.best_fit, 'c-')
+        plt.plot(x, y, '*')
+        plt.show()
         pass
 
 # def a_new_decorator(a_func):

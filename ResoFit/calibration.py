@@ -64,9 +64,9 @@ class Calibration(Simulation):
         self.params_to_calibrate = None
         self.raw_layer = raw_layer
 
-        self.peak_df_scaled = None
-        self.peak_map_full = None
-        self.peak_map_indexed = None
+        # self.peak_df_scaled = None
+        # self.peak_map_full = None
+        # self.peak_map_indexed = None
 
     def norm_to(self, file):
         if file is not None:
@@ -153,7 +153,7 @@ class Calibration(Simulation):
                                                    calibrated_offset_us=self.calibrated_offset_us,
                                                    calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
         assert self.experiment.o_peak.peak_df_scaled is not None
-        self.peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+        # self.peak_df_scaled = self.experiment.o_peak.peak_df_scaled
         return self.experiment.o_peak.peak_df_scaled
 
     def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
@@ -161,12 +161,12 @@ class Calibration(Simulation):
             self.find_peak(thres=thres, min_dist=min_dist)
         _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
         self.experiment.o_peak.peak_map_full = _peak_map
-        self.peak_map_full = _peak_map
+        # self.peak_map_full = _peak_map
         # _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
         self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
         # self.peak_map_indexed = fit_util.index_peak(peak_df=self.peak_df_scaled, peak_map=_peak_map, rel_tol=rel_tol)
-        self.peak_map_indexed = self.experiment.o_peak.peak_map_indexed
-        return self.peak_map_indexed
+        # self.peak_map_indexed = self.experiment.o_peak.peak_map_indexed
+        return self.experiment.o_peak.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
     #     """
@@ -355,20 +355,23 @@ class Calibration(Simulation):
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
-        if self.peak_map_indexed is not None:
-            ax1.plot(self.peak_df_scaled['x'],
-                     self.peak_df_scaled['y'],
+        if self.experiment.o_peak.peak_map_indexed is not None:
+            _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+            _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
+            _peak_map_full = self.experiment.o_peak.peak_map_full
+            ax1.plot(_peak_df_scaled['x'],
+                     _peak_df_scaled['y'],
                      'kx', label='_nolegend_')
             ax1.set_ylim(ymin=-0.1)
-            for _ele_name in self.peak_map_indexed.keys():
+            for _ele_name in _peak_map_indexed.keys():
                 if peak is 'all':
-                    ax1.plot(self.peak_map_full[_ele_name]['peak']['x'],
-                             [-0.05] * len(self.peak_map_full[_ele_name]['peak']['x']),
+                    ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
+                             [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
                              '|', ms=10,
                              label=_ele_name)
                 elif peak is 'indexed':
-                    ax1.plot(self.peak_map_indexed[_ele_name]['exp']['x'],
-                             [-0.05] * len(self.peak_map_indexed[_ele_name]['exp']['x']),
+                    ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
+                             [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
                              label=_ele_name)
                 else:
