@@ -106,7 +106,7 @@ class Calibration(Simulation):
                                      vary=source_to_detector_vary_tag)
         self.params_to_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
         # Print before
-        print("-------Calibration-------\nParams before:")
+        print("+----------------- Calibration -----------------+\nParams before:")
         self.params_to_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
         self.calibrate_result = minimize(y_gap_for_calibration,
@@ -165,9 +165,7 @@ class Calibration(Simulation):
         self.experiment.o_peak.analyze()
         self.experiment.o_peak.fill_peak_span(offset_us=self.calibrated_offset_us,
                                               source_to_detector_m=self.calibrated_source_to_detector_m)
-        # if self.experiment.slice_start is not None:
-        #     self.experiment.o_peak.peak_map_indexed[]
-        #     pass
+
         return self.experiment.o_peak.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
@@ -379,10 +377,9 @@ class Calibration(Simulation):
                 if 'peak_span' in _peak_map_indexed[_ele_name].keys():
                     _data_point_x = _peak_map_indexed[_ele_name]['peak_span']['energy_ev']
                     _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['y']
-                    ax1.plot(_data_point_x,
-                             _data_point_y,
-                             'o',
-                             label='_nolegend_')
+                    ax1.scatter(_data_point_x,
+                                _data_point_y,
+                                label='_nolegend_')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

@@ -265,7 +265,11 @@ class Layer(object):
 
 def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
     if x is None:
-        x = np.array(range(0, len(y)))
+        x = np.array(range(len(y)))
+    x_num_gap = 0
+    # Note: weirdly, indexes have to be reset here to get correct peak locations
+    x = np.array(x)
+    y = np.array(y)
     _index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
     _peak_y = list(y[_index])
     if impr_reso is False:
@@ -273,14 +277,9 @@ def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_r
     else:
         _peak_x = list(pku.interpolate(x, y, ind=_index))
 
-    # data_df = pd.DataFrame()
-    # data_df[y_name] = y
-    # data_df[x_name] = x
-    # data_df.sort_values([x_name], inplace=True)
-    # data_df.reset_index(inplace=True, drop=True)
-
     peak_df = pd.DataFrame()
     peak_df[y_name] = _peak_y
+    # peak_df[x_name] = [x_num + x_num_gap for x_num in _peak_x]
     peak_df[x_name] = _peak_x
     peak_df.sort_values([x_name], inplace=True)
     peak_df.reset_index(inplace=True, drop=True)
@@ -348,10 +347,11 @@ class Peak(object):
         self.shape_report = None
         self.prefix_list = None
 
+        self.x_num_gap = 0
         # self.offset_us = None
         # self.source_to_detector_m = None
 
-    def find(self, y, x=None, x_name='x', y_name='y', x_num_gap=0, thres=0.015, min_dist=1, impr_reso=False):
+    def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
         """
         find peaks in 1d data and return peaks detected using pd.DataFrame
         :param y: 1d data
@@ -371,18 +371,23 @@ class Peak(object):
         :return:
         :rtype:
         """
-        self.y = y
         if x is None:
-            x = np.array(range(0, len(y)))
+            x = np.array(range(len(y)))
         self.x = x
+        self.y = y
+        # self.y = np.array(y)
         self.thres = thres
         self.min_dist = min_dist
         self.impr_reso = impr_reso
         self.peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
                                  thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        if type(y) == pd.core.series.Series:
+            if y.index[0] != 1:
+                self.x_num_gap = y.index[0]
+                self.peak_df['x_num_o'] = self.peak_df[x_name] + self.x_num_gap
         return self.peak_df
 
-    def add_x_col(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+    def add_x_col(self, y, x=None, x_name='x', y_name='y', thres=0.15, min_dist=1, impr_reso=False):
         if x_name == 'x_s':
             self.x_s = x
 
@@ -436,9 +441,9 @@ class Peak(object):
         self.shape_report = _out
         self._fwhm()
         self._fill_img_num_to_peak_map_indexed()
-        # plt.plot(_x, out.best_fit, 'k-')
-        # plt.plot(_x, _y, '*')
-        # plt.show()
+        print("+------------ Peak analysis ------------+\nGaussian fit:")
+        print("{}\n".format(self.fwhm_df))
+
         if report is True:
             print(_out.fit_report())
 
@@ -458,7 +463,6 @@ class Peak(object):
         _fwhm_df.sort_values(['center_val'], inplace=True)
         _fwhm_df.reset_index(inplace=True, drop=True)
         self.fwhm_df = _fwhm_df
-        print(_fwhm_df)
 
     def _fill_img_num_to_peak_map_indexed(self):
         if self.x_s is None:
@@ -472,22 +476,17 @@ class Peak(object):
             for _ind in range(len(_fwhm_df)):
                 if _fwhm_df['ele_name'][_ind] == _ele:
                     half_fwhm = _fwhm_df['fwhm_val'][_ind] / 2
-                    _min = _fwhm_df['center_val'][_ind] - half_fwhm
-                    _max = _fwhm_df['center_val'][_ind] + half_fwhm
+                    _min = _fwhm_df['center_val'][_ind] - half_fwhm + self.x_num_gap
+                    _max = _fwhm_df['center_val'][_ind] + half_fwhm + self.x_num_gap
                     _min = int(np.floor(_min))
                     _max = int(np.ceil(_max)) + 1
                     _img_num_list += [a for a in range(_min, _max)]
             _peak_span_df['img_num'] = _img_num_list
             _peak_map_indexed[_ele]['peak_span'] = _peak_span_df
-            # _peak_map_indexed[_ele]['peak_span']['time_s'] = _data_point_x_list
-            # _peak_map_indexed[_ele]['peak_span']['attenuation'] = _data_point_y_list
         self.peak_map_indexed = _peak_map_indexed
 
     def fill_peak_span(self, offset_us, source_to_detector_m):
         assert self.x_s is not None
-        assert all(self.x_s.index == self.y.index)
-        # self.offset_us = offset_us
-        # self.source_to_detector_m = source_to_detector_m
 
         for _keys in self.peak_map_indexed.keys():
             _live_location = self.peak_map_indexed[_keys]['peak_span']
@@ -499,16 +498,6 @@ class Peak(object):
             _live_location['y'] = list(self.y.loc[_img_num_list])
 
 
-
-            # print(type(self.x_i))
-            # for each_center in pars_list_center:
-            #
-            # pprint.pprint(_values['U_0_sigma'])
-            # print(pars_list_fwhm)
-
-            # pprint.pprint(out.__dict__)
-            # print(out.fit_report())
-            # pass
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

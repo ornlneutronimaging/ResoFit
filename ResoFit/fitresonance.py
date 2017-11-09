@@ -173,7 +173,7 @@ class FitResonance(Experiment):
         self.params_for_iso_fit[_constraint_param].set(expr=_constraint)
 
         # Print params before
-        print("-------Fitting (isotopic at.%)-------\nParams before:")
+        print("+----------------- Fitting (isotopic at.%) -----------------+\nParams before:")
         self.params_for_iso_fit.pretty_print()
         # Fitting
         self.fitted_iso_result = minimize(y_gap_for_iso_fitting, self.params_for_iso_fit, method='leastsq',
