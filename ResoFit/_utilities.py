@@ -346,10 +346,12 @@ class Peak(object):
         self.x_s = None
 
         self.shape_report = None
-
         self.prefix_list = None
 
-    def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        # self.offset_us = None
+        # self.source_to_detector_m = None
+
+    def find(self, y, x=None, x_name='x', y_name='y', x_num_gap=0, thres=0.015, min_dist=1, impr_reso=False):
         """
         find peaks in 1d data and return peaks detected using pd.DataFrame
         :param y: 1d data
@@ -397,10 +399,10 @@ class Peak(object):
     def add_ev_and_scale(self, calibrated_source_to_detector_m, calibrated_offset_us,
                          energy_min, energy_max,
                          _from='x_s', _to='x'):
-        self.peak_df[_to] = reso_util.s_to_ev(array=self.peak_df[_from],
-                                              source_to_detector_m=calibrated_source_to_detector_m,
-                                              offset_us=calibrated_offset_us)
         _peak_df_scaled = self.peak_df
+        _peak_df_scaled[_to] = reso_util.s_to_ev(array=_peak_df_scaled[_from],
+                                                 source_to_detector_m=calibrated_source_to_detector_m,
+                                                 offset_us=calibrated_offset_us)
         _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
         _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
         _peak_df_scaled.reset_index(drop=True, inplace=True)
@@ -480,15 +482,33 @@ class Peak(object):
             # _peak_map_indexed[_ele]['peak_span']['time_s'] = _data_point_x_list
             # _peak_map_indexed[_ele]['peak_span']['attenuation'] = _data_point_y_list
         self.peak_map_indexed = _peak_map_indexed
-        # print(type(self.x_i))
-        # for each_center in pars_list_center:
-        #
-        # pprint.pprint(_values['U_0_sigma'])
-        # print(pars_list_fwhm)
 
-        # pprint.pprint(out.__dict__)
-        # print(out.fit_report())
-        # pass
+    def fill_peak_span(self, offset_us, source_to_detector_m):
+        assert self.x_s is not None
+        assert all(self.x_s.index == self.y.index)
+        # self.offset_us = offset_us
+        # self.source_to_detector_m = source_to_detector_m
+
+        for _keys in self.peak_map_indexed.keys():
+            _live_location = self.peak_map_indexed[_keys]['peak_span']
+            _img_num_list = _live_location['img_num']
+            _live_location['time_s'] = list(self.x_s.loc[_img_num_list])
+            _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.loc[_img_num_list]),
+                                                            offset_us=offset_us,
+                                                            source_to_detector_m=source_to_detector_m)
+            _live_location['y'] = list(self.y.loc[_img_num_list])
+
+
+
+            # print(type(self.x_i))
+            # for each_center in pars_list_center:
+            #
+            # pprint.pprint(_values['U_0_sigma'])
+            # print(pars_list_fwhm)
+
+            # pprint.pprint(out.__dict__)
+            # print(out.fit_report())
+            # pass
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

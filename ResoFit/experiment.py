@@ -261,15 +261,14 @@ class Experiment(object):
         # remove baseline
         _y = fit_util.rm_baseline(_y)
         _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
-        _index_gap = 0
         # Note: weirdly, indexes have to be reset here to get correct peak locations
         if self.slice_start is not None:
             _y.reset_index(drop=True, inplace=True)
             _x.reset_index(drop=True, inplace=True)
-            _index_gap = self.slice_start
 
         self.o_peak = fit_util.Peak()
-        self.o_peak.find(x=_y.index.values + _index_gap, y=_y,
+        # self.o_peak.find(x=_y.index.values + _index_gap, y=_y,
+        self.o_peak.find(_y, x_num_gap=self.slice_start,
                          x_name='x_num', y_name='y',
                          thres=thres, min_dist=min_dist, impr_reso=False)
         self.o_peak.add_x_col(x=_x, y=_y,
@@ -324,10 +323,15 @@ class Experiment(object):
             raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
         x_axis_label = None
         x_exp_raw = None
-        if 'offset_us' in kwargs.keys():
-            self.offset_us = kwargs['offset_us']
-        if 'source_to_detector_m' in kwargs.keys():
-            self.source_to_detector_m = kwargs['source_to_detector_m']
+        if len(kwargs.keys())>1:
+            if 'offset_us' in kwargs.keys():
+                self.offset_us = kwargs['offset_us']
+
+            elif 'source_to_detector_m' in kwargs.keys():
+                self.source_to_detector_m = kwargs['source_to_detector_m']
+
+            else:
+                raise ValueError("'{}' is a invalid kwargs.")
         if baseline is True:
             if self.baseline is True:
                 baseline = False
