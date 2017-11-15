@@ -427,6 +427,7 @@ class FitResonance(Experiment):
                 self.df[_live_df_x_label] = simu_x
                 self.df[_live_df_y_label] = _signal_dict[_each_label]
 
+        # plot peaks detected and indexed
         if self.o_peak.peak_map_indexed is not None:
             _peak_df_scaled = self.o_peak.peak_df_scaled
             _peak_map_indexed = self.o_peak.peak_map_indexed
@@ -441,11 +442,17 @@ class FitResonance(Experiment):
                              [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
                              '|', ms=10,
                              label=_ele_name)
-                else:
+                elif peak is 'indexed':
                     ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
                              [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
                              label=_ele_name)
+                if 'peak_span' in _peak_map_indexed[_ele_name].keys():
+                    _data_point_x = _peak_map_indexed[_ele_name]['peak_span']['energy_ev']
+                    _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['y']
+                    ax1.scatter(_data_point_x,
+                                _data_point_y,
+                                label='_nolegend_')
 
         # Set plot limit and captions
         fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)

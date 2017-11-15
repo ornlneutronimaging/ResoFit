@@ -40,7 +40,7 @@ each_step = False
 before = False
 table = True
 grid = True
-peak = 'indexed'
+peak = 'all'
 # items_to_plot = ['238-U', '235-U', 'Gd']
 # items_to_plot = ['U-238', 'Gd-156', 'U']
 # items_to_plot = [layer_1, layer_2]
@@ -69,11 +69,8 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-# calibration.find_peak()
 calibration.index_peak(thres=0.13, min_dist=21)
-
-# pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
-# pprint.pprint(calibration.experiment.o_peak.peak_df_scaled)
+# calibration.analyze_peak()
 
 
 calibration.plot(before=before, table=table, peak=peak, grid=grid, items_to_plot=items_to_plot, interp=False)
@@ -92,6 +89,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
+
 fit_result = fit.fit(layer, vary='density', each_step=each_step)
 # Fit isotope ratios
 # fit.fit_iso(layer=layer_1)
@@ -100,4 +98,4 @@ fit.index_peak(thres=0.15, min_dist=25)
 fit.plot(before=before, table=table, grid=grid, peak=peak,
          items_to_plot=items_to_plot, interp=False)
 
-# fit.export()
+fit.export()

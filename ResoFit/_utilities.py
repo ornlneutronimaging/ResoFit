@@ -439,15 +439,15 @@ class Peak(object):
                 self.prefix_list.append(_prefix)
         _out = model.fit(_y, pars, x=_x)
         self.shape_report = _out
-        self._fwhm()
-        self._fill_img_num_to_peak_map_indexed()
+        self.__fwhm()
+        self.__fill_img_num_to_peak_map_indexed()
         print("+------------ Peak analysis ------------+\nGaussian fit:")
         print("{}\n".format(self.fwhm_df))
 
         if report is True:
             print(_out.fit_report())
 
-    def _fwhm(self):
+    def __fwhm(self):
         _fwhm_df = pd.DataFrame()
         # generate ele list for _fwhm_df
         _ele_list = [_ele_name.split('_')[0] for _ele_name in self.prefix_list]
@@ -464,7 +464,7 @@ class Peak(object):
         _fwhm_df.reset_index(inplace=True, drop=True)
         self.fwhm_df = _fwhm_df
 
-    def _fill_img_num_to_peak_map_indexed(self):
+    def __fill_img_num_to_peak_map_indexed(self):
         if self.x_s is None:
             raise ValueError("Column of x in time (s) has not been added.")
         _peak_map_indexed = self.peak_map_indexed

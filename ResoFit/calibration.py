@@ -162,6 +162,12 @@ class Calibration(Simulation):
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
         self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
+
+        return self.experiment.o_peak.peak_map_indexed
+
+    def analyze_peak(self):
+        if self.experiment.o_peak is None:
+            raise AttributeError("Please run 'Calibration.index_peak()' before peak analysis.")
         self.experiment.o_peak.analyze()
         self.experiment.o_peak.fill_peak_span(offset_us=self.calibrated_offset_us,
                                               source_to_detector_m=self.calibrated_source_to_detector_m)
@@ -355,6 +361,7 @@ class Calibration(Simulation):
             for _each_label in list(_signal_dict.keys()):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
+        # plot peaks detected and indexed
         if self.experiment.o_peak.peak_map_indexed is not None:
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
