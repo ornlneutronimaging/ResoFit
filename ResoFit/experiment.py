@@ -298,7 +298,7 @@ class Experiment(object):
         return self.o_peak.peak_df_scaled
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
-                 y_type='attenuation', baseline=False,
+                 y_type='attenuation', baseline=None,
                  x_type='energy', time_unit='us', **kwargs):
         """
         Display the loaded signal from data and spectra files.
@@ -328,9 +328,10 @@ class Experiment(object):
 
             else:
                 raise ValueError("'{}' is a invalid kwargs.")
-        if baseline is True:
-            if self.baseline is True:
-                baseline = False
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
 
         """X-axis"""
         # determine values and labels for x-axis with options from
@@ -377,7 +378,7 @@ class Experiment(object):
             y_axis_label = 'Neutron Transmission'
         else:
             y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=baseline)
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline)
 
         # Plot
         plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
@@ -412,9 +413,10 @@ class Experiment(object):
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
             self.source_to_detector_m = kwargs['source_to_detector_m']
-        if baseline is True:
-            if self.baseline is True:
-                baseline = False
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
 
         """X-axis"""
         # determine values and labels for x-axis with options from
@@ -458,7 +460,7 @@ class Experiment(object):
             y_axis_label = 'Neutron Transmission'
         else:
             y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=baseline)
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline)
         df[y_axis_label] = y_exp_raw
 
         # Export
