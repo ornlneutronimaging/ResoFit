@@ -17,7 +17,7 @@ energy_step = 0.01
 # thickness_1 = 0.018
 # density_1 = None
 layer_2 = 'Gd'
-thickness_2 = 0.075
+thickness_2 = 0.150
 density_2 = None
 # layer_3 = 'Cd'
 # thickness_3 = 0.015
@@ -28,7 +28,7 @@ layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
 folder = 'data/IPTS_19558/reso_data_19558'
-data_file = 'Gd_thin.csv'
+data_file = 'Gd_thick.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
@@ -85,5 +85,5 @@ fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
 fit.index_peak(thres=0.10, min_dist=25)
 # fit.fit_iso(layer=layer_2)
-fit.plot(peak='all')
-fit.export('Exp_Gd_75_um.csv')
+fit.plot(peak='all', interp=True)
+fit.export('Exp_Gd_150_um.csv')
