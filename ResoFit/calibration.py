@@ -362,7 +362,7 @@ class Calibration(Simulation):
                 ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
         # plot peaks detected and indexed
-        if self.experiment.o_peak.peak_map_indexed is not None:
+        if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full

@@ -428,7 +428,7 @@ class FitResonance(Experiment):
                 self.df[_live_df_y_label] = _signal_dict[_each_label]
 
         # plot peaks detected and indexed
-        if self.o_peak.peak_map_indexed is not None:
+        if self.o_peak and self.o_peak.peak_map_indexed is not None:
             _peak_df_scaled = self.o_peak.peak_df_scaled
             _peak_map_indexed = self.o_peak.peak_map_indexed
             _peak_map_full = self.o_peak.peak_map_full

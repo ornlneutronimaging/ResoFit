@@ -61,34 +61,11 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 calibration.index_peak(thres=0.5, min_dist=50)
+calibration.analyze_peak()
+pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 # peak_df = calibration.peak_df_scaled
 
-model = lmfit.models.GaussianModel()
-y = calibration.exp_y_interp_calibrated
-x = calibration.exp_x_interp_calibrated
-pars = model.make_params()
-# print(pars)
-pars['center'].set(135, min=100, max=150)
-pars['amplitude'].set(2000, min=10)
-pars['sigma'].set(15, min=3)
-out = model.fit(y, pars, x=x)
-pprint.pprint(out.__dict__)
-print(out.fit_report())
-plt.plot(x, out.best_fit, 'k-')
-plt.plot(x, y, '-')
-plt.show()
-
-# pars = mod.make_params()
-# pars['peak_amplitude'].value = 3.0
-# pars['peak_center'].value = 6.0
-# pars['peak_sigma'].value = 2.0
-# pars['bkg_intercept'].value = 0.0
-# pars['bkg_slope'].value = 0.0
-# print( out.fit_report())
-
-# fit = model.fit(calibration.exp_y_interp_calibrated, x=calibration.exp_x_interp_calibrated)
-# plt.show()
-# calibration.plot(before=before, table=table, peak='all')
+calibration.plot(before=before, table=table, peak='all')
 #
 #
 # # Fit the peak height
