@@ -30,7 +30,9 @@ data_file = layer_1 + '.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
-norm_to_file = 'ob_1.csv'  #'Ag.csv'
+# norm_to_file = 'ob_1.csv'  #'Ag.csv'
+# norm_to_file = 'Ag.csv'
+norm_to_file = None
 baseline = True
 each_step = False
 before = False

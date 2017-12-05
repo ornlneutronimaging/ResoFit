@@ -56,8 +56,12 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.plot_before()
-calibration.plot_after()
+calibration.index_peak(thres=0.5, min_dist=50)
+# calibration.analyze_peak()
+pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
+# peak_df = calibration.peak_df_scaled
+
+calibration.plot(before=True, table=True, peak='all')
 
 # Fit the peak height
 fit = FitResonance(folder=folder,

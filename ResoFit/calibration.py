@@ -165,10 +165,10 @@ class Calibration(Simulation):
 
         return self.experiment.o_peak.peak_map_indexed
 
-    def analyze_peak(self):
+    def analyze_peak(self, report=False):
         if self.experiment.o_peak is None:
             raise AttributeError("Please run 'Calibration.index_peak()' before peak analysis.")
-        self.experiment.o_peak.analyze()
+        self.experiment.o_peak.analyze(report=report)
         self.experiment.o_peak.fill_peak_span(offset_us=self.calibrated_offset_us,
                                               source_to_detector_m=self.calibrated_source_to_detector_m)
 
@@ -285,7 +285,7 @@ class Calibration(Simulation):
             if len(self.layer_list) == 1:
                 raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
         if peak not in ['indexed', 'all']:
-            raise ValueError("'peak=' must be one of ['indexed', 'full'].")
+            raise ValueError("'peak=' must be one of ['indexed', 'all'].")
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_init'

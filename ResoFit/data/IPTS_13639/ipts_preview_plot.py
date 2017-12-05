@@ -12,8 +12,8 @@ data_file2 = 'Ag.csv'
 spectra_file = 'spectra.csv'
 
 repeat = 1
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.752  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.293278721983177  # 16#16.445359069030175#16.447496101100739
+offset_us = -12112.494119089204 # 0#2.7120797253959119#2.7355447625559037
 # transmission = False
 baseline = False
 energy_xmax = 150
@@ -29,6 +29,8 @@ experiment2 = Experiment(data_file=data_file2,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)
+experiment1.slice(500, 1600)
+experiment2.slice(500, 1600)
 
 experiment1.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
                      x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,

@@ -61,30 +61,30 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 calibration.index_peak(thres=0.5, min_dist=50)
-calibration.analyze_peak()
+# calibration.analyze_peak()
 pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 # peak_df = calibration.peak_df_scaled
 
 calibration.plot(before=before, table=table, peak='all')
-#
-#
-# # Fit the peak height
-# fit = FitResonance(folder=folder,
-#                    spectra_file=spectra_file,
-#                    data_file=data_file,
-#                    repeat=repeat,
-#                    energy_min=energy_min,
-#                    energy_max=energy_max,
-#                    energy_step=energy_step,
-#                    calibrated_offset_us=calibration.calibrated_offset_us,
-#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-#                    norm_to_file=norm_to_file,
-#                    slice_start=image_start,
-#                    slice_end=image_end,
-#                    baseline=baseline)
-# fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
-# fit.molar_conc()
-# # fit.fit_iso(layer=layer_1)
-# fit.index_peak(thres=0.5, min_dist=50)
-# fit.plot(before=before, table=table, peak='all')
-#
+
+
+# Fit the peak height
+fit = FitResonance(folder=folder,
+                   spectra_file=spectra_file,
+                   data_file=data_file,
+                   repeat=repeat,
+                   energy_min=energy_min,
+                   energy_max=energy_max,
+                   energy_step=energy_step,
+                   calibrated_offset_us=calibration.calibrated_offset_us,
+                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+                   norm_to_file=norm_to_file,
+                   slice_start=image_start,
+                   slice_end=image_end,
+                   baseline=baseline)
+fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
+fit.molar_conc()
+# fit.fit_iso(layer=layer_1)
+fit.index_peak(thres=0.5, min_dist=50)
+fit.plot(before=before, table=table, peak='all')
+

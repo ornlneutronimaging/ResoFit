@@ -83,6 +83,8 @@ def set_plt(plt, x_max, fig_title, grid=False):
 
 
 def rm_baseline(y, deg=7, max_it=None, tol=None):
+    if y.max() < 0:
+        raise ValueError("y.max() < 0")
     baseline = pku.baseline(y=y, deg=deg, max_it=max_it, tol=tol)
     return y - baseline
 
@@ -443,6 +445,7 @@ class Peak(object):
         self.__fill_img_num_to_peak_map_indexed()
         print("+------------ Peak analysis ------------+\nGaussian fit:")
         print("{}\n".format(self.fwhm_df))
+        # _out.plot()
 
         if report is True:
             print(_out.fit_report())
@@ -496,8 +499,6 @@ class Peak(object):
                                                             offset_us=offset_us,
                                                             source_to_detector_m=source_to_detector_m)
             _live_location['y'] = list(self.y.loc[_img_num_list])
-
-
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)
