@@ -167,3 +167,4 @@ MANIFEST
 documentation/source/_templates/
 .idea/sf-acc.xml
 .idea/preferred-vcs.xml
+.idea/other.xml
