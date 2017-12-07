@@ -19,7 +19,7 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
 
     gap = (exp_y - simu_y)  # ** 2
     if each_step is True:
-        print("source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
+        print("Trying: source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
                                                                               offset_us,
                                                                               sum((exp_y - simu_y) ** 2)))
     return gap
@@ -37,7 +37,7 @@ def y_gap_for_adv_calibration(params, ideal_x, thres, min_dist, experiment, each
     sorted(exp_x)
     gap = (exp_x - ideal_x)  # ** 2
     if each_step is True:
-        print("source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
+        print("Trying: source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
                                                                               offset_us,
                                                                               sum((exp_x - ideal_x) ** 2)))
     return gap
@@ -59,7 +59,7 @@ def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list,
 
     if each_step is True:
         for each_layer in layer_list:
-            print("density_gcm3_{}: {}    thickness_mm_{}: {}    chi^2: {}".format(
+            print("Trying: density_gcm3_{}: {}    thickness_mm_{}: {}    chi^2: {}".format(
                 each_layer,
                 parvals['density_gcm3_' + each_layer],
                 each_layer,
@@ -82,7 +82,7 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
 
     if each_step is True:
         for each_iso in formatted_isotope_list:
-            print("{}: {}    chi^2: {}".format(
+            print("Trying: {}: {}    chi^2: {}".format(
                 each_iso,
                 parvals[each_iso],
                 sum((exp_y_interp - simu_y) ** 2))

@@ -90,14 +90,14 @@ class FitResonance(Experiment):
                                     vary=density_vary_tag,
                                     min=0)
         # Print before
-        print("-------Fitting ({})-------\nParams before:".format(vary))
+        print("+----------------- Fitting ({}) -----------------+\nParams before:".format(vary))
         self.params_for_fit.pretty_print()
         # Fitting
         self.fit_result = minimize(y_gap_for_fitting, self.params_for_fit, method='leastsq',
                                    args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
                                          self.energy_min, self.energy_max, self.energy_step, each_step))
         # Print after
-        print("Params after:")
+        print("\nParams after:")
         self.fit_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_residual = self.fit_result.__dict__['residual']
@@ -180,7 +180,7 @@ class FitResonance(Experiment):
                                           args=(self.exp_x_interp, self.exp_y_interp, layer, _formatted_isotope_list,
                                                 self.fitted_simulation, each_step))
         # Print params after
-        print("Params after:")
+        print("\nParams after:")
         self.fitted_iso_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.fitted_iso_residual = self.fitted_iso_result.__dict__['residual']

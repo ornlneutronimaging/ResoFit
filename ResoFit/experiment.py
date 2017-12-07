@@ -187,6 +187,7 @@ class Experiment(object):
     def slice(self, slice_start=None, slice_end=None, reset_index=False):
         """
         Slice the signal by image number
+
         :param slice_start: start image
         :param slice_end: end image
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
@@ -223,6 +224,7 @@ class Experiment(object):
     def norm_to(self, file, reset_index=False):
         """
         Use specified file for normalization and save normalized data signal in self.data
+
         :param file: string. filename with suffix. ex: 'your_data.csv' inside the folder specified in __init__
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
         :return: pd.Dataframe in place. normalized data signal in self.data

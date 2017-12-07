@@ -334,6 +334,10 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
 
 class Peak(object):
     def __init__(self):
+        """
+        Initialization
+
+        """
         self.thres = None
         self.min_dist = None
         self.impr_reso = None

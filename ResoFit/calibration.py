@@ -19,6 +19,7 @@ class Calibration(Simulation):
                  repeat=1, folder='data', baseline=False):
         """
         Initialization with passed file location and sample info
+
         :param spectra_file:
         :type spectra_file:
         :param data_file:
@@ -116,7 +117,7 @@ class Calibration(Simulation):
                                                self.energy_min, self.energy_max, self.energy_step,
                                                self.experiment, self.baseline, each_step))
         # Print after
-        print("Params after:")
+        print("\nParams after:")
         self.calibrate_result.__dict__['params'].pretty_print()
         # Print chi^2
         self.calibrated_residual = self.calibrate_result.__dict__['residual']

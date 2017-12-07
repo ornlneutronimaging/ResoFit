@@ -36,6 +36,7 @@ class Simulation(object):
     def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
         """
         Add layers and update x y values to pass
+
         :param layer:
         :param layer_thickness_mm:
         :param layer_density_gcm3: can be omitted same as Resonance() in ImagingReso
@@ -52,6 +53,7 @@ class Simulation(object):
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list):
         """
         Set isotopic ratios for picked element and update x y values to pass
+
         :param layer:
         :param element:
         :param new_isotopic_ratio_list:
@@ -78,6 +80,7 @@ class Simulation(object):
     def x_angstrom(self):
         """
         Convert x to angstrom
+
         :return: x in angstrom
         """
         _x = reso_util.ev_to_angstroms(self.o_reso.total_signal['energy_eV'])
@@ -86,6 +89,7 @@ class Simulation(object):
     def y_transmission(self):
         """
         Convert y to transmission
+
         :return: x in transmission
         """
         _y = self.o_reso.total_signal['transmission']
@@ -94,9 +98,14 @@ class Simulation(object):
     def xy_simu(self, angstrom=False, transmission=False):
         """
         Get x and y arrays
+
         :param angstrom: bool to determine the output x
+        :type angstrom: bool
         :param transmission: bool to determine the output y
+        :type transmission: bool
+
         :return: x and y arrays
+        :rtype: array
         """
         _x = self.o_reso.total_signal['energy_eV']
         if angstrom is True:
@@ -108,6 +117,20 @@ class Simulation(object):
         return _x, _y
 
     def peak_map(self, thres=0.15, min_dist=1, impr_reso=True, isotope=False):
+        """
+        Get peak map (eV and sigma) for each element and/or nuclide
+
+        :param thres:
+        :type thres: float
+        :param min_dist:
+        :type min_dist:
+        :param impr_reso:
+        :type impr_reso:
+        :param isotope:
+        :type isotope:
+        :return:
+        :rtype:
+        """
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         _stack_sigma = self.o_reso.stack_sigma
