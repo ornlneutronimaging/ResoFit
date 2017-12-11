@@ -27,6 +27,7 @@ class Simulation(object):
         self.nergy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
+        self.database = database
 
         self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step,
                                 database=database)
@@ -165,7 +166,7 @@ class Simulation(object):
             raise ValueError("No layer has been added.")
         if items_to_plot is not None:
             # shape format of items
-            items = fit_util.Items(o_reso=self.o_reso)
+            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_plot = items.shaped(items_list=items_to_plot)
 
         self.o_reso.plot(y_axis=y_axis, x_axis=x_axis, mixed=mixed,
@@ -184,7 +185,7 @@ class Simulation(object):
                     t_start_us=1, time_resolution_us=0.16, time_unit='us'):
         if items_to_export is not None:
             # Shape items
-            items = fit_util.Items(o_reso=self.o_reso)
+            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_export = items.shaped(items_list=items_to_export)
 
         self.o_reso.export(filename=filename,

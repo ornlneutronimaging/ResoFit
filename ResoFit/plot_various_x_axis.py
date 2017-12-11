@@ -1,5 +1,5 @@
 from ResoFit.simulation import Simulation
-
+import pprint
 import numpy as np
 
 # Global parameters
@@ -16,13 +16,15 @@ thickness_2 = 0.05
 
 simulation = Simulation(energy_min=energy_min,
                         energy_max=energy_max,
-                        energy_step=energy_step, )
+                        energy_step=energy_step,
+                        database='ENDF_VII')
 
 simulation.o_reso.add_layer(formula=layer_1, thickness=thickness_1)
 simulation.o_reso.add_layer(formula=layer_2, thickness=thickness_2)
 
 # o_reso.plot(all_elements=True, transmission=False, x_axis='time')
 # o_reso.plot(all_elements=True, transmission=False, x_axis='lambda')
+pprint.pprint(simulation.o_reso.stack)
 simulation.o_reso.plot(mixed=True,
                        all_elements=True,
                        all_isotopes=False,

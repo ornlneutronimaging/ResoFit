@@ -20,11 +20,13 @@ class FitResonance(Experiment):
                  calibrated_offset_us, calibrated_source_to_detector_m,
                  folder, repeat=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
-                 energy_min=1e-5, energy_max=1000, energy_step=0.01):
+                 energy_min=1e-5, energy_max=1000, energy_step=0.01,
+                 database='ENDF_VII'):
         super().__init__(spectra_file=spectra_file, data_file=data_file, folder=folder, repeat=repeat)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
+        self.database = database
         self.calibrated_offset_us = calibrated_offset_us
         self.calibrated_source_to_detector_m = calibrated_source_to_detector_m
         self.raw_layer = None
@@ -95,7 +97,8 @@ class FitResonance(Experiment):
         # Fitting
         self.fit_result = minimize(y_gap_for_fitting, self.params_for_fit, method='leastsq',
                                    args=(self.exp_x_interp, self.exp_y_interp, self.layer_list,
-                                         self.energy_min, self.energy_max, self.energy_step, each_step))
+                                         self.energy_min, self.energy_max, self.energy_step,
+                                         self.database, each_step))
         # Print after
         print("\nParams after:")
         self.fit_result.__dict__['params'].pretty_print()
@@ -120,7 +123,8 @@ class FitResonance(Experiment):
 
         self.fitted_simulation = Simulation(energy_min=self.energy_min,
                                             energy_max=self.energy_max,
-                                            energy_step=self.energy_step)
+                                            energy_step=self.energy_step,
+                                            database=self.database)
         for each_layer in self.layer_list:
             self.fitted_simulation.add_layer(layer=each_layer,
                                              layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
@@ -416,7 +420,7 @@ class FitResonance(Experiment):
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
             y_axis_tag = 'attenuation'
-            items = fit_util.Items(o_reso=self.fitted_simulation.o_reso)
+            items = fit_util.Items(o_reso=self.fitted_simulation.o_reso, database=self.database)
             shaped_items = items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):

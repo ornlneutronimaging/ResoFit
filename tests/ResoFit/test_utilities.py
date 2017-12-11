@@ -110,7 +110,7 @@ class TestItems(unittest.TestCase):
                               ['U', 'U', '234-U'],
                               ['U', 'U', '235-U'],
                               ['U', 'U', '238-U']]
-        assert fit_util._fill_iso_to_items(name) == expected_path_list
+        assert fit_util._fill_iso_to_items(name, database='ENDF_VIII') == expected_path_list
         name = 'U'
         pytest.raises(ValueError, fit_util._fill_iso_to_items, name=name)
 

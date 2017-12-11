@@ -44,12 +44,13 @@ def y_gap_for_adv_calibration(params, ideal_x, thres, min_dist, experiment, each
 
 
 def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list,
-                      energy_min, energy_max, energy_step,
+                      energy_min, energy_max, energy_step, database,
                       each_step=False):
     parvals = params.valuesdict()
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
-                            energy_step=energy_step)
+                            energy_step=energy_step,
+                            database=database)
     for each_layer in layer_list:
         simulation.add_layer(layer=each_layer,
                              layer_thickness_mm=parvals['thickness_mm_' + each_layer],

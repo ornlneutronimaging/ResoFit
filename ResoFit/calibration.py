@@ -16,7 +16,8 @@ from ResoFit._utilities import Peak
 class Calibration(Simulation):
     def __init__(self, spectra_file, data_file, raw_layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
-                 repeat=1, folder='data', baseline=False):
+                 repeat=1, folder='data', baseline=False,
+                 database='ENDF_VII'):
         """
         Initialization with passed file location and sample info
 
@@ -39,7 +40,10 @@ class Calibration(Simulation):
         :param baseline: True -> to remove baseline/background by detrend
         :type baseline: boolean
         """
-        super().__init__(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
+        super().__init__(energy_min=energy_min,
+                         energy_max=energy_max,
+                         energy_step=energy_step,
+                         database=database)
         for _each_layer in list(raw_layer.info.keys()):
             self.add_layer(layer=_each_layer,
                            layer_thickness_mm=raw_layer.info[_each_layer]['thickness']['value'],
@@ -64,6 +68,7 @@ class Calibration(Simulation):
         self.calibrated_residual = None
         self.params_to_calibrate = None
         self.raw_layer = raw_layer
+        self.database = database
 
         # self.peak_df_scaled = None
         # self.peak_map_full = None
@@ -356,7 +361,7 @@ class Calibration(Simulation):
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
             y_axis_tag = 'attenuation'
-            items = fit_util.Items(o_reso=self.o_reso)
+            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):

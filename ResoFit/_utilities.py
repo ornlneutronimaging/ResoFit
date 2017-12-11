@@ -90,16 +90,19 @@ def rm_baseline(y, deg=7, max_it=None, tol=None):
 
 
 class Items(object):
-    def __init__(self, o_reso):
+    def __init__(self, o_reso, database='ENDF_VIII'):
         self.o_reso = o_reso
         self.shaped_list = None
+        self.database = database
 
     def shaped(self, items_list):
         _shaped_list = []
         for _raw_path_to_plot in items_list:
             if type(_raw_path_to_plot) is not list:
                 if '*' in _raw_path_to_plot:
-                    _shaped_list = _shaped_list + _fill_iso_to_items(_raw_path_to_plot, self.o_reso.stack)
+                    _shaped_list = _shaped_list + _fill_iso_to_items(name=_raw_path_to_plot,
+                                                                     stack=self.o_reso.stack,
+                                                                     database=self.database)
                 else:
                     _shaped_list.append(_shape_items(_raw_path_to_plot))
             else:
@@ -167,13 +170,13 @@ def _shape_items(name):
     return _path_of_input
 
 
-def _fill_iso_to_items(name, stack=None):
+def _fill_iso_to_items(name, stack=None, database='ENDF_VII'):
     if '*' not in name:
         raise ValueError("'*' is needed to retrieve all isotopes of '{}' ".format(name))
     else:
         ele_name = name.replace('*', '')
         if stack is None:
-            o_reso = Resonance()
+            o_reso = Resonance(database=database)
             o_reso.add_layer(formula=ele_name,
                              thickness=1)
             stack = o_reso.stack
