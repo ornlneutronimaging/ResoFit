@@ -11,24 +11,26 @@ import peakutils as pku
 class Simulation(object):
     # Input sample name or names as str, case sensitive
 
-    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01):
+    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01, database='ENDF_VIII'):
         """
         initialize the a Simulation() using the Resonance() in ImagingReso
 
         :param energy_min:
+        :type energy_min:
         :param energy_max:
+        :type energy_max:
         :param energy_step:
+        :type energy_step:
+        :param database:
+        :type database:
         """
         self.nergy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
 
-        self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
-        # self.o_reso.add_layer(formula=layer_1, thickness=thickness_1, density=density_1)
-        # self.layer_1 = layer_1
-        # self.layers.append(layer_1)
-        # self.simu_x = self.o_reso.total_signal['energy_eV']
-        # self.simu_y = self.o_reso.total_signal['attenuation']
+        self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step,
+                                database=database)
+
         self.simu_x = None
         self.simu_y = None
         self.layer_list = []

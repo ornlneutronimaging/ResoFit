@@ -68,7 +68,7 @@ calibration.slice(slice_start=300, slice_end=image_end)
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='all',
-                                         each_step=True)
+                                         each_step=False)
 # calibration.index_peak(thres=0.13, min_dist=21)
 # calibration.analyze_peak(report=True)
 
@@ -96,4 +96,4 @@ fit.fit_iso(layer=layer_1, each_step=True)
 fit.molar_conc()
 fit.index_peak(thres=0.15, min_dist=25)
 fit.plot(before=before, table=table, grid=grid, peak=peak,
-         items_to_plot=items_to_plot, interp=False)
+         items_to_plot=items_to_plot, interp=False, error=True)
