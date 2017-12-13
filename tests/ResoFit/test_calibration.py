@@ -15,6 +15,7 @@ class TestCalibration(unittest.TestCase):
         energy_min = 7
         energy_max = 150
         energy_step = 0.01
+        database = "ENDF_VIII"
 
         layer_1 = 'Gd'
         thickness_1 = 0.075

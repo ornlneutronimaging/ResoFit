@@ -91,8 +91,10 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 pprint.pprint(fit.fitted_simulation)
 fit_result = fit.fit(layer, vary='density', each_step=each_step)
-# Fit isotope ratios
+
+# Fit isotope ratios (under development)
 # fit.fit_iso(layer=layer_1, each_step=True)
+
 fit.molar_conc()
 fit.index_peak(thres=0.15, min_dist=25)
 fit.plot(before=before, table=table, grid=grid, peak=peak,
