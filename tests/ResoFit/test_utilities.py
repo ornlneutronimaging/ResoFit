@@ -72,21 +72,22 @@ class TestLayer(unittest.TestCase):
 class TestItems(unittest.TestCase):
     layer_1 = 'U'
     thickness_1 = 0.05
-    layer_2 = 'Gd'
+    layer_2 = 'Ag'
     thickness_2 = 0.05
-    simulation = Simulation()
+    database = '_data_for_unittest'
+    simulation = Simulation(database=database)
     simulation.add_layer(layer=layer_1, layer_thickness_mm=thickness_1)
     simulation.add_layer(layer=layer_2, layer_thickness_mm=thickness_2)
     items = fit_util.Items(simulation.o_reso)
 
     def test_raises(self):
-        name = 'GD'
+        name = 'AG'
         pytest.raises(ValueError, fit_util._shape_items, name=name)
-        name = 'gD'
+        name = 'aG'
         pytest.raises(ValueError, fit_util._shape_items, name=name)
-        name = 'GdO'
+        name = 'AgO'
         pytest.raises(ValueError, fit_util._shape_items, name=name)
-        name = 'gd'
+        name = 'ag'
         pytest.raises(ValueError, fit_util._shape_items, name=name)
         name = ''
         pytest.raises(ValueError, fit_util._shape_items, name=name)
@@ -110,9 +111,9 @@ class TestItems(unittest.TestCase):
                               ['U', 'U', '234-U'],
                               ['U', 'U', '235-U'],
                               ['U', 'U', '238-U']]
-        assert fit_util._fill_iso_to_items(name, database='ENDF_VIII') == expected_path_list
+        assert fit_util._fill_iso_to_items(name, database=self.database) == expected_path_list
         name = 'U'
-        pytest.raises(ValueError, fit_util._fill_iso_to_items, name=name)
+        pytest.raises(ValueError, fit_util._fill_iso_to_items, name=name, database=self.database)
 
     def test_shape_items(self):
         name = 'U'
@@ -159,7 +160,8 @@ class TestPeaks(unittest.TestCase):
     energy_step = 0.01
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
-                            energy_step=energy_step)
+                            energy_step=energy_step,
+                            database='_data_for_unittest')
     simulation.add_layer(layer='U', layer_thickness_mm=0.05)
 
     def test_indexes(self):

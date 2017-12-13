@@ -7,10 +7,11 @@ class TestSimulation(unittest.TestCase):
     energy_min = 7
     energy_max = 10
     energy_step = 1
+    database = '_data_for_unittest'
     simulation = Simulation(energy_min=energy_min,
                             energy_max=energy_max,
                             energy_step=energy_step,
-                            database='ENDF_VIII')
+                            database='_data_for_unittest')
 
     def test_add_layer(self):
         simulation = self.simulation

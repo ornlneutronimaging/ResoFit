@@ -6,6 +6,8 @@ from ResoFit._utilities import Layer
 
 
 class TestCalibration(unittest.TestCase):
+    database = '_data_for_unittest'
+
     def setUp(self):
         _file_path = os.path.dirname(__file__)
         self.folder = os.path.abspath(os.path.join(_file_path, '../../ResoFit/data/_mock_data_for_test'))
@@ -15,9 +17,8 @@ class TestCalibration(unittest.TestCase):
         energy_min = 7
         energy_max = 150
         energy_step = 0.01
-        database = "ENDF_VIII"
 
-        layer_1 = 'Gd'
+        layer_1 = 'U'
         thickness_1 = 0.075
         density_1 = None
         layer = Layer()
@@ -29,7 +30,8 @@ class TestCalibration(unittest.TestCase):
                                        energy_min=energy_min,
                                        energy_max=energy_max,
                                        energy_step=energy_step,
-                                       folder=self.folder)
+                                       folder=self.folder,
+                                       database=self.database)
 
     source_to_detector_m = 16.
     offset_us = 0
