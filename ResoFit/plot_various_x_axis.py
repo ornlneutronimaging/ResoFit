@@ -17,7 +17,7 @@ thickness_2 = 0.05
 simulation = Simulation(energy_min=energy_min,
                         energy_max=energy_max,
                         energy_step=energy_step,
-                        database='ENDF_VII')
+                        database='ENDF_VIII')
 
 simulation.o_reso.add_layer(formula=layer_1, thickness=thickness_1)
 simulation.o_reso.add_layer(formula=layer_2, thickness=thickness_2)

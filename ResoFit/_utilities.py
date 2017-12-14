@@ -428,7 +428,9 @@ class Peak(object):
         assert self.peak_df_scaled is not None
         self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
-    def analyze(self, report=False):
+    def analyze(self, report=False, fit_model='Lorentzian'):
+        if fit_model not in ['Gaussian', 'Lorentzian']:
+            raise ValueError("Model must be one from '['Gaussian', 'Lorentzian']'")
         _y = self.y
         _x = self.x
         _peak_map_indexed = self.peak_map_indexed
@@ -438,7 +440,10 @@ class Peak(object):
         for _ele in _peak_map_indexed.keys():
             for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
                 _prefix = _ele + '_' + str(_ind) + '_'
-                _model = lmfit.models.LorentzianModel(prefix=_prefix)
+                if fit_model == 'Gaussian':
+                    _model = lmfit.models.GaussianModel(prefix=_prefix)
+                elif fit_model == 'Lorentzian':
+                    _model = lmfit.models.LorentzianModel(prefix=_prefix)
                 _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
                 pars.update(_model.make_params())
                 pars[_prefix + 'amplitude'].value = 3.0
@@ -450,12 +455,18 @@ class Peak(object):
         self.shape_report = _out
         self.__fwhm()
         self.__fill_img_num_to_peak_map_indexed()
-        print("+------------ Peak analysis ------------+\nGaussian fit:")
+        print("+------------ Peak analysis ------------+\n{} peak fitting:".format(fit_model))
         print("{}\n".format(self.fwhm_df))
-        # _out.plot()
 
         if report is True:
             print(_out.fit_report())
+
+    def plot_fit(self):
+        if self.shape_report is not None:
+            self.shape_report.plot()
+            plt.show()
+        else:
+            print("Peaks have not been fitted. Please run 'Peak.analyze()' before plotting.")
 
     def __fwhm(self):
         _fwhm_df = pd.DataFrame()

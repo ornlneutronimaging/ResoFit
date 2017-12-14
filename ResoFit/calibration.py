@@ -171,12 +171,14 @@ class Calibration(Simulation):
 
         return self.experiment.o_peak.peak_map_indexed
 
-    def analyze_peak(self, report=False):
+    def analyze_peak(self, report=False, show_fit=False):
         if self.experiment.o_peak is None:
             raise AttributeError("Please run 'Calibration.index_peak()' before peak analysis.")
         self.experiment.o_peak.analyze(report=report)
         self.experiment.o_peak.fill_peak_span(offset_us=self.calibrated_offset_us,
                                               source_to_detector_m=self.calibrated_source_to_detector_m)
+        if show_fit:
+            self.experiment.o_peak.plot_fit()
 
         return self.experiment.o_peak.peak_map_indexed
 
