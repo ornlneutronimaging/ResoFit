@@ -61,9 +61,9 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(plt, x_max, fig_title, grid=False):
-    plt.set_xlim([0, x_max])
-    plt.set_ylim(ymax=1.01)
+def set_plt(plt, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
+    plt.set_xlim(left=x_min, right=x_max)
+    plt.set_ylim(top=y_max)
     plt.set_title(fig_title)
     plt.set_xlabel('Energy (eV)')
     plt.set_ylabel('Neutron attenuation')

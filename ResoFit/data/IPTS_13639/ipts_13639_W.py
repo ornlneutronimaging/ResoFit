@@ -61,7 +61,7 @@ calibration.index_peak(thres=0.5, min_dist=50)
 pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 # peak_df = calibration.peak_df_scaled
 
-calibration.plot(before=True, table=True, peak='all')
+calibration.plot(before=True, table=True, peak_id='all')
 
 # Fit the peak height
 fit = FitResonance(folder=folder,

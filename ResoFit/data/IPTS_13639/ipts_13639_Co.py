@@ -65,7 +65,7 @@ calibration.index_peak(thres=0.5, min_dist=50)
 pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 # peak_df = calibration.peak_df_scaled
 
-calibration.plot(before=before, table=table, peak='all')
+calibration.plot(before=before, table=table, peak_id='all')
 
 
 # Fit the peak height
@@ -86,5 +86,5 @@ fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
 # fit.fit_iso(layer=layer_1)
 fit.index_peak(thres=0.5, min_dist=50)
-fit.plot(before=before, table=table, peak='all')
+fit.plot(before=before, table=table, peak_id='all')
 

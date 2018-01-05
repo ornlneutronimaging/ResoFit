@@ -262,12 +262,15 @@ class Calibration(Simulation):
     #     return self.calibrate_result
 
     def plot(self, table=True, grid=True, before=False, interp=False, total=False,
-             all_elements=False, all_isotopes=False, items_to_plot=None, peak='indexed',
+             all_elements=False, all_isotopes=False, items_to_plot=None,
+             peak_mark=True, peak_id='indexed',
              save_fig=False):
         """
 
-        :param peak:
-        :type peak:
+        :param peak_mark:
+        :type peak_mark:
+        :param peak_id:
+        :type peak_id:
         :param total:
         :type total:
         :param table:
@@ -292,7 +295,7 @@ class Calibration(Simulation):
         if all_elements is True:
             if len(self.layer_list) == 1:
                 raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
-        if peak not in ['indexed', 'all']:
+        if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'all'].")
         simu_label = 'Ideal'
         exp_label = 'Exp'
@@ -374,17 +377,18 @@ class Calibration(Simulation):
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
-            ax1.plot(_peak_df_scaled['x'],
-                     _peak_df_scaled['y'],
-                     'kx', label='_nolegend_')
-            ax1.set_ylim(ymin=-0.1)
+            if peak_mark is True:
+                ax1.plot(_peak_df_scaled['x'],
+                         _peak_df_scaled['y'],
+                         'kx', label='_nolegend_')
+            ax1.set_ylim(bottom=-0.1)
             for _ele_name in _peak_map_indexed.keys():
-                if peak is 'all':
+                if peak_id == 'all':
                     ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
                              [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
                              '|', ms=10,
                              label=_ele_name)
-                elif peak is 'indexed':
+                elif peak_id == 'indexed':
                     ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
                              [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,

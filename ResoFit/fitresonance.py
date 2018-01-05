@@ -238,18 +238,21 @@ class FitResonance(Experiment):
                           rel_tol=rel_tol)
         return self.o_peak.peak_map_indexed
 
-    def analyze_peak(self):
-        pass
+    # def analyze_peak(self):
+    #     pass
 
     def plot(self, error=True, table=True, grid=True, before=False, interp=False, total=True,
-             all_elements=False, all_isotopes=False, items_to_plot=None, peak='indexed',
+             all_elements=False, all_isotopes=False, items_to_plot=None,
+             peak_mark=True, peak_id='indexed',
              save_fig=False):
         """
 
+        :param peak_mark:
+        :type peak_mark:
         :param total:
         :type total:
-        :param peak:
-        :type peak:
+        :param peak_id:
+        :type peak_id:
         :param error:
         :type error:
         :param table:
@@ -282,7 +285,7 @@ class FitResonance(Experiment):
                                                      'value'],
                                                  layer_density_gcm3=self.fitted_layer.info[each_layer]['density'][
                                                      'value'])
-        if peak not in ['indexed', 'all']:
+        if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'full'].")
         simu_x, simu_y = self.fitted_simulation.xy_simu(angstrom=False, transmission=False)
 
@@ -436,17 +439,19 @@ class FitResonance(Experiment):
             _peak_df_scaled = self.o_peak.peak_df_scaled
             _peak_map_indexed = self.o_peak.peak_map_indexed
             _peak_map_full = self.o_peak.peak_map_full
-            ax1.plot(_peak_df_scaled['x'],
-                     _peak_df_scaled['y'],
-                     'kx', label='_nolegend_')
-            # ax1.set_ylim(ymin=-0.1)
+            if peak_mark is True:
+                ax1.plot(_peak_df_scaled['x'],
+                         _peak_df_scaled['y'],
+                         'kx', label='_nolegend_')
+            if error is False:
+                ax1.set_ylim(ymin=-0.1)
             for _ele_name in _peak_map_indexed.keys():
-                if peak is 'all':
+                if peak_id is 'all':
                     ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
                              [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
                              '|', ms=10,
                              label=_ele_name)
-                elif peak is 'indexed':
+                elif peak_id is 'indexed':
                     ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
                              [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
                              '|', ms=8,
@@ -514,7 +519,7 @@ class FitResonance(Experiment):
 
     def export(self, filename=None):
         if self.df is None:
-            raise ValueError("pd.DataFrame is empty, please run required step.")
+            raise ValueError("pd.DataFrame is empty, please run required step: FitResonance.plot()")
         elif filename is None:
             self.df.to_clipboard(excel=True)
         else:

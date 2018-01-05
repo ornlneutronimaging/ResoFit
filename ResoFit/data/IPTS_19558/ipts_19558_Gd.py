@@ -65,7 +65,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.13, min_dist=21)
 
-calibration.plot(before=False, all_elements=False, peak='all')
+calibration.plot(before=False, all_elements=False, peak_id='all')
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -85,5 +85,5 @@ fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
 fit.index_peak(thres=0.10, min_dist=25)
 # fit.fit_iso(layer=layer_2)
-fit.plot(peak='all', interp=True)
+fit.plot(peak_id='all', interp=True)
 # fit.export('Exp_Gd_150_um.csv')
