@@ -78,9 +78,9 @@ def cole_windsor(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
 # def pseudo_voigt()
 
 
-x = np.linspace(0, 20, 1000)
-# y = ikeda_carpenter(x, 0.5, 1.3, 1.7, 1.05)
-y = cole_windsor(x, 0.5, 1.3, 1.7, 1.05, 1.7, 1, 2)
-
-plt.plot(x, y)
-plt.show()
+# x = np.linspace(0, 20, 1000)
+# # y = ikeda_carpenter(x, 0.5, 1.3, 1.7, 1.05)
+# y = cole_windsor(x, 0.5, 1.3, 1.7, 1.05, 1.7, 1, 2)
+#
+# plt.plot(x, y)
+# plt.show()
