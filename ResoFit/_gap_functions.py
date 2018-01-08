@@ -1,5 +1,7 @@
 from ResoFit.simulation import Simulation
 import ImagingReso._utilities as reso_util
+from ResoFit.model import ikeda_carpenter
+from ResoFit.model import cole_windsor
 
 
 def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment,
@@ -20,8 +22,8 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     gap = (exp_y - simu_y)  # ** 2
     if each_step is True:
         print("Trying: source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
-                                                                              offset_us,
-                                                                              sum((exp_y - simu_y) ** 2)))
+                                                                                      offset_us,
+                                                                                      sum((exp_y - simu_y) ** 2)))
     return gap
 
 
@@ -38,8 +40,8 @@ def y_gap_for_adv_calibration(params, ideal_x, thres, min_dist, experiment, each
     gap = (exp_x - ideal_x)  # ** 2
     if each_step is True:
         print("Trying: source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
-                                                                              offset_us,
-                                                                              sum((exp_x - ideal_x) ** 2)))
+                                                                                      offset_us,
+                                                                                      sum((exp_x - ideal_x) ** 2)))
     return gap
 
 
@@ -88,4 +90,57 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
                 parvals[each_iso],
                 sum((exp_y_interp - simu_y) ** 2))
             )
+    return gap
+
+
+def gap_neutron_pulse_ikeda_carpenter(params, t, f, each_step=False):
+    parvals = params.valuesdict()
+    alpha = parvals['alpha']
+    beta = parvals['beta']
+    fraction = parvals['fraction']
+    t0 = parvals['t0']
+    simulated_shape = ikeda_carpenter(t=t,
+                                      alpha=alpha,
+                                      beta=beta,
+                                      fraction=fraction,
+                                      t0=t0)
+    gap = f - simulated_shape
+
+    if each_step is True:
+        print("Trying: alpha: {}    beta: {}    fraction: {}    t0: {}     chi^2: {}".format(
+            parvals['alpha'], parvals['beta'], parvals['fraction'], parvals['t0'],
+            sum((f - simulated_shape) ** 2))
+        )
+    return gap
+
+
+def gap_neutron_pulse_cole_windsor(params, t, f, each_step=False):
+    parvals = params.valuesdict()
+    sig1 = parvals['sig1']
+    sig2 = parvals['sig2']
+    gam1 = parvals['gam1']
+    gam2 = parvals['gam2']
+    norm_factor = parvals['norm_factor']
+    fraction = parvals['fraction']
+    t0 = parvals['t0']
+    simulated_shape = cole_windsor(t=t,
+                                   sig1=sig1,
+                                   sig2=sig2,
+                                   gam1=gam1,
+                                   gam2=gam2,
+                                   norm_factor=norm_factor,
+                                   fraction=fraction,
+                                   t0=t0)
+    gap = f - simulated_shape
+
+    if each_step is True:
+        print(
+            "Trying: sig1: {}    sig2: {}    gam1: {}    gam2: {}    norm_factor: {}    fraction: {}    t0: {}     chi^2: {}".format(
+                parvals['sig1'], parvals['sig2'],
+                parvals['gam1'], parvals['gam2'],
+                parvals['norm_factor'],
+                parvals['fraction'],
+                parvals['t0'],
+                sum((f - simulated_shape) ** 2))
+        )
     return gap

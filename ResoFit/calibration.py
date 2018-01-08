@@ -65,7 +65,7 @@ class Calibration(Simulation):
         self.exp_x_interp_calibrated = None
         self.exp_y_interp_calibrated = None
         self.baseline = baseline
-        self.calibrated_residual = None
+        # self.calibrated_residual = None
         self.params_to_calibrate = None
         self.raw_layer = raw_layer
         self.database = database
@@ -125,7 +125,7 @@ class Calibration(Simulation):
         print("\nParams after:")
         self.calibrate_result.__dict__['params'].pretty_print()
         # Print chi^2
-        self.calibrated_residual = self.calibrate_result.__dict__['residual']
+        # self.calibrated_residual = self.calibrate_result.__dict__['residual']
         print("Calibration chi^2 : {}\n".format(self.calibrate_result.__dict__['chisqr']))
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
