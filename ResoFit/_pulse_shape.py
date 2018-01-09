@@ -11,9 +11,9 @@ import ResoFit._utilities as fit_util
 
 class NeutronPulse(object):
 
-    def __init__(self, file_path):
+    def __init__(self, path):
         """"""
-        self.shape_total_df = load_neutron_total_shape(file_path)
+        self.shape_total_df = load_neutron_total_shape(path)
         self.params_to_fitshape = None
         self.shape_result = None
         self.shape_dict = None
@@ -21,6 +21,21 @@ class NeutronPulse(object):
 
     def load_shape_each(self, path):
         self.shape_dict = load_neutron_each_shape(path)
+
+    def export_total(self, filename=None):
+        assert self.shape_total_df is not None
+
+        if filename is None:
+            self.shape_total_df.to_clipboard(excel=True)
+        else:
+            self.shape_total_df.to_csv(filename)
+
+    def export_each(self):
+        for index, each_energy in enumerate(self.shape_dict.keys()):
+            df = self.shape_dict[each_energy]
+            file_name = 'energy_' + str(index + 1) + '.csv'
+            df.to_csv(file_name, index=False)
+            print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
     def fit_shape(self, t, f, model_index=1, each_step=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']

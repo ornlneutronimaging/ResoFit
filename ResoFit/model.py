@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from lmfit.lineshapes import pvoigt
+from lmfit import Model
 
 
 def ikeda_carpenter(t, alpha, beta, fraction, t0):
@@ -75,6 +76,7 @@ def cole_windsor(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
     f = np.array(f)
     return f
 
+
 # def pseudo_voigt()
 
 
@@ -84,3 +86,6 @@ def cole_windsor(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
 #
 # plt.plot(x, y)
 # plt.show()
+# my_model = Model(ikeda_carpenter)
+# print(my_model.independent_vars)
+# result = my_model.fit(t, )
