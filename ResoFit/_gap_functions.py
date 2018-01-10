@@ -99,18 +99,14 @@ def gap_neutron_pulse_ikeda_carpenter(params, t, f, each_step=False):
     beta = parvals['beta']
     fraction = parvals['fraction']
     t0 = parvals['t0']
-    print(t)
-    print(t[0])
-    print(type(t))
-    print(f)
     simulated_shape = ikeda_carpenter(t=t,
                                       alpha=alpha,
                                       beta=beta,
                                       fraction=fraction,
                                       t0=t0)
-    print(simulated_shape)
+    # print(simulated_shape)
     gap = f - simulated_shape
-    print(gap)
+    # print(gap)
 
     if each_step is True:
         print("Trying: alpha: {}    beta: {}    fraction: {}    t0: {}     chi^2: {}".format(

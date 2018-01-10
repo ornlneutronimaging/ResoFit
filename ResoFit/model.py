@@ -21,15 +21,19 @@ def ikeda_carpenter(t, alpha, beta, fraction, t0):
     :rtype:
     """
     _t = t - t0
-    part1 = (1 - fraction) * (alpha * _t) ** 2 * np.exp(-alpha * _t)
-    part2 = np.exp(-beta * _t) - np.exp(-alpha * _t) * (
-            1 + (alpha - beta) * _t + 0.5 * ((alpha - beta) ** 2) * (_t ** 2))
+    part1 = 0.5 * alpha * (alpha * _t) ** 2 * np.exp(-alpha * _t)
+    part2 = (beta * (alpha ** 2) / (alpha - beta) ** 3) * (np.exp(-beta * _t) - np.exp(-alpha * _t) * (
+            1 + (alpha - beta) * _t + 0.5 * ((alpha - beta) ** 2) * (_t ** 2)))
 
-    f = 0.5 * alpha * (part1 + (2 * fraction * alpha * beta / (alpha - beta) ** 3) * part2)
+    f = (1 - fraction) * part1 + fraction * part2
     return f
 
 
-def cole_windsor(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
+def cole_windsor(t, sig1, sig2, gam, norm_factor, fraction, t0):
+    pass
+
+
+def cole_windsor_jparc(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
     """
 
 
@@ -75,7 +79,6 @@ def cole_windsor(t, sig1, sig2, gam1, gam2, norm_factor, fraction, t0):
 
     f = np.array(f)
     return f
-
 
 # def pseudo_voigt()
 

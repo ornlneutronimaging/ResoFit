@@ -25,35 +25,37 @@ print("Parameters: ", my_model.param_names)
 print("Independent variable: ", my_model.independent_vars)
 
 
-my_model.set_param_hint('alpha', value=0.06)
-my_model.set_param_hint('beta', value=0.05)
+my_model.set_param_hint('alpha', value=0.06, min=0)
+my_model.set_param_hint('beta', value=0.0415, min=0)
 my_model.set_param_hint('fraction', value=0.5, min=0, max=1)
-my_model.set_param_hint('t0', value=0.01)
+my_model.set_param_hint('t0', value=0.01, min=0)
 params = my_model.make_params(verbose=True)
 
 my_model.print_param_hints()
+print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
+params.pretty_print()
 
 # print(f)
 # print(t)
-each_step = False
+each_step = True
 # len(f)
 
-params_to_fitshape = Parameters()
-params_to_fitshape.add('alpha', value=0.06)
-params_to_fitshape.add('beta', value=0.05)
-params_to_fitshape.add('fraction', value=0.5, min=0, max=1)
-params_to_fitshape.add('t0', value=0.01)
+# params_to_fitshape = Parameters()
+# params_to_fitshape.add('alpha', value=0.06)
+# params_to_fitshape.add('beta', value=0.05)
+# params_to_fitshape.add('fraction', value=0.5, min=0, max=1)
+# params_to_fitshape.add('t0', value=0.01, min=0)
 
 # Print before
-print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
-params_to_fitshape.pretty_print()
+# print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
+# params_to_fitshape.pretty_print()
 
 # result = my_model.fit(f, params_to_fitshape, t=t, fit_kws={'nan_policy': 'omit'})
-# result = my_model.fit(f, params_to_fitshape, t=t)
+result = my_model.fit(f, params, t=t)
 
 
 # shape_result = minimize(gap_neutron_pulse_ikeda_carpenter,
-#                         params_to_fitshape,
+#                         params,
 #                         method='leastsq',
 #                         args=(t, f, each_step)
 #                         )

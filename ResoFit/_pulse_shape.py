@@ -45,20 +45,10 @@ class NeutronPulse(object):
         # ikeda_carpenter
         if self.model_index == 1:
             # Load params
-            self.params_to_fitshape.add('alpha',
-                                        # value=source_to_detector_m
-                                        )
-            self.params_to_fitshape.add('beta',
-                                        # value=offset_us
-                                        )
-            self.params_to_fitshape.add('fraction',
-                                        # value=0.5,
-                                        min=0,
-                                        max=1
-                                        )
-            self.params_to_fitshape.add('t0',
-                                        # value=offset_us
-                                        )
+            self.params_to_fitshape.add('alpha', value=0.06)
+            self.params_to_fitshape.add('beta', value=0.05)
+            self.params_to_fitshape.add('fraction', value=0.5, min=0, max=1)
+            self.params_to_fitshape.add('t0', value=0.01)
             # Use lmfit to obtain params by minimizing gap_function
             self.shape_result = minimize(gap_neutron_pulse_ikeda_carpenter,
                                          self.params_to_fitshape,
