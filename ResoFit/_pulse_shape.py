@@ -138,10 +138,14 @@ def load_neutron_each_shape(path):
                 e_ev.append(each_line[1])
                 f.append(each_line[2])
                 s.append(each_line[3])
-        df['t_us'] = t_us
+        f_max = np.amax(f)
         df['E_eV'] = e_ev
+        df['t_us'] = t_us
         df['f'] = f
         df['s'] = s
+        df['f_norm'] = f/f_max
+        df['s_norm'] = s/f_max
+        # df[]
         # file_name = 'energy_' + str(index + 1) + '.csv'
         # df.to_csv(file_name, index=False)
         shape_dict[each_energy] = df

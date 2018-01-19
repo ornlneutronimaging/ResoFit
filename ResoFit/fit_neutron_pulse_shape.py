@@ -25,10 +25,11 @@ print("Parameters: ", my_model.param_names)
 print("Independent variable: ", my_model.independent_vars)
 
 
-my_model.set_param_hint('alpha', value=0.06, min=0)
-my_model.set_param_hint('beta', value=0.0415, min=0)
-my_model.set_param_hint('fraction', value=0.5, min=0, max=1)
-my_model.set_param_hint('t0', value=0.01, min=0)
+my_model.set_param_hint('alpha', value=0.699, min=0, max=20)
+my_model.set_param_hint('beta', value=0.0215, min=0, max=1)
+my_model.set_param_hint('fraction', value=0.383, min=0, max=1)
+my_model.set_param_hint('t0', value=0.0889, min=0, max=5)
+my_model.set_param_hint('magnitude', value=1.46e12, min=0)
 params = my_model.make_params(verbose=True)
 
 my_model.print_param_hints()
@@ -51,6 +52,7 @@ each_step = True
 # params_to_fitshape.pretty_print()
 
 # result = my_model.fit(f, params_to_fitshape, t=t, fit_kws={'nan_policy': 'omit'})
+
 result = my_model.fit(f, params, t=t)
 
 
