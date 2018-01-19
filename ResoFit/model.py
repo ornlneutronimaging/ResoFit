@@ -4,7 +4,7 @@ from lmfit.lineshapes import pvoigt
 from lmfit import Model
 
 
-def ikeda_carpenter(t, alpha, beta, fraction, t0, magnitude=1):
+def ikeda_carpenter(t, alpha, beta, fraction, t0, norm_factor=1):
     """
 
     :param t:
@@ -17,18 +17,21 @@ def ikeda_carpenter(t, alpha, beta, fraction, t0, magnitude=1):
     :type t0:
     :param fraction:
     :type fraction:
-    :param magnitude:
-    :type magnitude:
+    :param norm_factor:
+    :type norm_factor:
     :return:
     :rtype:
     """
     _t = t - t0
+    # _t = t1[np.logical_not(t1 < 0)]
+    _t[_t < 0] = 0  # t>=0 required
+
     part1 = 0.5 * alpha * (alpha * _t) ** 2 * np.exp(-alpha * _t)
     part2 = (beta * (alpha ** 2) / (alpha - beta) ** 3) * (np.exp(-beta * _t) - np.exp(-alpha * _t) * (
             1 + (alpha - beta) * _t + 0.5 * ((alpha - beta) ** 2) * (_t ** 2)))
 
-    f = (1 - fraction) * part1 + fraction * part2
-    return f * magnitude
+    f = ((1 - fraction) * part1 + fraction * part2) * norm_factor
+    return f
 
 
 def cole_windsor(t, sig1, sig2, gam, norm_factor, fraction, t0):
