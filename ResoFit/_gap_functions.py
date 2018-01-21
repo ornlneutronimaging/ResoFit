@@ -92,57 +92,56 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
             )
     return gap
 
-
-def gap_neutron_pulse_ikeda_carpenter(params, t, f, each_step=False):
-    parvals = params.valuesdict()
-    alpha = parvals['alpha']
-    beta = parvals['beta']
-    fraction = parvals['fraction']
-    t0 = parvals['t0']
-    simulated_shape = ikeda_carpenter(t=t,
-                                      alpha=alpha,
-                                      beta=beta,
-                                      fraction=fraction,
-                                      t0=t0)
-    # print(simulated_shape)
-    gap = f - simulated_shape
-    # print(gap)
-
-    if each_step is True:
-        print("Trying: alpha: {}    beta: {}    fraction: {}    t0: {}     chi^2: {}".format(
-            parvals['alpha'], parvals['beta'], parvals['fraction'], parvals['t0'],
-            sum((f - simulated_shape) ** 2))
-        )
-    return gap
-
-
-def gap_neutron_pulse_cole_windsor(params, t, f, each_step=False):
-    parvals = params.valuesdict()
-    sig1 = parvals['sig1']
-    sig2 = parvals['sig2']
-    gam1 = parvals['gam1']
-    gam2 = parvals['gam2']
-    norm_factor = parvals['norm_factor']
-    fraction = parvals['fraction']
-    t0 = parvals['t0']
-    simulated_shape = cole_windsor(t=t,
-                                   sig1=sig1,
-                                   sig2=sig2,
-                                   gam1=gam1,
-                                   gam2=gam2,
-                                   norm_factor=norm_factor,
-                                   fraction=fraction,
-                                   t0=t0)
-    gap = f - simulated_shape
-
-    if each_step is True:
-        print(
-            "Trying: sig1: {}    sig2: {}    gam1: {}    gam2: {}    norm_factor: {}    fraction: {}    t0: {}     chi^2: {}".format(
-                parvals['sig1'], parvals['sig2'],
-                parvals['gam1'], parvals['gam2'],
-                parvals['norm_factor'],
-                parvals['fraction'],
-                parvals['t0'],
-                sum((f - simulated_shape) ** 2))
-        )
-    return gap
+# def gap_neutron_pulse_ikeda_carpenter(params, t, f, each_step=False):
+#     parvals = params.valuesdict()
+#     alpha = parvals['alpha']
+#     beta = parvals['beta']
+#     fraction = parvals['fraction']
+#     t0 = parvals['t0']
+#     simulated_shape = ikeda_carpenter(t=t,
+#                                       alpha=alpha,
+#                                       beta=beta,
+#                                       fraction=fraction,
+#                                       t0=t0)
+#     # print(simulated_shape)
+#     gap = f - simulated_shape
+#     # print(gap)
+#
+#     if each_step is True:
+#         print("Trying: alpha: {}    beta: {}    fraction: {}    t0: {}     chi^2: {}".format(
+#             parvals['alpha'], parvals['beta'], parvals['fraction'], parvals['t0'],
+#             sum((f - simulated_shape) ** 2))
+#         )
+#     return gap
+#
+#
+# def gap_neutron_pulse_cole_windsor(params, t, f, each_step=False):
+#     parvals = params.valuesdict()
+#     sig1 = parvals['sig1']
+#     sig2 = parvals['sig2']
+#     gam1 = parvals['gam1']
+#     gam2 = parvals['gam2']
+#     norm_factor = parvals['norm_factor']
+#     fraction = parvals['fraction']
+#     t0 = parvals['t0']
+#     simulated_shape = cole_windsor(t=t,
+#                                    sig1=sig1,
+#                                    sig2=sig2,
+#                                    gam1=gam1,
+#                                    gam2=gam2,
+#                                    norm_factor=norm_factor,
+#                                    fraction=fraction,
+#                                    t0=t0)
+#     gap = f - simulated_shape
+#
+#     if each_step is True:
+#         print(
+#             "Trying: sig1: {}    sig2: {}    gam1: {}    gam2: {}    norm_factor: {}    fraction: {}    t0: {}     chi^2: {}".format(
+#                 parvals['sig1'], parvals['sig2'],
+#                 parvals['gam1'], parvals['gam2'],
+#                 parvals['norm_factor'],
+#                 parvals['fraction'],
+#                 parvals['t0'],
+#                 sum((f - simulated_shape) ** 2))
+#         )
+#     return gap

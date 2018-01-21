@@ -3,8 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from lmfit import Parameters
 from lmfit import minimize
-from ResoFit._gap_functions import gap_neutron_pulse_ikeda_carpenter
-from ResoFit._gap_functions import gap_neutron_pulse_cole_windsor
+from lmfit import Model
+from ResoFit.model import cole_windsor
+from ResoFit.model import cole_windsor_jparc
+from ResoFit.model import ikeda_carpenter
 import ImagingReso._utilities as reso_util
 import ResoFit._utilities as fit_util
 
@@ -14,7 +16,7 @@ class NeutronPulse(object):
     def __init__(self, path):
         """"""
         self.shape_total_df = load_neutron_total_shape(path)
-        self.params_to_fitshape = None
+        # self.params_to_fitshape = None
         self.shape_result = None
         self.shape_dict = None
         self.model_index = None
@@ -30,63 +32,85 @@ class NeutronPulse(object):
         else:
             self.shape_total_df.to_csv(filename)
 
-    def export_each(self):
+    def export_each_to_csv(self):
         for index, each_energy in enumerate(self.shape_dict.keys()):
             df = self.shape_dict[each_energy]
             file_name = 'energy_' + str(index + 1) + '.csv'
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
-    def fit_shape(self, t, f, model_index=1, each_step=False):
+    def _fit_shape(self, f, t, model_index=1):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.model_index = model_index
-        self.params_to_fitshape = Parameters()
+        # self.params_to_fitshape = Parameters()
 
         # ikeda_carpenter
         if self.model_index == 1:
-            # Load params
-            self.params_to_fitshape.add('alpha', value=0.06)
-            self.params_to_fitshape.add('beta', value=0.05)
-            self.params_to_fitshape.add('fraction', value=0.5, min=0, max=1)
-            self.params_to_fitshape.add('t0', value=0.01)
-            # Use lmfit to obtain params by minimizing gap_function
-            self.shape_result = minimize(gap_neutron_pulse_ikeda_carpenter,
-                                         self.params_to_fitshape,
-                                         method='leastsq',
-                                         args=(t, f, each_step)
-                                         )
+            my_model = Model(ikeda_carpenter)
+
+            assert my_model.param_names == ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
+            assert my_model.independent_vars == ['t']
+
+            # Set params hints
+            my_model.set_param_hint('alpha', value=0.699, min=0, max=20)
+            my_model.set_param_hint('beta', value=0.0215, min=0, max=20)
+            my_model.set_param_hint('fraction', value=0.383, min=0, max=1)
+            my_model.set_param_hint('t0', value=0.0889, min=0, max=20)
+            my_model.set_param_hint('norm_factor', value=1, min=0)
+
+            # Make params
+            params = my_model.make_params(verbose=True)
+
+            # Fit the model
+            result = my_model.fit(f, params, t=t)
+
+            # result.best_values
+
         # cole_windsor
         elif self.model_index == 2:
-            # Load params
-            self.params_to_fitshape.add('sig1',
-                                        # value=source_to_detector_m
-                                        )
-            self.params_to_fitshape.add('sig2',
-                                        # value=offset_us
-                                        )
-            self.params_to_fitshape.add('gam1',
-                                        # value=offset_us
-                                        )
-            self.params_to_fitshape.add('gam2',
-                                        # value=offset_us
-                                        )
-            self.params_to_fitshape.add('norm_factor',
-                                        # value=source_to_detector_m
-                                        )
-            self.params_to_fitshape.add('fraction',
-                                        # value=0.5,
-                                        min=0,
-                                        max=1
-                                        )
-            self.params_to_fitshape.add('t0',
-                                        # value=offset_us,
-                                        vary=True
-                                        )
-            # Use lmfit to obtain params by minimizing gap_function
-            self.shape_result = minimize(gap_neutron_pulse_cole_windsor,
-                                         self.params_to_fitshape,
-                                         method='leastsq',
-                                         args=(t, f, each_step))
+            my_model = Model(cole_windsor)
+
+            assert my_model.param_names == ['sig1', 'sig2', 'gamma', 'fraction', 't0', 'norm_factor']
+            assert my_model.independent_vars == ['t']
+
+            # Set params hints
+            my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
+            my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
+            my_model.set_param_hint('gamma', value=6.291, min=0, max=20)
+            my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
+            my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
+            my_model.set_param_hint('norm_factor', value=0.9951, min=0)
+
+            # Make params
+            params = my_model.make_params(verbose=True)
+
+            # Fit the model
+            result = my_model.fit(f, params, t=t)
+
+        # cole_windsor_jparc
+        elif self.model_index == 3:
+            my_model = Model(cole_windsor_jparc)
+
+            assert my_model.param_names == ['sig1', 'sig2', 'gam1', 'gam2', 'fraction', 't0', 'norm_factor']
+            assert my_model.independent_vars == ['t']
+
+            # Set params hints
+            my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
+            my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
+            my_model.set_param_hint('gam1', value=6.291, min=0, max=20)
+            my_model.set_param_hint('gam2', value=1.285, min=0, max=20)
+            my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
+            my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
+            my_model.set_param_hint('norm_factor', value=0.9951, min=0)
+
+            # Make params
+            params = my_model.make_params(verbose=True)
+
+            # Fit the model
+            result = my_model.fit(f, params, t=t)
+
+
+
 
         # Print before
         print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
