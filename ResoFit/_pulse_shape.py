@@ -109,19 +109,16 @@ class NeutronPulse(object):
             # Fit the model
             result = my_model.fit(f, params, t=t)
 
-
-
-
-        # Print before
-        print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
-        self.params_to_fitshape.pretty_print()
-        # Use lmfit to obtain params by minimizing gap_function
-
-        # Print after
-        print("\nParams after:")
-        self.shape_result.__dict__['params'].pretty_print()
-        # Print chi^2
-        print("Calibration chi^2 : {}\n".format(self.shape_result.__dict__['chisqr']))
+        # # Print before
+        # print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
+        # self.params_to_fitshape.pretty_print()
+        # # Use lmfit to obtain params by minimizing gap_function
+        #
+        # # Print after
+        # print("\nParams after:")
+        # self.shape_result.__dict__['params'].pretty_print()
+        # # Print chi^2
+        # print("Calibration chi^2 : {}\n".format(self.shape_result.__dict__['chisqr']))
 
 
 class ProtonPulse(object):
@@ -167,8 +164,8 @@ def load_neutron_each_shape(path):
         df['t_us'] = t_us
         df['f'] = f
         df['s'] = s
-        df['f_norm'] = f/f_max
-        df['s_norm'] = s/f_max
+        df['f_norm'] = f / f_max
+        df['s_norm'] = s / f_max
         # df[]
         # file_name = 'energy_' + str(index + 1) + '.csv'
         # df.to_csv(file_name, index=False)
