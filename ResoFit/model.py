@@ -4,13 +4,6 @@ from lmfit.lineshapes import pvoigt
 from lmfit import Model
 
 
-def pseudo_voigt(t, beta, sigma, fraction):
-    gauss = 1 / (1 + (t / beta)**2)
-    lorentz = np.exp(-(t / sigma)**2)
-    f = (1 - fraction) * gauss + fraction * lorentz
-    return f
-
-
 def ikeda_carpenter(t, alpha, beta, fraction, t0, norm_factor=1):
     _t = t - t0
     # _t = t1[np.logical_not(t1 < 0)]
@@ -53,6 +46,13 @@ def cole_windsor(t, sig1, sig2, gamma, fraction, t0, norm_factor=1):
         f.append(each_f)
 
     f = np.array(f)
+    return f
+
+
+def pseudo_voigt(t, beta, sigma, fraction):
+    gauss = 1 / (1 + (t / beta)**2)
+    lorentz = np.exp(-(t / sigma)**2)
+    f = (1 - fraction) * gauss + fraction * lorentz
     return f
 
 
