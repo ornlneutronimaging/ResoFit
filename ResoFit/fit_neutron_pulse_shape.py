@@ -18,7 +18,7 @@ neutron_pulse = NeutronPulse(path1)
 neutron_pulse.load_shape_each(path2)
 # neutron_pulse.export_total()
 # neutron_pulse.export_each()
-neutron_pulse.fit_shape(e_min=1, e_max=1, model_index=2, show_each=True)
+neutron_pulse.fit_shape(e_min=100, e_max=100, model_index=1, check_each=True, save_fig=True)
 # pprint.pprint(neutron_pulse.shape_dict)
 
 

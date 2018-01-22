@@ -41,28 +41,28 @@ class NeutronPulse(object):
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
-    # def fit_shape(self, e_min, e_max, model_index=1):
-    def fit_shape(self, e_min, e_max, model_index=1, show_each=False):
+    def fit_shape(self, e_min, e_max, model_index=1, show_init=True, check_each=False, save_fig=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
 
-        # f = self.shape_dict[1]['data']['f_norm']
-        # t = self.shape_dict[1]['data']['t_us']
         param_dict_fitted = {}
         for each_e in self.shape_dict.keys():
             if e_min <= each_e <= e_max:
+                print("Fitting [{} eV] ...".format(each_e))
+                param_dict_fitted[each_e] = {}
                 f = self.shape_dict[each_e]['data']['f_norm']
                 t = self.shape_dict[each_e]['data']['t_us']
-                # self.shape_dict[each]['fitted_params'] = self._fit_shape(f=f, t=t, model_index=model_index)
-                param_dict_fitted[each_e] = {}
                 param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
                                                                              t=t,
+                                                                             e=each_e,
                                                                              model_index=model_index,
-                                                                             show_each=show_each
+                                                                             check_each=check_each,
+                                                                             show_init=show_init,
+                                                                             save_fig=save_fig
                                                                              )
+                # print(' done')
 
         df_fitted_params = self._form_fitted_df(param_dict=param_dict_fitted)
         print(df_fitted_params)
-        pass
 
     def fit_params(self):
 
@@ -84,11 +84,11 @@ class NeutronPulse(object):
             _df[each_param] = _dict[each_param]
         return _df
 
-    def _fit_shape(self, f, t, model_index, show_each):
+    def _fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.model_index = model_index
         # self.params_to_fitshape = Parameters()
-
+        verbose = False
         # ikeda_carpenter
         if self.model_index == 1:
             my_model = Model(ikeda_carpenter)
@@ -105,7 +105,7 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=1, min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
             else:
                 _best_pre_values = self.result.best_values
                 my_model.set_param_hint('alpha', value=_best_pre_values['alpha'], min=0, max=20)
@@ -115,7 +115,7 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
 
             # Fit the model
             self.result = my_model.fit(f, params, t=t)
@@ -137,7 +137,7 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=0.9951, min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
             else:
                 _best_pre_values = self.result.best_values
                 my_model.set_param_hint('sig1', value=_best_pre_values['sig1'], min=0, max=20)
@@ -148,7 +148,7 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
 
             # Fit the model
             self.result = my_model.fit(f, params, t=t)
@@ -171,7 +171,7 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=0.9951, min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
             else:
                 _best_pre_values = self.result.best_values
                 my_model.set_param_hint('sig1', value=_best_pre_values['sig1'], min=0, max=20)
@@ -183,16 +183,29 @@ class NeutronPulse(object):
                 my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
 
                 # Make params
-                params = my_model.make_params(verbose=True)
+                params = my_model.make_params(verbose=verbose)
 
             # Fit the model
             self.result = my_model.fit(f, params, t=t)
 
-        if show_each is True:
+        if check_each:
             assert self.result is not None
-            self.result.plot()
-            plt.xlim(xmin=0, xmax=40)
-            plt.show()
+            _y_label = 'Normalized neutron flux (arb. unit)'
+            _x_label = 'Time (µs)'
+            _e_text = str(e) + ' eV'
+            if show_init is True:
+                self.result.plot(xlabel=_x_label, ylabel=_y_label)
+            else:
+                self.result.plot(xlabel=_x_label, ylabel=_y_label, initfmt='None')
+            plt.text(x=0, y=1.09, s=_e_text, fontsize=12)
+
+            if save_fig:
+                _filename = 'Neutron_pulse_shape_' + str(e) + '_eV.png'
+                plt.savefig(_filename, dpi=300, transparent=False)
+            else:
+                plt.show()
+        elif save_fig:
+            raise ValueError("'check_each' has to be 'True' in order to save figure")
 
         return self.result.best_values
 
@@ -237,26 +250,32 @@ def load_neutron_each_shape(path):
     for index, each_energy in enumerate(energy_list):
         data_dict = {}
         t_us = []
-        # e_ev = []
+        e_ev = []
         f = []
         s = []
         df = pd.DataFrame()
         for each_line in q:
             if each_energy == each_line[1]:
                 t_us.append(each_line[0])
-                # e_ev.append(each_line[1])
+                e_ev.append(each_line[1])
                 f.append(each_line[2])
                 s.append(each_line[3])
         f_max = np.amax(f)
-        # df['E_eV'] = e_ev
         df['t_us'] = t_us
         df['f'] = f
         df['s'] = s
         df['f_norm'] = f / f_max
         df['s_norm'] = s / f_max
+        # df['f_max'] = [f_max] * len(f)
+        df['E_eV'] = e_ev
+        data_dict['data_raw'] = df
+        df_dropped = df.drop(df[df.f_norm <= 0].index)
+        df_dropped.reset_index(drop=True, inplace=True)
+        data_dict['data'] = df_dropped
+        shape_dict[each_energy] = data_dict
+
+        # Export to .csv
         # df[]
         # file_name = 'energy_' + str(index + 1) + '.csv'
         # df.to_csv(file_name, index=False)
-        data_dict['data'] = df
-        shape_dict[each_energy] = data_dict
     return shape_dict
