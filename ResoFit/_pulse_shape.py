@@ -16,10 +16,12 @@ class NeutronPulse(object):
     def __init__(self, path):
         """"""
         self.shape_total_df = load_neutron_total_shape(path)
-        # self.params_to_fitshape = None
-        self.shape_result = None
         self.shape_dict = None
-        self.model_index = None
+        self.result = None
+        # self.model_params = None
+        # self.params_to_fitshape = None
+        # self.shape_result = None
+        # self.model_index = None
 
     def load_shape_each(self, path):
         self.shape_dict = load_neutron_each_shape(path)
@@ -39,33 +41,50 @@ class NeutronPulse(object):
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
-    def fit_shape(self, model_index):
+    # def fit_shape(self, e_min, e_max, model_index=1):
+    def fit_shape(self, e_min, e_max, model_index=1, show_each=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
-        for each in self.shape_dict.keys():
-            f = self.shape_dict[each]['data']['f_norm']
-            t = self.shape_dict[each]['data']['t_us']
-            self.shape_dict[each]['fitted_params'] = self._fit_shape(f=f, t=t, model_index=model_index)
 
-    def fit_params(self):
+        # f = self.shape_dict[1]['data']['f_norm']
+        # t = self.shape_dict[1]['data']['t_us']
+        param_dict_fitted = {}
+        for each_e in self.shape_dict.keys():
+            if e_min <= each_e <= e_max:
+                f = self.shape_dict[each_e]['data']['f_norm']
+                t = self.shape_dict[each_e]['data']['t_us']
+                # self.shape_dict[each]['fitted_params'] = self._fit_shape(f=f, t=t, model_index=model_index)
+                param_dict_fitted[each_e] = {}
+                param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
+                                                                             t=t,
+                                                                             model_index=model_index,
+                                                                             show_each=show_each
+                                                                             )
+
+        df_fitted_params = self._form_fitted_df(param_dict=param_dict_fitted)
+        print(df_fitted_params)
         pass
 
-    def _form_fitted_df(self):
-        e_list = list(self.shape_dict.keys())
-        assert 'fitted_params' in self.shape_dict[e_list[0]]
-        params_list = list(self.shape_dict[e_list[0]]['fitted_params'].keys())
-        _dict = {}
-        for each_param in params_list:
-            _dict[each_param] = []
-        for each_e in e_list:
-            for each_param in params_list:
-                _dict[each_param].append(self.shape_dict[each_e]['fitted_params'][each_param])
-        _df = pd.DataFrame()
-        for each_param in params_list:
-            _df[each_param] = _dict[each_param]
+    def fit_params(self):
 
+        pass
+
+    @staticmethod
+    def _form_fitted_df(param_dict):
+        e_list_fitted = list(param_dict.keys())
+        param_list_fitted = list(param_dict[e_list_fitted[0]]['fitted_params'].keys())
+        _dict = {}
+        for each_param in param_list_fitted:
+            _dict[each_param] = []
+        for each_e in e_list_fitted:
+            for each_param in param_list_fitted:
+                _dict[each_param].append(param_dict[each_e]['fitted_params'][each_param])
+        _df = pd.DataFrame()
+        _df['E_eV'] = e_list_fitted
+        for each_param in param_list_fitted:
+            _df[each_param] = _dict[each_param]
         return _df
 
-    def _fit_shape(self, f, t, model_index):
+    def _fit_shape(self, f, t, model_index, show_each):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.model_index = model_index
         # self.params_to_fitshape = Parameters()
@@ -73,24 +92,33 @@ class NeutronPulse(object):
         # ikeda_carpenter
         if self.model_index == 1:
             my_model = Model(ikeda_carpenter)
-            model_params = ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
+            # model_params = ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
             assert my_model.param_names == ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
             assert my_model.independent_vars == ['t']
 
             # Set params hints
-            my_model.set_param_hint('alpha', value=0.699, min=0, max=20)
-            my_model.set_param_hint('beta', value=0.0215, min=0, max=20)
-            my_model.set_param_hint('fraction', value=0.383, min=0, max=1)
-            my_model.set_param_hint('t0', value=0.0889, min=0, max=20)
-            my_model.set_param_hint('norm_factor', value=1, min=0)
+            if self.result is None:
+                my_model.set_param_hint('alpha', value=0.699, min=0, max=20)
+                my_model.set_param_hint('beta', value=0.0215, min=0, max=20)
+                my_model.set_param_hint('fraction', value=0.383, min=0, max=1)
+                my_model.set_param_hint('t0', value=0.0889, min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=1, min=0)
 
-            # Make params
-            params = my_model.make_params(verbose=True)
+                # Make params
+                params = my_model.make_params(verbose=True)
+            else:
+                _best_pre_values = self.result.best_values
+                my_model.set_param_hint('alpha', value=_best_pre_values['alpha'], min=0, max=20)
+                my_model.set_param_hint('beta', value=_best_pre_values['beta'], min=0, max=20)
+                my_model.set_param_hint('fraction', value=_best_pre_values['fraction'], min=0, max=1)
+                my_model.set_param_hint('t0', value=_best_pre_values['t0'], min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
+
+                # Make params
+                params = my_model.make_params(verbose=True)
 
             # Fit the model
-            result = my_model.fit(f, params, t=t)
-
-            # result.best_values
+            self.result = my_model.fit(f, params, t=t)
 
         # cole_windsor
         elif self.model_index == 2:
@@ -100,18 +128,30 @@ class NeutronPulse(object):
             assert my_model.independent_vars == ['t']
 
             # Set params hints
-            my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
-            my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
-            my_model.set_param_hint('gamma', value=6.291, min=0, max=20)
-            my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
-            my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
-            my_model.set_param_hint('norm_factor', value=0.9951, min=0)
+            if self.result is None:
+                my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
+                my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
+                my_model.set_param_hint('gamma', value=6.291, min=0, max=20)
+                my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
+                my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=0.9951, min=0)
 
-            # Make params
-            params = my_model.make_params(verbose=True)
+                # Make params
+                params = my_model.make_params(verbose=True)
+            else:
+                _best_pre_values = self.result.best_values
+                my_model.set_param_hint('sig1', value=_best_pre_values['sig1'], min=0, max=20)
+                my_model.set_param_hint('sig2', value=_best_pre_values['sig2'], min=0, max=20)
+                my_model.set_param_hint('gamma', value=_best_pre_values['gamma'], min=0, max=20)
+                my_model.set_param_hint('fraction', value=_best_pre_values['fraction'], min=0, max=1)
+                my_model.set_param_hint('t0', value=_best_pre_values['t0'], min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
+
+                # Make params
+                params = my_model.make_params(verbose=True)
 
             # Fit the model
-            result = my_model.fit(f, params, t=t)
+            self.result = my_model.fit(f, params, t=t)
 
         # cole_windsor_jparc
         elif self.model_index == 3:
@@ -121,21 +161,40 @@ class NeutronPulse(object):
             assert my_model.independent_vars == ['t']
 
             # Set params hints
-            my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
-            my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
-            my_model.set_param_hint('gam1', value=6.291, min=0, max=20)
-            my_model.set_param_hint('gam2', value=1.285, min=0, max=20)
-            my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
-            my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
-            my_model.set_param_hint('norm_factor', value=0.9951, min=0)
+            if self.result is None:
+                my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
+                my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
+                my_model.set_param_hint('gam1', value=6.291, min=0, max=20)
+                my_model.set_param_hint('gam2', value=1.285, min=0, max=20)
+                my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
+                my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=0.9951, min=0)
 
-            # Make params
-            params = my_model.make_params(verbose=True)
+                # Make params
+                params = my_model.make_params(verbose=True)
+            else:
+                _best_pre_values = self.result.best_values
+                my_model.set_param_hint('sig1', value=_best_pre_values['sig1'], min=0, max=20)
+                my_model.set_param_hint('sig2', value=_best_pre_values['sig2'], min=0, max=20)
+                my_model.set_param_hint('gam1', value=_best_pre_values['gam1'], min=0, max=20)
+                my_model.set_param_hint('gam2', value=_best_pre_values['gam2'], min=0, max=20)
+                my_model.set_param_hint('fraction', value=_best_pre_values['fraction'], min=0, max=1)
+                my_model.set_param_hint('t0', value=_best_pre_values['t0'], min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
+
+                # Make params
+                params = my_model.make_params(verbose=True)
 
             # Fit the model
-            result = my_model.fit(f, params, t=t)
+            self.result = my_model.fit(f, params, t=t)
 
-        return result.best_values
+        if show_each is True:
+            assert self.result is not None
+            self.result.plot()
+            plt.xlim(xmin=0, xmax=40)
+            plt.show()
+
+        return self.result.best_values
 
         # # Print before
         # print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
