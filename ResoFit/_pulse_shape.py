@@ -39,7 +39,33 @@ class NeutronPulse(object):
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
-    def _fit_shape(self, f, t, model_index=1):
+    def fit_shape(self, model_index):
+        # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
+        for each in self.shape_dict.keys():
+            f = self.shape_dict[each]['data']['f_norm']
+            t = self.shape_dict[each]['data']['t_us']
+            self.shape_dict[each]['fitted_params'] = self._fit_shape(f=f, t=t, model_index=model_index)
+
+    def fit_params(self):
+        pass
+
+    def _form_fitted_df(self):
+        e_list = list(self.shape_dict.keys())
+        assert 'fitted_params' in self.shape_dict[e_list[0]]
+        params_list = list(self.shape_dict[e_list[0]]['fitted_params'].keys())
+        _dict = {}
+        for each_param in params_list:
+            _dict[each_param] = []
+        for each_e in e_list:
+            for each_param in params_list:
+                _dict[each_param].append(self.shape_dict[each_e]['fitted_params'][each_param])
+        _df = pd.DataFrame()
+        for each_param in params_list:
+            _df[each_param] = _dict[each_param]
+
+        return _df
+
+    def _fit_shape(self, f, t, model_index):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.model_index = model_index
         # self.params_to_fitshape = Parameters()
@@ -47,7 +73,7 @@ class NeutronPulse(object):
         # ikeda_carpenter
         if self.model_index == 1:
             my_model = Model(ikeda_carpenter)
-
+            model_params = ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
             assert my_model.param_names == ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
             assert my_model.independent_vars == ['t']
 
@@ -109,6 +135,8 @@ class NeutronPulse(object):
             # Fit the model
             result = my_model.fit(f, params, t=t)
 
+        return result.best_values
+
         # # Print before
         # print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
         # self.params_to_fitshape.pretty_print()
@@ -148,19 +176,20 @@ def load_neutron_each_shape(path):
 
     shape_dict = {}
     for index, each_energy in enumerate(energy_list):
+        data_dict = {}
         t_us = []
-        e_ev = []
+        # e_ev = []
         f = []
         s = []
         df = pd.DataFrame()
         for each_line in q:
             if each_energy == each_line[1]:
                 t_us.append(each_line[0])
-                e_ev.append(each_line[1])
+                # e_ev.append(each_line[1])
                 f.append(each_line[2])
                 s.append(each_line[3])
         f_max = np.amax(f)
-        df['E_eV'] = e_ev
+        # df['E_eV'] = e_ev
         df['t_us'] = t_us
         df['f'] = f
         df['s'] = s
@@ -169,5 +198,6 @@ def load_neutron_each_shape(path):
         # df[]
         # file_name = 'energy_' + str(index + 1) + '.csv'
         # df.to_csv(file_name, index=False)
-        shape_dict[each_energy] = df
+        data_dict['data'] = df
+        shape_dict[each_energy] = data_dict
     return shape_dict
