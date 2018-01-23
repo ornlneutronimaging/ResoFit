@@ -20,8 +20,7 @@ def check_and_make_dir(current_path, name):
     if not os.path.exists(_dir_path):
         os.makedirs(_dir_path)
         print("Folder: '{}' has been created ".format(_dir_path))
-    else:
-        print("Folder: '{}' already exists ".format(_dir_path))
+
     return _dir_path
 
 

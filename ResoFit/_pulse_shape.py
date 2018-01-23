@@ -289,6 +289,21 @@ class NeutronPulse(object):
                 self.result.plot(xlabel=_x_label, ylabel=_y_label, initfmt='None')
             plt.text(x=0, y=1.09, s=_e_text, fontsize=12)
 
+            if e < 1:
+                plt.xlim(xmin=0, xmax=40)
+            elif 1 <= e < 5:
+                plt.xlim(xmin=0, xmax=20)
+            elif 5 <= e < 15:
+                plt.xlim(xmin=0, xmax=10)
+            elif 15 <= e < 30:
+                plt.xlim(xmin=0, xmax=6)
+            elif 30 <= e < 50:
+                plt.xlim(xmin=0, xmax=4)
+            elif 50 <= e < 500:
+                plt.xlim(xmin=0, xmax=2.5)
+            else:
+                plt.xlim(xmin=0, xmax=1.5)
+
             if save_fig:
                 # Check and make dir to save
                 if self.result_neutron_folder is None:
@@ -300,11 +315,6 @@ class NeutronPulse(object):
                 plt.savefig(_dir_to_save, dpi=300, transparent=False)
                 plt.close()
             else:
-                if e <= 1:
-                    plt.xlim(xmin=0, xmax=40)
-                else:
-                    plt.xlim(xmin=0, xmax=3)
-
                 plt.show()
         elif save_fig:
             raise ValueError("'check_each' has to be 'True' in order to save figure")
