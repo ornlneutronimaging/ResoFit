@@ -300,6 +300,11 @@ class NeutronPulse(object):
                 plt.savefig(_dir_to_save, dpi=300, transparent=False)
                 plt.close()
             else:
+                if e <= 1:
+                    plt.xlim(xmin=0, xmax=40)
+                else:
+                    plt.xlim(xmin=0, xmax=3)
+
                 plt.show()
         elif save_fig:
             raise ValueError("'check_each' has to be 'True' in order to save figure")
