@@ -8,6 +8,7 @@ from ResoFit.model import cole_windsor
 from ResoFit.model import cole_windsor_jparc
 from ResoFit.model import ikeda_carpenter
 from ResoFit.model import ikeda_carpenter_jparc
+from lmfit.models import LinearModel
 import ImagingReso._utilities as reso_util
 import ResoFit._utilities as fit_util
 import os
@@ -16,7 +17,12 @@ import os
 class NeutronPulse(object):
 
     def __init__(self, path):
-        """"""
+        """
+        Load total neutron pulse shape from .dat file
+
+        :param path: path to the '.dat' file
+        :type path: str
+        """
         self.shape_total_df = load_neutron_total_shape(path)
         self.shape_dict = None
         self.result = None
@@ -32,24 +38,17 @@ class NeutronPulse(object):
         # self.model_index = None
 
     def load_shape_each(self, path):
+        """
+        Load each eV neutron pulse shape from .dat file
+
+        :param path: path to the '.dat' file
+        :type path: str
+        """
         self.shape_dict = load_neutron_each_shape(path)
 
-    def export_total(self, filename=None):
-        assert self.shape_total_df is not None
-
-        if filename is None:
-            self.shape_total_df.to_clipboard(excel=True)
-        else:
-            self.shape_total_df.to_csv(filename)
-
-    def export_each_to_csv(self):
-        for index, each_energy in enumerate(self.shape_dict.keys()):
-            df = self.shape_dict[each_energy]
-            file_name = 'energy_' + str(index + 1) + '.csv'
-            df.to_csv(file_name, index=False)
-            print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
-
-    def fit_shape(self, e_min, e_max, model_index=1, drop=False, show_init=True, check_each=False, save_fig=False, save_df=False):
+    def fit_shape(self, e_min, e_max, model_index=1,
+                  drop=False, show_init=True,
+                  check_each=False, save_fig=False, save_df=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.e_min = e_min
         self.e_max = e_max
@@ -75,57 +74,36 @@ class NeutronPulse(object):
                                                                              )
         # Organize fitted parameters into pd.DataFrame
         self.param_df_fitted = self._form_fitted_df(param_dict=param_dict_fitted, save=save_df)
-        print(self.param_df_fitted)
+
+    def plot_fitted_params(self):
+        assert self.param_df_fitted is not None
+        self.param_df_fitted.set_index('E_eV').plot(loglog=True, style='.')
 
     def fit_params(self):
         if self.param_df_fitted is None:
             raise ValueError("'.fit_shape' must be applied before '.fit_params'")
 
-        pass
+        my_model = Model(LinearModel)
 
-    def _form_fitted_df(self, param_dict, save=False):
-        e_list_fitted = list(param_dict.keys())
-        if self.model_param_names is None:
-            param_list_fitted = list(param_dict[e_list_fitted[0]]['fitted_params'].keys())
-        else:
-            param_list_fitted = self.model_param_names
+        assert my_model.param_names == ['sig1', 'sig2', 'gamma', 'fraction', 't0', 'norm_factor']
+        assert my_model.independent_vars == ['t']
 
-        _dict = {}
-        for each_param in param_list_fitted:
-            _dict[each_param] = []
-        for each_e in e_list_fitted:
-            for each_param in param_list_fitted:
-                _dict[each_param].append(param_dict[each_e]['fitted_params'][each_param])
-        _df = pd.DataFrame()
-        _df['E_eV'] = e_list_fitted
-        for each_param in param_list_fitted:
-            _df[each_param] = _dict[each_param]
+        # Set params hints
 
-        if save is True:
-            # Check and make dir to save
-            if self.result_neutron_folder is None:
-                self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+        my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
+        my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
+        my_model.set_param_hint('gamma', value=6.291, min=0, max=20)
+        my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
+        my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
+        my_model.set_param_hint('norm_factor', value=0.9951, min=0)
 
-            # Form file name
-            _e_min = str(self.e_min) + 'eV_'
-            _e_max = str(self.e_max) + 'eV_'
-            _model_s = self.model_used + '.csv'
-            _file_name = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
+        # Make params
+        params = my_model.make_params()
 
-            # Save
-            _dir_to_save = os.path.join(self.result_neutron_folder, _file_name)
-            _df.to_csv(path_or_buf=_dir_to_save, index=False)
+        # Fit the model
+        # out = my_model.fit(f, params, t=t)
 
-        return _df
-
-    @staticmethod
-    def _check_and_make_subdir(*args):
-        # Check and make dir to save
-        _file_path = os.path.abspath(os.path.dirname(__file__))
-        for arg in args:
-            _created_path = fit_util.check_and_make_dir(_file_path, arg)
-            _file_path = _created_path
-        return _file_path
+        return out
 
     def _fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
         _model_map = {1: 'ikeda_carpenter',
@@ -321,16 +299,64 @@ class NeutronPulse(object):
 
         return self.result.best_values
 
-        # # Print before
-        # print("+----------------- Fit neutron pulse shape -----------------+\nParams before:")
-        # self.params_to_fitshape.pretty_print()
-        # # Use lmfit to obtain params by minimizing gap_function
-        #
-        # # Print after
-        # print("\nParams after:")
-        # self.shape_result.__dict__['params'].pretty_print()
-        # # Print chi^2
-        # print("Calibration chi^2 : {}\n".format(self.shape_result.__dict__['chisqr']))
+    def _form_fitted_df(self, param_dict, save=False):
+        e_list_fitted = list(param_dict.keys())
+        if self.model_param_names is None:
+            param_list_fitted = list(param_dict[e_list_fitted[0]]['fitted_params'].keys())
+        else:
+            param_list_fitted = self.model_param_names
+
+        _dict = {}
+        for each_param in param_list_fitted:
+            _dict[each_param] = []
+        for each_e in e_list_fitted:
+            for each_param in param_list_fitted:
+                _dict[each_param].append(param_dict[each_e]['fitted_params'][each_param])
+        _df = pd.DataFrame()
+        _df['E_eV'] = e_list_fitted
+        for each_param in param_list_fitted:
+            _df[each_param] = _dict[each_param]
+
+        if save is True:
+            # Check and make dir to save
+            if self.result_neutron_folder is None:
+                self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+
+            # Form file name
+            _e_min = str(self.e_min) + 'eV_'
+            _e_max = str(self.e_max) + 'eV_'
+            _model_s = self.model_used + '.csv'
+            _file_name = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
+
+            # Save
+            _dir_to_save = os.path.join(self.result_neutron_folder, _file_name)
+            _df.to_csv(path_or_buf=_dir_to_save, index=False)
+
+        return _df
+
+    def _export_total(self, filename=None):
+        assert self.shape_total_df is not None
+
+        if filename is None:
+            self.shape_total_df.to_clipboard(excel=True)
+        else:
+            self.shape_total_df.to_csv(filename)
+
+    def _export_each_to_csv(self):
+        for index, each_energy in enumerate(self.shape_dict.keys()):
+            df = self.shape_dict[each_energy]
+            file_name = 'energy_' + str(index + 1) + '.csv'
+            df.to_csv(file_name, index=False)
+            print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
+
+    @staticmethod
+    def _check_and_make_subdir(*args):
+        # Check and make dir to save
+        _file_path = os.path.abspath(os.path.dirname(__file__))
+        for arg in args:
+            _created_path = fit_util.check_and_make_dir(_file_path, arg)
+            _file_path = _created_path
+        return _file_path
 
 
 class ProtonPulse(object):
