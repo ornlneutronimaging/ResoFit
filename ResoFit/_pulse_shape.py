@@ -18,6 +18,7 @@ class NeutronPulse(object):
         self.shape_total_df = load_neutron_total_shape(path)
         self.shape_dict = None
         self.result = None
+        self.param_df_fitted = None
         # self.model_params = None
         # self.params_to_fitshape = None
         # self.shape_result = None
@@ -61,8 +62,8 @@ class NeutronPulse(object):
                                                                              )
                 # print(' done')
 
-        df_fitted_params = self._form_fitted_df(param_dict=param_dict_fitted)
-        print(df_fitted_params)
+        self.param_df_fitted = self._form_fitted_df(param_dict=param_dict_fitted)
+        print(self.param_df_fitted)
 
     def fit_params(self):
 
@@ -222,9 +223,20 @@ class NeutronPulse(object):
 
 
 class ProtonPulse(object):
-    pass
+
+    def __init__(self, path):
+        """"""
+        self.shape_df = load_proton_pulse(path)
+
+    def fit_shape(self):
+        t_ns = self.shape_df['t_ns']
+        intensity = self.shape_df['intensity']
+        # my_model = Model(guass)
+        # result = my_model.fit((intensity, params, t=t_ns))
+        pass
 
 
+# Functions to load files #
 def load_neutron_total_shape(path):
     p = np.genfromtxt(path)
     pp = p.T
@@ -279,3 +291,9 @@ def load_neutron_each_shape(path):
         # file_name = 'energy_' + str(index + 1) + '.csv'
         # df.to_csv(file_name, index=False)
     return shape_dict
+
+
+def load_proton_pulse(path):
+    df = pd.read_csv(path, sep=' ', skiprows=1, header=None)
+    df.columns = ['t_ns', 'intensity']
+    return df
