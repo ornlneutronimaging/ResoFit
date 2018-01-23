@@ -103,7 +103,7 @@ class NeutronPulse(object):
         # Fit the model
         # out = my_model.fit(f, params, t=t)
 
-        return out
+        # return out
 
     def _fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
         _model_map = {1: 'ikeda_carpenter',
