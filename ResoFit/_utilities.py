@@ -14,6 +14,17 @@ from cerberus import Validator
 import matplotlib.pyplot as plt
 
 
+def check_and_make_dir(current_path, name):
+    _dir_path = os.path.join(current_path, name)
+
+    if not os.path.exists(_dir_path):
+        os.makedirs(_dir_path)
+        print("Folder: '{}' has been created ".format(_dir_path))
+    else:
+        print("Folder: '{}' already exists ".format(_dir_path))
+    return _dir_path
+
+
 def load_txt_csv(path_to_file):
     """
     Load and format data from .txt or .csv files

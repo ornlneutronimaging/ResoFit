@@ -23,6 +23,20 @@ def ikeda_carpenter(t, alpha, beta, fraction, t0, norm_factor=1):
     return f
 
 
+def ikeda_carpenter_jparc(t, alpha, beta, fraction, t0, norm_factor=1):
+    _t = t - t0
+    # _t = t1[np.logical_not(t1 < 0)]
+    _t[_t < 0] = 0  # t>=0 required
+
+    part1 = 0.5 * alpha * (alpha*_t)**2 * np.exp(-alpha*_t)
+    part2_1 = alpha**2 * beta / (alpha - beta)**3  # jparc uses alpha**2 instead of alpha**3 in the original function
+    part2_2 = np.exp(-beta*_t) - np.exp(-alpha*_t) * (1 + (alpha - beta) * _t + 0.5 * (alpha - beta)**2 * _t**2)
+    part2 = part2_1 * part2_2
+
+    f = ((1 - fraction) * part1 + fraction * part2) * norm_factor
+    return f
+
+
 def cole_windsor(t, sig1, sig2, gamma, fraction, t0, norm_factor=1):
     _t = t - t0
     f = []
@@ -53,20 +67,6 @@ def pseudo_voigt(t, beta, sigma, fraction):
     gauss = 1 / (1 + (t / beta)**2)
     lorentz = np.exp(-(t / sigma)**2)
     f = (1 - fraction) * gauss + fraction * lorentz
-    return f
-
-
-def ikeda_carpenter_jparc(t, alpha, beta, fraction, t0, norm_factor=1):
-    _t = t - t0
-    # _t = t1[np.logical_not(t1 < 0)]
-    _t[_t < 0] = 0  # t>=0 required
-
-    part1 = 0.5 * alpha * (alpha*_t)**2 * np.exp(-alpha*_t)
-    part2_1 = alpha**2 * beta / (alpha - beta)**3  # jparc uses alpha**2 instead of alpha**3 in the original function
-    part2_2 = np.exp(-beta*_t) - np.exp(-alpha*_t) * (1 + (alpha - beta) * _t + 0.5 * (alpha - beta)**2 * _t**2)
-    part2 = part2_1 * part2_2
-
-    f = ((1 - fraction) * part1 + fraction * part2) * norm_factor
     return f
 
 

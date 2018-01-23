@@ -7,8 +7,10 @@ from lmfit import Model
 from ResoFit.model import cole_windsor
 from ResoFit.model import cole_windsor_jparc
 from ResoFit.model import ikeda_carpenter
+from ResoFit.model import ikeda_carpenter_jparc
 import ImagingReso._utilities as reso_util
 import ResoFit._utilities as fit_util
+import os
 
 
 class NeutronPulse(object):
@@ -19,6 +21,11 @@ class NeutronPulse(object):
         self.shape_dict = None
         self.result = None
         self.param_df_fitted = None
+        self.model_used = None
+        self.model_param_names = None
+        self.e_min = None
+        self.e_max = None
+        self.result_neutron_folder = None
         # self.model_params = None
         # self.params_to_fitshape = None
         # self.shape_result = None
@@ -42,16 +49,22 @@ class NeutronPulse(object):
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))
 
-    def fit_shape(self, e_min, e_max, model_index=1, show_init=True, check_each=False, save_fig=False):
+    def fit_shape(self, e_min, e_max, model_index=1, drop=False, show_init=True, check_each=False, save_fig=False, save_df=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
-
+        self.e_min = e_min
+        self.e_max = e_max
         param_dict_fitted = {}
         for each_e in self.shape_dict.keys():
             if e_min <= each_e <= e_max:
                 print("Fitting [{} eV] ...".format(each_e))
                 param_dict_fitted[each_e] = {}
-                f = self.shape_dict[each_e]['data']['f_norm']
-                t = self.shape_dict[each_e]['data']['t_us']
+                # If drop is True, only flux value above 0 will be used
+                if drop:
+                    _data_used = 'data'
+                else:
+                    _data_used = 'data_raw'
+                f = self.shape_dict[each_e][_data_used]['f_norm']
+                t = self.shape_dict[each_e][_data_used]['t_us']
                 param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
                                                                              t=t,
                                                                              e=each_e,
@@ -60,19 +73,23 @@ class NeutronPulse(object):
                                                                              show_init=show_init,
                                                                              save_fig=save_fig
                                                                              )
-                # print(' done')
-
-        self.param_df_fitted = self._form_fitted_df(param_dict=param_dict_fitted)
+        # Organize fitted parameters into pd.DataFrame
+        self.param_df_fitted = self._form_fitted_df(param_dict=param_dict_fitted, save=save_df)
         print(self.param_df_fitted)
 
     def fit_params(self):
+        if self.param_df_fitted is None:
+            raise ValueError("'.fit_shape' must be applied before '.fit_params'")
 
         pass
 
-    @staticmethod
-    def _form_fitted_df(param_dict):
+    def _form_fitted_df(self, param_dict, save=False):
         e_list_fitted = list(param_dict.keys())
-        param_list_fitted = list(param_dict[e_list_fitted[0]]['fitted_params'].keys())
+        if self.model_param_names is None:
+            param_list_fitted = list(param_dict[e_list_fitted[0]]['fitted_params'].keys())
+        else:
+            param_list_fitted = self.model_param_names
+
         _dict = {}
         for each_param in param_list_fitted:
             _dict[each_param] = []
@@ -83,19 +100,84 @@ class NeutronPulse(object):
         _df['E_eV'] = e_list_fitted
         for each_param in param_list_fitted:
             _df[each_param] = _dict[each_param]
+
+        if save is True:
+            # Check and make dir to save
+            if self.result_neutron_folder is None:
+                self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+
+            # Form file name
+            _e_min = str(self.e_min) + 'eV_'
+            _e_max = str(self.e_max) + 'eV_'
+            _model_s = self.model_used + '.csv'
+            _file_name = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
+
+            # Save
+            _dir_to_save = os.path.join(self.result_neutron_folder, _file_name)
+            _df.to_csv(path_or_buf=_dir_to_save, index=False)
+
         return _df
 
+    @staticmethod
+    def _check_and_make_subdir(*args):
+        # Check and make dir to save
+        _file_path = os.path.abspath(os.path.dirname(__file__))
+        for arg in args:
+            _created_path = fit_util.check_and_make_dir(_file_path, arg)
+            _file_path = _created_path
+        return _file_path
+
     def _fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
+        _model_map = {1: 'ikeda_carpenter',
+                      2: 'cole_windsor',
+                      3: 'pseudo_voigt',
+                      4: 'ikeda_carpenter_jparc',
+                      5: 'cole_windsor_jparc',
+                      }
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
-        self.model_index = model_index
-        # self.params_to_fitshape = Parameters()
         verbose = False
+
         # ikeda_carpenter
-        if self.model_index == 1:
+        if model_index == 1:
+            self.model_used = _model_map[model_index]
             my_model = Model(ikeda_carpenter)
-            # model_params = ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
+
             assert my_model.param_names == ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
             assert my_model.independent_vars == ['t']
+            self.model_param_names = my_model.param_names
+
+            # Set params hints
+            if self.result is None:
+                my_model.set_param_hint('alpha', value=0.699, min=0, max=20)
+                my_model.set_param_hint('beta', value=0.0215, min=0, max=20)
+                my_model.set_param_hint('fraction', value=0.383, min=0, max=1)
+                my_model.set_param_hint('t0', value=0.0889, min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=1, min=0)
+
+                # Make params
+                params = my_model.make_params(verbose=verbose)
+            else:
+                _best_pre_values = self.result.best_values
+                my_model.set_param_hint('alpha', value=_best_pre_values['alpha'], min=0, max=20)
+                my_model.set_param_hint('beta', value=_best_pre_values['beta'], min=0, max=20)
+                my_model.set_param_hint('fraction', value=_best_pre_values['fraction'], min=0, max=1)
+                my_model.set_param_hint('t0', value=_best_pre_values['t0'], min=0, max=20)
+                my_model.set_param_hint('norm_factor', value=_best_pre_values['norm_factor'], min=0)
+
+                # Make params
+                params = my_model.make_params(verbose=verbose)
+
+            # Fit the model
+            self.result = my_model.fit(f, params, t=t)
+
+        # ikeda_carpenter_jparc
+        elif model_index == 4:
+            self.model_used = _model_map[model_index]
+            my_model = Model(ikeda_carpenter_jparc)
+
+            assert my_model.param_names == ['alpha', 'beta', 'fraction', 't0', 'norm_factor']
+            assert my_model.independent_vars == ['t']
+            self.model_param_names = my_model.param_names
 
             # Set params hints
             if self.result is None:
@@ -122,11 +204,13 @@ class NeutronPulse(object):
             self.result = my_model.fit(f, params, t=t)
 
         # cole_windsor
-        elif self.model_index == 2:
+        elif model_index == 2:
+            self.model_used = _model_map[model_index]
             my_model = Model(cole_windsor)
 
             assert my_model.param_names == ['sig1', 'sig2', 'gamma', 'fraction', 't0', 'norm_factor']
             assert my_model.independent_vars == ['t']
+            self.model_param_names = my_model.param_names
 
             # Set params hints
             if self.result is None:
@@ -155,11 +239,13 @@ class NeutronPulse(object):
             self.result = my_model.fit(f, params, t=t)
 
         # cole_windsor_jparc
-        elif self.model_index == 3:
+        elif model_index == 5:
+            self.model_used = _model_map[model_index]
             my_model = Model(cole_windsor_jparc)
 
             assert my_model.param_names == ['sig1', 'sig2', 'gam1', 'gam2', 'fraction', 't0', 'norm_factor']
             assert my_model.independent_vars == ['t']
+            self.model_param_names = my_model.param_names
 
             # Set params hints
             if self.result is None:
@@ -189,6 +275,9 @@ class NeutronPulse(object):
             # Fit the model
             self.result = my_model.fit(f, params, t=t)
 
+        else:
+            raise ValueError("Model index not exists, please refer to: '{}' ".format(_model_map))
+
         if check_each:
             assert self.result is not None
             _y_label = 'Normalized neutron flux (arb. unit)'
@@ -201,8 +290,15 @@ class NeutronPulse(object):
             plt.text(x=0, y=1.09, s=_e_text, fontsize=12)
 
             if save_fig:
-                _filename = 'Neutron_pulse_shape_' + str(e) + '_eV.png'
-                plt.savefig(_filename, dpi=300, transparent=False)
+                # Check and make dir to save
+                if self.result_neutron_folder is None:
+                    self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+
+                _model_s = _model_map[model_index] + '.png'
+                _filename = 'Neutron_pulse_fit_' + str(e) + '_eV_' + _model_s
+                _dir_to_save = os.path.join(self.result_neutron_folder, _filename)
+                plt.savefig(_dir_to_save, dpi=300, transparent=False)
+                plt.close()
             else:
                 plt.show()
         elif save_fig:
