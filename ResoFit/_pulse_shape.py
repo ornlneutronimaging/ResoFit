@@ -267,20 +267,33 @@ class NeutronPulse(object):
                 self.result.plot(xlabel=_x_label, ylabel=_y_label, initfmt='None')
             plt.text(x=0, y=1.09, s=_e_text, fontsize=12)
 
+            # set x_max for plot
             if e < 1:
-                plt.xlim(xmin=0, xmax=40)
+                _plt_xmax = 40
             elif 1 <= e < 5:
-                plt.xlim(xmin=0, xmax=20)
+                _plt_xmax = 20
             elif 5 <= e < 15:
-                plt.xlim(xmin=0, xmax=10)
+                _plt_xmax = 10
             elif 15 <= e < 30:
-                plt.xlim(xmin=0, xmax=6)
+                _plt_xmax = 6
             elif 30 <= e < 50:
-                plt.xlim(xmin=0, xmax=4)
+                _plt_xmax = 4
             elif 50 <= e < 500:
-                plt.xlim(xmin=0, xmax=2.5)
+                _plt_xmax = 2.5
             else:
-                plt.xlim(xmin=0, xmax=1.5)
+                _plt_xmax = 1.5
+
+            # Show fitted params in figure
+            _param_text = ''
+            for _each in self.model_param_names:
+                _param_text = _param_text + _each + ': ' + str(self.result.best_values[_each]) + '\n'
+            param_text = _param_text[:-2]
+            plt.text(x=0.5*_plt_xmax, y=0.4, s=param_text, fontsize=10,
+                     bbox={'facecolor': 'None', 'alpha': 0.5, 'pad': 2}
+                     )
+
+            # Apply plot limit
+            plt.xlim(xmin=0, xmax=_plt_xmax)
 
             if save_fig:
                 # Check and make dir to save
