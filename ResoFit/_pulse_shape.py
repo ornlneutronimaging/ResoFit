@@ -63,6 +63,7 @@ class NeutronPulse(object):
                 else:
                     _data_used = 'data_raw'
                 f = self.shape_dict[each_e][_data_used]['f_norm']
+                # f = self.shape_dict[each_e][_data_used]['f']
                 t = self.shape_dict[each_e][_data_used]['t_us']
                 param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
                                                                              t=t,

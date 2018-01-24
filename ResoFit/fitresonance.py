@@ -512,8 +512,9 @@ class FitResonance(Experiment):
 
         if save_fig:
             _sample_name = '_'.join(self.layer_list)
-            _filename = 'fitting_' + _sample_name + '.tiff'
+            _filename = 'fitting_' + _sample_name + '.png'
             plt.savefig(_filename, dpi=600, transparent=True)
+            plt.close()
         else:
             plt.show()
 
