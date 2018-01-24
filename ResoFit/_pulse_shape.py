@@ -78,6 +78,8 @@ class NeutronPulse(object):
     def plot_fitted_params(self):
         assert self.param_df_fitted is not None
         self.param_df_fitted.set_index('E_eV').plot(loglog=True, style='.')
+        plt.xlabel('Energy (eV)')
+        plt.ylabel('Fitted parameter value')
 
     def fit_params(self):
         if self.param_df_fitted is None:
