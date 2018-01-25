@@ -37,6 +37,19 @@ class NeutronPulse(object):
         # self.shape_result = None
         # self.model_index = None
 
+    def plot_total(self, x_type='energy'):
+        x_type_list = ['energy', 'lambda']
+        if x_type not in x_type_list:
+            raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
+        if x_type == 'energy':
+            plt.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], '.')
+            plt.xlabel('Energy (eV)')
+            plt.ylabel('Flux (n/sterad/pulse/eV)')
+        elif x_type == 'lambda':
+            plt.loglog(self.shape_total_df['I_angstrom'], self.shape_total_df['f(I)'], '.')
+            plt.xlabel(u"Wavelength (\u212B)")
+            plt.ylabel('Flux (n/sterad/pulse/Angstrom)')
+
     def load_shape_each(self, path):
         """
         Load each eV neutron pulse shape from .dat file
@@ -93,12 +106,9 @@ class NeutronPulse(object):
 
         # Set params hints
 
-        my_model.set_param_hint('sig1', value=0.06917, min=0, max=20)
-        my_model.set_param_hint('sig2', value=0.2041, min=0, max=20)
-        my_model.set_param_hint('gamma', value=6.291, min=0, max=20)
-        my_model.set_param_hint('fraction', value=0.1308, min=0, max=1)
-        my_model.set_param_hint('t0', value=0.3176, min=0, max=20)
-        my_model.set_param_hint('norm_factor', value=0.9951, min=0)
+        my_model.set_param_hint('slope', value=0.06917, min=0, max=20)
+        my_model.set_param_hint('intercept', value=0.2041, min=0, max=20)
+
 
         # Make params
         params = my_model.make_params()
