@@ -313,15 +313,18 @@ class Experiment(object):
         :param time_unit: string. Must be either 's' or 'us' or 'ns'
         :return: display raw data signals
         """
-        if x_type not in ['energy', 'lambda', 'time', 'number']:
-            raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
-        if time_unit not in ['s', 'us', 'ns']:
-            raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
-        if y_type not in ['attenuation', 'transmission']:
-            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
+        _x_type_list = ['energy', 'lambda', 'time', 'number']
+        _y_type_list = ['attenuation', 'transmission']
+        _time_unit_list = ['s', 'us', 'ns']
+        if x_type not in _x_type_list:
+            raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))
+        if y_type not in _y_type_list:
+            raise ValueError("Please specify the y-axis type using one from '{}'.".format(_y_type_list))
+        if time_unit not in _time_unit_list:
+            raise ValueError("Please specify the time unit using one from '{}'.".format(_time_unit_list))
         x_axis_label = None
         x_exp_raw = None
-        if len(kwargs.keys())>1:
+        if len(kwargs.keys()) > 1:
             if 'offset_us' in kwargs.keys():
                 self.offset_us = kwargs['offset_us']
 
@@ -329,11 +332,16 @@ class Experiment(object):
                 self.source_to_detector_m = kwargs['source_to_detector_m']
 
             else:
-                raise ValueError("'{}' is a invalid kwargs.")
+                raise ValueError("'{}' is not a valid kwargs.")
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
+
+        # if baseline is True:
+        #     legend_label = 'Exp_raw'
+        # else:
+        #     legend_label = 'Exp_raw_detrended'
 
         """X-axis"""
         # determine values and labels for x-axis with options from
@@ -404,10 +412,16 @@ class Experiment(object):
         :param time_unit: string. Must be either 's' or 'us' or 'ns'
         :return: display raw data signals
         """
-        if x_type not in ['energy', 'lambda', 'time', 'number']:
-            raise ValueError("Please specify the x-axis type using one from '['energy', 'lambda', 'time', 'number']'.")
-        if time_unit not in ['s', 'us', 'ns']:
-            raise ValueError("Please specify the time unit using one from '['s', 'us', 'ns']'.")
+        _x_type_list = ['energy', 'lambda', 'time', 'number']
+        _y_type_list = ['attenuation', 'transmission']
+        _time_unit_list = ['s', 'us', 'ns']
+        if x_type not in _x_type_list:
+            raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))
+        if y_type not in _y_type_list:
+            raise ValueError("Please specify the y-axis type using one from '{}'.".format(_y_type_list))
+        if time_unit not in _time_unit_list:
+            raise ValueError("Please specify the time unit using one from '{}'.".format(_time_unit_list))
+
         x_axis_label = None
         x_exp_raw = None
         df = pd.DataFrame()
