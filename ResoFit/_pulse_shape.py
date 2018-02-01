@@ -27,8 +27,10 @@ class NeutronPulse(object):
         self.shape_dict = None
         self.result_shape_fit = None
         # self.result_param_fit = None
-        self.fitted_param_df_dir = None
+        self.param_df_dir = None
         self.param_df = None
+        self.linear_df = None
+        self.linear_df_dir = None
         self.model_param_names = None
         self.e_min = None
         self.e_max = None
@@ -43,6 +45,7 @@ class NeutronPulse(object):
         self.model_used = self.model_map[model_index]
         if self.result_neutron_folder is None:
             self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+
         # self.model_params = None
         # self.params_to_fitshape = None
         # self.shape_result = None
@@ -73,8 +76,8 @@ class NeutronPulse(object):
         self.shape_dict = load_neutron_each_shape(path, export=save_each)
 
     def fit_shape(self, e_min, e_max,
-                  drop=False, norm=True, show_init=True,
-                  check_each=False, save_fig=False, overwrite_csv=False):
+                  drop=False, norm=True,
+                  show_init=True, check_each=False, save_fig=False, overwrite_csv=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.e_min = e_min
         self.e_max = e_max
@@ -85,11 +88,11 @@ class NeutronPulse(object):
         _e_max = str(self.e_max) + 'eV_'
         _model_s = self.model_used + '.csv'
         _filename = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
-        self.fitted_param_df_dir = os.path.join(self.result_neutron_folder, _filename)
+        self.param_df_dir = os.path.join(self.result_neutron_folder, _filename)
 
         # File exists
-        if os.path.isfile(self.fitted_param_df_dir):
-            print("'{}' exists...".format(self.fitted_param_df_dir))
+        if os.path.isfile(self.param_df_dir):
+            print("'{}' exists...".format(self.param_df_dir))
             if overwrite_csv:
                 # Override==True, perform fitting and overwrite the .csv file
                 print("File overwriting...")
@@ -120,7 +123,7 @@ class NeutronPulse(object):
                 self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
             else:
                 # Override==False, read the .csv file
-                self.param_df = pd.read_csv(self.fitted_param_df_dir)
+                self.param_df = pd.read_csv(self.param_df_dir)
                 print("File loaded.")
 
         # File not exists, perform fitting
@@ -159,44 +162,34 @@ class NeutronPulse(object):
         plt.xlabel('Energy (eV)')
         plt.ylabel('Fitted parameter value')
 
-    def fit_params(self, show_init=True, check_each=False, save_fig=False):
+    def fit_params(self, show_init=True, check_each=False, save_fig=False, overwrite_csv=False):
         if self.param_df is None:
             raise ValueError("'NeutronPulse.fit_shape' must be applied before 'NeutronPulse.fit_params'")
+
+        _e_min = str(self.e_min) + 'eV_'
+        _e_max = str(self.e_max) + 'eV_'
+        _model_s = self.model_used + '.csv'
+        _filename = 'Loglog_linear_within_' + _e_min + _e_max + _model_s
+        self.linear_df_dir = os.path.join(self.result_neutron_folder, _filename)
+
         _param_df = self.param_df
-        # param_df_log10 = np.log10(_param_df)
         e_log = np.log10(_param_df['E_eV'])
         param_name_list = list(_param_df.columns.drop('E_eV'))
-        param_dict_linear = {}
+        linear_dict = {}
         for each_param in param_name_list:
-            # param_dict_linear[each_param] = self._fit_params(y=param_df_log10[each_param],
-            #                                                  x=e_log,
-            #                                                  name=each_param,
-            #                                                  check_each=check_each,
-            #                                                  show_init=show_init,
-            #                                                  save_fig=save_fig
-            #                                                  )
-            param_dict_linear[each_param] = self._fit_params(y=_param_df[each_param],
-                                                             x=_param_df['E_eV'],
-                                                             x_log=e_log,
-                                                             name=each_param,
-                                                             check_each=check_each,
-                                                             show_init=show_init,
-                                                             save_fig=save_fig
-                                                             )
+            linear_dict[each_param] = self._fit_params(y=_param_df[each_param],
+                                                       x=_param_df['E_eV'],
+                                                       x_log=e_log,
+                                                       name=each_param,
+                                                       check_each=check_each,
+                                                       show_init=show_init,
+                                                       save_fig=save_fig
+                                                       )
 
-        return param_dict_linear
+        self.linear_df = self._form_linear_df(linear_dict=linear_dict, save=True)
+        # return linear_dict
 
     def _fit_params(self, y, x, x_log, name, show_init, check_each, save_fig):
-
-        # my_param_model = LinearModel()
-        # assert my_param_model.independent_vars == ['x']
-        #
-        # # Guess params
-        # params = my_param_model.guess(y, x)
-        # # Make params
-        #
-        # # Fit the model
-        # out = my_param_model.fit(y, params, x=x)
 
         # Guess  to make param
         y_log = np.log10(y)
@@ -234,7 +227,7 @@ class NeutronPulse(object):
                 assert self.result_neutron_folder is not None
                 assert self.model_used is not None
                 _model_s = self.model_used + '_' + name + '.png'
-                _filename = 'Neutron_pulse_fit_' + _model_s
+                _filename = 'Neutron_pulse_param_fit_' + _model_s
                 _dir_to_save = os.path.join(self.result_neutron_folder, _filename)
                 plt.savefig(_dir_to_save, dpi=300, transparent=False)
                 plt.close()
@@ -465,13 +458,40 @@ class NeutronPulse(object):
         for each_param in param_list_fitted:
             _df[each_param] = _dict[each_param]
         _df['f_max'] = f_max_list
-        print(_df)
-        print("NOTE: 'f_max' in the params_df is NOT a fitted parameter, it is the maximum in each shape.")
+
+        # print("------------------------------------------------------------------------------------------")
+        # print("NOTE: 'f_max' in the params_df is NOT a fitted parameter, it is the maximum in each shape.")
+        # print("------------------------------------------------------------------------------------------")
+        # print("                                    Fitted Parameter                                      ")
+        # print("------------------------------------------------------------------------------------------")
+        # print(_df)
 
         if save is True:
             assert self.result_neutron_folder is not None
-            assert self.fitted_param_df_dir is not None
-            _df.to_csv(path_or_buf=self.fitted_param_df_dir, index=False)
+            assert self.param_df_dir is not None
+            _df.to_csv(path_or_buf=self.param_df_dir, index=False)
+
+        return _df
+
+    def _form_linear_df(self, linear_dict, save=False):
+        _key_list = list(linear_dict.keys())
+        linear_param_list = list(linear_dict[_key_list[0]].keys())
+
+        _dict = {}
+        for each_param in linear_param_list:
+            _dict[each_param] = []
+        for _key in _key_list:
+            for each_param in linear_param_list:
+                _dict[each_param].append(linear_dict[_key][each_param])
+        _df = pd.DataFrame()
+        for each_param in linear_param_list:
+            _df[each_param] = _dict[each_param]
+        _df.insert(0, 'param_name', _key_list)
+
+        if save is True:
+            assert self.result_neutron_folder is not None
+            assert self.linear_df_dir is not None
+            _df.to_csv(path_or_buf=self.linear_df_dir, index=False)
 
         return _df
 

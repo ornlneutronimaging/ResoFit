@@ -1,13 +1,5 @@
 from ResoFit._pulse_shape import NeutronPulse
-from lmfit import Parameters
-from lmfit import minimize
-import numpy as np
-import matplotlib.pyplot as plt
-from lmfit import Model
-from ResoFit.model import ikeda_carpenter
-from ResoFit.model import cole_windsor
-from ResoFit.model import cole_windsor_jparc
-import pprint
+
 
 # path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_research/pulse_shape/source_section_1.dat'
 # path2 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_research/pulse_shape/source_section_2.dat'
@@ -25,6 +17,6 @@ neutron_pulse.fit_shape(e_min=1, e_max=500,
                         save_fig=False,
                         overwrite_csv=False)
 
-neutron_pulse.fit_params(check_each=True)
+neutron_pulse.fit_params(check_each=False)
 # pprint.pprint(neutron_pulse.shape_dict)
 
