@@ -1,25 +1,22 @@
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from lmfit import Parameters
-from lmfit import minimize
 from lmfit import Model
+from lmfit.models import LinearModel
+
+import ResoFit._utilities as fit_util
 from ResoFit.model import cole_windsor
 from ResoFit.model import cole_windsor_jparc
 from ResoFit.model import ikeda_carpenter
 from ResoFit.model import ikeda_carpenter_jparc
 from ResoFit.model import loglog_linear
-from lmfit.models import LinearModel
-import ImagingReso._utilities as reso_util
-import ResoFit._utilities as fit_util
-import os
-from matplotlib.offsetbox import AnchoredText
-
 
 
 class NeutronPulse(object):
 
-    def __init__(self, path):
+    def __init__(self, path, model_index=1):
         """
         Load total neutron pulse shape from .dat file
 
@@ -30,8 +27,8 @@ class NeutronPulse(object):
         self.shape_dict = None
         self.result_shape_fit = None
         # self.result_param_fit = None
+        self.fitted_param_df_dir = None
         self.param_df = None
-        self.model_used = None
         self.model_param_names = None
         self.e_min = None
         self.e_max = None
@@ -42,6 +39,10 @@ class NeutronPulse(object):
                           4: 'ikeda_carpenter_jparc',
                           5: 'cole_windsor_jparc'
                           }
+        self.model_index = model_index
+        self.model_used = self.model_map[model_index]
+        if self.result_neutron_folder is None:
+            self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
         # self.model_params = None
         # self.params_to_fitshape = None
         # self.shape_result = None
@@ -71,35 +72,86 @@ class NeutronPulse(object):
         """
         self.shape_dict = load_neutron_each_shape(path, export=save_each)
 
-    def fit_shape(self, e_min, e_max, model_index=1,
-                  drop=False, show_init=True,
-                  check_each=False, save_fig=False, save_df=False):
+    def fit_shape(self, e_min, e_max,
+                  drop=False, norm=True, show_init=True,
+                  check_each=False, save_fig=False, overwrite_csv=False):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.e_min = e_min
         self.e_max = e_max
-        param_dict_fitted = {}
-        for each_e in self.shape_dict.keys():
-            if e_min <= each_e <= e_max:
-                print("Fitting [{} eV] ...".format(each_e))
-                param_dict_fitted[each_e] = {}
-                # If drop is True, only flux value above 0 will be used
-                if drop:
-                    _data_used = 'data'
-                else:
-                    _data_used = 'data_raw'
-                f = self.shape_dict[each_e][_data_used]['f_norm']
-                # f = self.shape_dict[each_e][_data_used]['f']
-                t = self.shape_dict[each_e][_data_used]['t_us']
-                param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
-                                                                             t=t,
-                                                                             e=each_e,
-                                                                             model_index=model_index,
-                                                                             check_each=check_each,
-                                                                             show_init=show_init,
-                                                                             save_fig=save_fig
-                                                                             )
-        # Organize fitted parameters into pd.DataFrame
-        self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=save_df)
+
+        # File name of fitted_param_df.csv
+        assert self.model_used is not None
+        _e_min = str(self.e_min) + 'eV_'
+        _e_max = str(self.e_max) + 'eV_'
+        _model_s = self.model_used + '.csv'
+        _filename = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
+        self.fitted_param_df_dir = os.path.join(self.result_neutron_folder, _filename)
+
+        # File exists
+        if os.path.isfile(self.fitted_param_df_dir):
+            print("'{}' exists...".format(self.fitted_param_df_dir))
+            if overwrite_csv:
+                # Override==True, perform fitting and overwrite the .csv file
+                print("File overwriting...")
+                print("New fitting starts...")
+                # Fitting starts
+                param_dict_fitted = {}
+                for each_e in self.shape_dict.keys():
+                    if e_min <= each_e <= e_max:
+                        print("Fitting [{} eV] ...".format(each_e))
+                        param_dict_fitted[each_e] = {}
+                        # If drop is True, only flux value above 0 will be used
+                        if drop:
+                            _data_used = 'data'
+                        else:
+                            _data_used = 'data_raw'
+                        f = self.shape_dict[each_e][_data_used]['f_norm']
+                        # f = self.shape_dict[each_e][_data_used]['f']
+                        t = self.shape_dict[each_e][_data_used]['t_us']
+                        param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
+                                                                                     t=t,
+                                                                                     e=each_e,
+                                                                                     model_index=self.model_index,
+                                                                                     check_each=check_each,
+                                                                                     show_init=show_init,
+                                                                                     save_fig=save_fig)
+                print("File overwritten.")
+                # Organize fitted parameters into pd.DataFrame
+                self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
+            else:
+                # Override==False, read the .csv file
+                self.param_df = pd.read_csv(self.fitted_param_df_dir)
+                print("File loaded.")
+
+        # File not exists, perform fitting
+        else:
+            print("No previous fitting file detected.\nNew fitting starts...")
+            # Fitting starts
+            param_dict_fitted = {}
+            for each_e in self.shape_dict.keys():
+                if e_min <= each_e <= e_max:
+                    print("Fitting [{} eV] ...".format(each_e))
+                    param_dict_fitted[each_e] = {}
+                    # If drop is True, only flux value above 0 will be used
+                    if drop:
+                        _data_used = 'data'
+                    else:
+                        _data_used = 'data_raw'
+                    if norm:
+                        _flux_used = 'f_norm'
+                    else:
+                        _flux_used = 'f'
+                    f = self.shape_dict[each_e][_data_used][_flux_used]
+                    t = self.shape_dict[each_e][_data_used]['t_us']
+                    param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
+                                                                                 t=t,
+                                                                                 e=each_e,
+                                                                                 model_index=self.model_index,
+                                                                                 check_each=check_each,
+                                                                                 show_init=show_init,
+                                                                                 save_fig=save_fig)
+            # Organize fitted parameters into pd.DataFrame
+            self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
 
     def plot_params_vs_e(self, loglog=True):
         assert self.param_df is not None
@@ -172,18 +224,14 @@ class NeutronPulse(object):
                 out.plot(xlabel=_x_label, ylabel=_y_label, initfmt='None')
 
             plt.title(name, fontsize=12)
-            # anchored_text = AnchoredText(name, loc='lower right')
-            # plt.text(anchored_text)
             plt.yscale('log')
             plt.xscale('log')
-            plt.xlim(left=self.e_min*0.8, right=self.e_max*1.2)
-            plt.ylim(bottom=np.amin(y)*0.8, top=np.amax(y)*1.2)
+            plt.xlim(left=self.e_min * 0.8, right=self.e_max * 1.2)
+            plt.ylim(bottom=np.amin(y) * 0.8, top=np.amax(y) * 1.2)
 
             if save_fig:
                 # Check and make dir to save
-                if self.result_neutron_folder is None:
-                    self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
-
+                assert self.result_neutron_folder is not None
                 assert self.model_used is not None
                 _model_s = self.model_used + '_' + name + '.png'
                 _filename = 'Neutron_pulse_fit_' + _model_s
@@ -342,6 +390,7 @@ class NeutronPulse(object):
         else:
             raise ValueError("Model index not exists, please refer to: '{}' ".format(_model_map))
 
+        # Check or visually inspect the fitting result of each energy
         if check_each:
             assert self.result_shape_fit is not None
             _y_label = 'Normalized neutron flux (arb. unit)'
@@ -383,9 +432,7 @@ class NeutronPulse(object):
 
             if save_fig:
                 # Check and make dir to save
-                if self.result_neutron_folder is None:
-                    self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
-
+                assert self.result_neutron_folder is not None
                 _model_s = _model_map[model_index] + '.png'
                 _filename = 'Neutron_pulse_fit_' + str(e) + '_eV_' + _model_s
                 _dir_to_save = os.path.join(self.result_neutron_folder, _filename)
@@ -422,19 +469,9 @@ class NeutronPulse(object):
         print("NOTE: 'f_max' in the params_df is NOT a fitted parameter, it is the maximum in each shape.")
 
         if save is True:
-            # Check and make dir to save
-            if self.result_neutron_folder is None:
-                self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
-
-            # Form file name
-            _e_min = str(self.e_min) + 'eV_'
-            _e_max = str(self.e_max) + 'eV_'
-            _model_s = self.model_used + '.csv'
-            _file_name = 'Neutron_fitted_params_' + _e_min + _e_max + _model_s
-
-            # Save
-            _dir_to_save = os.path.join(self.result_neutron_folder, _file_name)
-            _df.to_csv(path_or_buf=_dir_to_save, index=False)
+            assert self.result_neutron_folder is not None
+            assert self.fitted_param_df_dir is not None
+            _df.to_csv(path_or_buf=self.fitted_param_df_dir, index=False)
 
         return _df
 
