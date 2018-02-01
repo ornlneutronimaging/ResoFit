@@ -212,8 +212,8 @@ class NeutronPulse(object):
         out = my_param_model.fit(y, params, x=x)
 
         if check_each:
-            assert self.result_shape_fit is not None
-            if name[:4] == 'f_max':
+            # assert self.result_shape_fit is not None
+            if name == 'f_max':
                 _y_label = 'Flux (neutrons/s/cm2)'
             else:
                 _y_label = 'Parameter value (arb. unit)'
