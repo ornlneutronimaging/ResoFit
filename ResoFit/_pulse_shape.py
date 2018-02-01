@@ -162,7 +162,7 @@ class NeutronPulse(object):
         plt.xlabel('Energy (eV)')
         plt.ylabel('Fitted parameter value')
 
-    def fit_params(self, show_init=True, check_each=False, save_fig=False, overwrite_csv=False):
+    def fit_params(self, show_init=True, check_each=False, save_fig=False, overwrite_csv=False, loglog_fit=True):
         if self.param_df is None:
             raise ValueError("'NeutronPulse.fit_shape' must be applied before 'NeutronPulse.fit_params'")
 
@@ -183,15 +183,16 @@ class NeutronPulse(object):
                                                        name=each_param,
                                                        check_each=check_each,
                                                        show_init=show_init,
-                                                       save_fig=save_fig
+                                                       save_fig=save_fig,
+                                                       loglog_fit=loglog_fit
                                                        )
 
         self.linear_df = self._form_linear_df(linear_dict=linear_dict, save=True)
         # return linear_dict
 
-    def _fit_params(self, y, x, x_log, name, show_init, check_each, save_fig):
+    def _fit_params(self, y, x, x_log, name, show_init, check_each, save_fig, loglog_fit):
 
-        # Guess  to make param
+        # Guess to make param
         y_log = np.log10(y)
         _temp_guess_model = LinearModel()
         params = _temp_guess_model.guess(y_log, x_log)
@@ -201,26 +202,37 @@ class NeutronPulse(object):
         assert my_param_model.independent_vars == ['x']
         assert my_param_model.param_names == ['slope', 'intercept']
 
-        # Fit the model
-        out = my_param_model.fit(y, params, x=x)
+        # Fit the model (NOTE: lmfit leastsq gives different results!!!???)
+        if loglog_fit:
+            # fit in loglog space
+            out = _temp_guess_model.fit(y_log, params, x=x_log)
+            _x_label = 'Log E (eV)'
+            _y_label = 'Log value (arb. unit)'
+        else:
+            # fit in real space
+            out = my_param_model.fit(y, params, x=x)
+            _y_label = 'Parameter value (arb. unit)'
+            _x_label = 'E (eV)'
 
         if check_each:
             # assert self.result_shape_fit is not None
             if name == 'f_max':
-                _y_label = 'Flux (neutrons/s/cm2)'
-            else:
-                _y_label = 'Parameter value (arb. unit)'
-            _x_label = 'E (eV)'
+                if loglog_fit:
+                    _y_label = 'Log flux (neutrons/s/cm2)'
+                else:
+                    _y_label = 'Flux (neutrons/s/cm2)'
+
             if show_init is True:
                 out.plot(xlabel=_x_label, ylabel=_y_label)
             else:
                 out.plot(xlabel=_x_label, ylabel=_y_label, initfmt='None')
 
             plt.title(name, fontsize=12)
-            plt.yscale('log')
-            plt.xscale('log')
-            plt.xlim(left=self.e_min * 0.8, right=self.e_max * 1.2)
-            plt.ylim(bottom=np.amin(y) * 0.8, top=np.amax(y) * 1.2)
+            if loglog_fit is False:
+                plt.yscale('log')
+                plt.xscale('log')
+                plt.xlim(left=self.e_min * 0.8, right=self.e_max * 1.2)
+                plt.ylim(bottom=np.amin(y) * 0.8, top=np.amax(y) * 1.2)
 
             if save_fig:
                 # Check and make dir to save

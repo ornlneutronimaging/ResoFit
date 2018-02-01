@@ -45,8 +45,6 @@ class Experiment(object):
         self.source_to_detector_m = 16.
         # offset in time (us) for the actual measurement
         self.offset_us = 0.
-        # self.calibrated_offset_us = None
-        # self.calibrated_source_to_detector_m = None
 
         self.baseline = baseline
         self.slice_start = None
