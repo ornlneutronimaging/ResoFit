@@ -51,18 +51,33 @@ class NeutronPulse(object):
         # self.shape_result = None
         # self.model_index = None
 
-    def plot_total(self, x_type='energy'):
-        x_type_list = ['energy', 'lambda']
+    def plot_total(self, x_type='both'):
+        x_type_list = ['energy', 'lambda', 'both']
         if x_type not in x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
-        if x_type == 'energy':
-            plt.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], '.')
-            plt.xlabel('Energy (eV)')
-            plt.ylabel('Flux (n/sterad/pulse/eV)')
-        elif x_type == 'lambda':
-            plt.loglog(self.shape_total_df['I_angstrom'], self.shape_total_df['f(I)'], '.')
-            plt.xlabel(u"Wavelength (\u212B)")
-            plt.ylabel('Flux (n/sterad/pulse/Angstrom)')
+        # if x_type == 'energy':
+        #     plt.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], '.')
+        #     plt.xlabel('Energy (eV)')
+        #     plt.ylabel('Flux (n/sterad/pulse/eV)')
+        # elif x_type == 'lambda':
+        #     plt.loglog(self.shape_total_df['I_angstrom'], self.shape_total_df['f(I)'], '.')
+        #     plt.xlabel(u"Wavelength (\u212B)")
+        #     plt.ylabel('Flux (n/sterad/pulse/Angstrom)')
+        fig, ax1 = plt.subplots()
+        ax1.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], 'b.')
+        ax1.set_ylabel('Flux (n/sterad/pulse)')
+        ax1.set_xlabel('Energy (eV)', color='b')
+        ax1.tick_params('x', colors='b', which='both')
+
+        ax2 = ax1.twiny()
+        ax2.loglog(self.shape_total_df['l_angstrom'], self.shape_total_df['f(l)'], 'rx')
+        ax2.set_xlabel(u"Wavelength (\u212B)", color='r')
+        ax2.invert_xaxis()
+        ax1.grid(axis='x', which='both', color='b', alpha=0.3)
+        ax1.grid(axis='y', which='major', alpha=0.3)
+        ax2.grid(axis='x', which='both', color='r', alpha=0.3)
+        ax2.tick_params('x', colors='r', which='both')
+        plt.show()
 
     def load_shape_each(self, path, save_each=False):
         """
@@ -553,8 +568,13 @@ def load_neutron_total_shape(path):
     df1 = pd.DataFrame()
     for i, col in enumerate(pp):
         df1[i] = col
-    col_name_1 = ['E_eV', 'I_angstrom', 'f(E)', 's(E)', 'f(I)', 's(I)']
+    col_name_1 = ['E_eV', 'l_angstrom', 'b(E)', 'bs(E)', 'b(l)', 'bs(l)']
     df1.columns = col_name_1
+    df1['f(E)'] = df1['b(E)'] * df1['E_eV']
+    df1['s(E)'] = df1['bs(E)'] * df1['E_eV']
+    df1['f(l)'] = df1['b(l)'] * df1['l_angstrom']
+    df1['s(l)'] = df1['bs(l)'] * df1['l_angstrom']
+
     return df1
 
 
@@ -573,6 +593,8 @@ def load_neutron_each_shape(path, export=False):
         data_dict = {}
         t_us = []
         e_ev = []
+        b = []
+        bs = []
         f = []
         s = []
         df = pd.DataFrame()
@@ -580,10 +602,14 @@ def load_neutron_each_shape(path, export=False):
             if each_energy == each_line[1]:
                 t_us.append(each_line[0])
                 e_ev.append(each_line[1])
-                f.append(each_line[2])
-                s.append(each_line[3])
+                b.append(each_line[2])
+                f.append(each_line[2] * each_line[1])  # brightness * E
+                bs.append(each_line[3])
+                s.append(each_line[3] * each_line[1])  # brightness s * E
         f_max = np.amax(f)
         df['t_us'] = t_us
+        df['b'] = b
+        df['bs'] = bs
         df['f'] = f
         df['s'] = s
         df['f_norm'] = f / f_max

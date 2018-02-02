@@ -8,15 +8,15 @@ path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutr
 
 neutron_pulse = NeutronPulse(path1, model_index=1)
 neutron_pulse.load_shape_each(path2)
-# neutron_pulse.export_total()
-# neutron_pulse.export_each()
-neutron_pulse.fit_shape(e_min=1, e_max=500,
-                        drop=False,
-                        norm=True,
-                        check_each=False,
-                        save_fig=False,
-                        overwrite_csv=False)
 
-neutron_pulse.fit_params(check_each=True,loglog_fit=True)
-# pprint.pprint(neutron_pulse.shape_dict)
+neutron_pulse.plot_total()
+
+# neutron_pulse.fit_shape(e_min=1, e_max=500,
+#                         drop=False,
+#                         norm=True,
+#                         check_each=False,
+#                         save_fig=False,
+#                         overwrite_csv=False)
+#
+# neutron_pulse.fit_params(check_each=True,loglog_fit=True)
 
