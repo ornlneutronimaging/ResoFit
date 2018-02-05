@@ -102,8 +102,8 @@ class TestExperiment(unittest.TestCase):
         x_interp, y_interp = experiment.xy_scaled(energy_min=self.energy_min,
                                                   energy_max=self.energy_max,
                                                   energy_step=self.energy_step,
-                                                  angstrom=False,
-                                                  transmission=False,
+                                                  x_type='energy',
+                                                  y_type='attenuation',
                                                   offset_us=0,
                                                   source_to_detector_m=15)
 

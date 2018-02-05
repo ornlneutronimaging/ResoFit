@@ -84,6 +84,8 @@ class Experiment(object):
         """
         if x_type not in ['energy', 'lambda']:
             raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
+        if list(kwargs.keys()) != ['offset_us', 'source_to_detector_m']:
+            raise ValueError("'{}' is not a valid **kwargs".format(kwargs))
         if 'offset_us' in kwargs.keys():
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
@@ -135,6 +137,8 @@ class Experiment(object):
         :param y_type:
         :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
         """
+        if list(kwargs.keys()) != ['offset_us', 'source_to_detector_m']:
+            raise ValueError("'{}' is not a valid **kwargs".format(kwargs))
         if 'offset_us' in kwargs.keys():
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
@@ -347,21 +351,19 @@ class Experiment(object):
         if x_type in ['energy', 'lambda']:
             if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
-                angstrom = False
+                # angstrom = False
                 plt.xlim(xmin=0, xmax=energy_xmax)
             else:
                 x_axis_label = u"Wavelength (\u212B)"
-                angstrom = True
+                # angstrom = True
                 if lambda_xmax is not None:
                     plt.xlim(xmin=0, xmax=lambda_xmax)
-            x_exp_raw = self.x_raw(angstrom=angstrom,
+            x_exp_raw = self.x_raw(x_type=x_type,
                                    offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
 
         if x_type in ['time', 'number']:
-            x_exp_raw = self.x_raw(angstrom=False,
-                                   offset_us=self.offset_us,
-                                   source_to_detector_m=self.source_to_detector_m)
+
             if x_type == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
@@ -438,16 +440,13 @@ class Experiment(object):
         if x_type in ['energy', 'lambda']:
             if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
-                angstrom = False
             else:
                 x_axis_label = u"Wavelength (\u212B)"
-                angstrom = True
-            x_exp_raw = self.x_raw(angstrom=angstrom, offset_us=self.offset_us,
+            x_exp_raw = self.x_raw(x_type=x_type, offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
 
         if x_type in ['time', 'number']:
-            x_exp_raw = self.x_raw(angstrom=False, offset_us=self.offset_us,
-                                   source_to_detector_m=self.source_to_detector_m)
+
             if x_type == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'

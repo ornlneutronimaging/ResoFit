@@ -26,7 +26,7 @@ experiment1 = Experiment(data_file=data_file1,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)
-experiment2 = Experiment(data_file=data_file3,
+experiment2 = Experiment(data_file=data_file2,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)

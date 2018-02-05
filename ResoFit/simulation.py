@@ -98,25 +98,23 @@ class Simulation(object):
         _y = self.o_reso.total_signal['transmission']
         return _y
 
-    def xy_simu(self, angstrom=False, transmission=False):
+    def xy_simu(self, x_type='energy', y_type='attenuation'):
         """
         Get x and y arrays
 
-        :param angstrom: bool to determine the output x
-        :type angstrom: bool
-        :param transmission: bool to determine the output y
-        :type transmission: bool
+        :param y_type:
+        :type y_type:
+        :param x_type:
+        :type x_type:
 
         :return: x and y arrays
         :rtype: array
         """
         _x = self.o_reso.total_signal['energy_eV']
-        if angstrom is True:
+        if x_type == 'lambda':
             _x = reso_util.ev_to_angstroms(_x)
-        if transmission is True:
-            _y = self.o_reso.total_signal['transmission']
-        else:
-            _y = self.o_reso.total_signal['attenuation']
+        _y = self.o_reso.total_signal[y_type]
+
         return _x, _y
 
     def peak_map(self, thres=0.15, min_dist=1, impr_reso=True, isotope=False):

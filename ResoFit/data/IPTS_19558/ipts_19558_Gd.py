@@ -28,7 +28,7 @@ layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
 folder = 'data/IPTS_19558/reso_data_19558'
-data_file = 'Gd_thick.csv'
+data_file = 'Gd_thin.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None

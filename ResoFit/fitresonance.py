@@ -37,7 +37,7 @@ class FitResonance(Experiment):
         self.exp_x_interp, self.exp_y_interp = self.xy_scaled(energy_min=self.energy_min,
                                                               energy_max=self.energy_max,
                                                               energy_step=self.energy_step,
-                                                              angstrom=False, transmission=False,
+                                                              x_type='energy', y_type='attenuation',
                                                               offset_us=self.calibrated_offset_us,
                                                               source_to_detector_m=self.calibrated_source_to_detector_m,
                                                               baseline=self.baseline)
@@ -287,7 +287,7 @@ class FitResonance(Experiment):
                                                      'value'])
         if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'full'].")
-        simu_x, simu_y = self.fitted_simulation.xy_simu(angstrom=False, transmission=False)
+        simu_x, simu_y = self.fitted_simulation.xy_simu(x_type='energy', y_type='attenuation')
 
         # Get plot labels
         simu_label = 'Fit'
@@ -347,7 +347,7 @@ class FitResonance(Experiment):
             # Plot exp. data (interpolated)
             x_interp, y_interp = self.xy_scaled(energy_max=self.energy_max, energy_min=self.energy_min,
                                                 energy_step=self.energy_step,
-                                                angstrom=False, transmission=False, baseline=self.baseline,
+                                                x_type='energy', y_type='attenuation', baseline=self.baseline,
                                                 offset_us=self.calibrated_offset_us,
                                                 source_to_detector_m=self.calibrated_source_to_detector_m)
             ax1.plot(x_interp, y_interp, 'r:', label=exp_interp_label, linewidth=1)
@@ -358,7 +358,7 @@ class FitResonance(Experiment):
             self.df[_live_df_y_label] = y_interp
         else:
             # Plot exp. data (raw)
-            exp_x = self.x_raw(angstrom=False, offset_us=self.calibrated_offset_us,
+            exp_x = self.x_raw(x_type='energy', offset_us=self.calibrated_offset_us,
                                source_to_detector_m=self.calibrated_source_to_detector_m)
             exp_y = self.y_raw(y_type='attenuation', baseline=self.baseline)
             ax1.plot(exp_x, exp_y,
