@@ -113,29 +113,8 @@ class NeutronPulse(object):
                 print("File overwriting...")
                 print("New fitting starts...")
                 # Fitting starts
-                param_dict_fitted = {}
-                for each_e in self.shape_dict.keys():
-                    if e_min <= each_e <= e_max:
-                        print("Fitting [{} eV] ...".format(each_e))
-                        param_dict_fitted[each_e] = {}
-                        # If drop is True, only flux value above 0 will be used
-                        if drop:
-                            _data_used = 'data'
-                        else:
-                            _data_used = 'data_raw'
-                        f = self.shape_dict[each_e][_data_used]['f_norm']
-                        # f = self.shape_dict[each_e][_data_used]['f']
-                        t = self.shape_dict[each_e][_data_used]['t_us']
-                        param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
-                                                                                     t=t,
-                                                                                     e=each_e,
-                                                                                     model_index=self.model_index,
-                                                                                     check_each=check_each,
-                                                                                     show_init=show_init,
-                                                                                     save_fig=save_fig)
+                self._fit_shape(drop=drop, norm=norm, show_init=show_init, check_each=check_each, save_fig=save_fig)
                 print("File overwritten.")
-                # Organize fitted parameters into pd.DataFrame
-                self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
             else:
                 # Override==False, read the .csv file
                 self.param_df = pd.read_csv(self.param_df_dir)
@@ -144,32 +123,34 @@ class NeutronPulse(object):
         # File not exists, perform fitting
         else:
             print("No previous fitting file detected.\nNew fitting starts...")
-            # Fitting starts
-            param_dict_fitted = {}
-            for each_e in self.shape_dict.keys():
-                if e_min <= each_e <= e_max:
-                    print("Fitting [{} eV] ...".format(each_e))
-                    param_dict_fitted[each_e] = {}
-                    # If drop is True, only flux value above 0 will be used
-                    if drop:
-                        _data_used = 'data'
-                    else:
-                        _data_used = 'data_raw'
-                    if norm:
-                        _flux_used = 'f_norm'
-                    else:
-                        _flux_used = 'f'
-                    f = self.shape_dict[each_e][_data_used][_flux_used]
-                    t = self.shape_dict[each_e][_data_used]['t_us']
-                    param_dict_fitted[each_e]['fitted_params'] = self._fit_shape(f=f,
-                                                                                 t=t,
-                                                                                 e=each_e,
-                                                                                 model_index=self.model_index,
-                                                                                 check_each=check_each,
-                                                                                 show_init=show_init,
-                                                                                 save_fig=save_fig)
-            # Organize fitted parameters into pd.DataFrame
-            self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
+
+    def _fit_shape(self, drop, norm, show_init, check_each, save_fig):
+        # Fitting starts
+        param_dict_fitted = {}
+        for each_e in self.shape_dict.keys():
+            if self.e_min <= each_e <= self.e_max:
+                print("Fitting [{} eV] ...".format(each_e))
+                param_dict_fitted[each_e] = {}
+                # If drop is True, only flux value above 0 will be used
+                if drop:
+                    _data_used = 'data'
+                else:
+                    _data_used = 'data_raw'
+                if norm:
+                    _flux_used = 'f_norm'
+                else:
+                    _flux_used = 'f'
+                f = self.shape_dict[each_e][_data_used][_flux_used]
+                t = self.shape_dict[each_e][_data_used]['t_us']
+                param_dict_fitted[each_e]['fitted_params'] = self.__fit_shape(f=f,
+                                                                              t=t,
+                                                                              e=each_e,
+                                                                              model_index=self.model_index,
+                                                                              check_each=check_each,
+                                                                              show_init=show_init,
+                                                                              save_fig=save_fig)
+        # Organize fitted parameters into pd.DataFrame
+        self.param_df = self._form_params_df(param_dict=param_dict_fitted, save=True)
 
     def plot_params_vs_e(self, loglog=True):
         assert self.param_df is not None
@@ -187,25 +168,53 @@ class NeutronPulse(object):
         _filename = 'Loglog_linear_within_' + _e_min + _e_max + _model_s
         self.linear_df_dir = os.path.join(self.result_neutron_folder, _filename)
 
+        # File exists
+        if os.path.isfile(self.linear_df_dir):
+            print("'{}' exists...".format(self.linear_df_dir))
+            if overwrite_csv:
+                # Override==True, perform fitting and overwrite the .csv file
+                print("File overwriting...")
+                print("New fitting starts...")
+                # Fitting starts
+                self._fit_params(show_init=show_init,
+                                 check_each=check_each,
+                                 save_fig=save_fig,
+                                 loglog_fit=loglog_fit)
+                print("File overwritten.")
+            else:
+                # Override==False, read the .csv file
+                self.linear_df = pd.read_csv(self.linear_df_dir)
+                print("File loaded.")
+
+        # File not exists, perform fitting
+        else:
+            print("No previous fitting file detected.\nNew fitting starts...")
+            # Fitting starts
+            self._fit_params(show_init=show_init,
+                             check_each=check_each,
+                             save_fig=save_fig,
+                             loglog_fit=loglog_fit)
+
+    def _fit_params(self, show_init, check_each, save_fig, loglog_fit):
+
         _param_df = self.param_df
         e_log = np.log10(_param_df['E_eV'])
         param_name_list = list(_param_df.columns.drop('E_eV'))
         linear_dict = {}
         for each_param in param_name_list:
-            linear_dict[each_param] = self._fit_params(y=_param_df[each_param],
-                                                       x=_param_df['E_eV'],
-                                                       x_log=e_log,
-                                                       name=each_param,
-                                                       check_each=check_each,
-                                                       show_init=show_init,
-                                                       save_fig=save_fig,
-                                                       loglog_fit=loglog_fit
-                                                       )
+            linear_dict[each_param] = self.__fit_params(y=_param_df[each_param],
+                                                        x=_param_df['E_eV'],
+                                                        x_log=e_log,
+                                                        name=each_param,
+                                                        check_each=check_each,
+                                                        show_init=show_init,
+                                                        save_fig=save_fig,
+                                                        loglog_fit=loglog_fit
+                                                        )
 
         self.linear_df = self._form_linear_df(linear_dict=linear_dict, save=True)
-        # return linear_dict
 
-    def _fit_params(self, y, x, x_log, name, show_init, check_each, save_fig, loglog_fit):
+    def __fit_params(self, y, x, x_log, name, show_init, check_each, save_fig, loglog_fit):
 
         # Guess to make param
         y_log = np.log10(y)
@@ -265,7 +274,7 @@ class NeutronPulse(object):
 
         return out.best_values
 
-    def _fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
+    def __fit_shape(self, f, t, e, model_index, show_init, check_each, save_fig):
         _model_map = self.model_map
         verbose = False
 
