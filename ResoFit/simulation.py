@@ -177,10 +177,10 @@ class Simulation(object):
                          time_unit=time_unit,
                          t_start_us=t_start_us)
 
-    def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
-                    all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                    offset_us=0., source_to_detector_m=16.,
-                    t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+    def _export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
+                     all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+                     offset_us=0., source_to_detector_m=16.,
+                     t_start_us=1, time_resolution_us=0.16, time_unit='us'):
         if items_to_export is not None:
             # Shape items
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)

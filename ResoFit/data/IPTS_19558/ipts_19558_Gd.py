@@ -10,14 +10,14 @@ import lmfit
 
 # Global parameters
 energy_min = 7
-energy_max = 150
+energy_max = 600
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 # layer_1 = 'U'
 # thickness_1 = 0.018
 # density_1 = None
 layer_2 = 'Gd'
-thickness_2 = 0.150
+thickness_2 = 0.075
 density_2 = None
 # layer_3 = 'Cd'
 # thickness_3 = 0.015
@@ -65,7 +65,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.13, min_dist=21)
 
-# calibration.plot(before=False, all_elements=False, peak_id='all')
+calibration.plot(before=True, all_elements=False, peak_id='all', save_fig=False, total=True)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,
@@ -85,5 +85,5 @@ fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
 fit.index_peak(thres=0.10, min_dist=25)
 # fit.fit_iso(layer=layer_2)
-fit.plot(peak_id='all', interp=False)
+# fit.plot(peak_id='all', interp=False)
 # fit.export('Exp_Gd_150_um.csv')

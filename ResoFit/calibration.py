@@ -431,3 +431,24 @@ class Calibration(Simulation):
             plt.close()
         else:
             plt.show()
+
+    def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
+                    all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+                    t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+        if items_to_export is not None:
+            # Shape items
+            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
+            items_to_export = items.shaped(items_list=items_to_export)
+
+        self._export_simu(filename=filename,
+                          x_axis=x_axis,
+                          y_axis=y_axis,
+                          all_layers=all_layers,
+                          all_elements=all_elements,
+                          all_isotopes=all_isotopes,
+                          items_to_export=items_to_export,
+                          offset_us=self.calibrated_offset_us,
+                          source_to_detector_m=self.calibrated_source_to_detector_m,
+                          t_start_us=t_start_us,
+                          time_resolution_us=time_resolution_us,
+                          time_unit=time_unit)
