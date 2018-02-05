@@ -334,7 +334,7 @@ class FitResonance(Experiment):
                 simulation.add_layer(layer=each_layer,
                                      layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
                                      layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
-            simu_x, simu_y_before = simulation.xy_simu(angstrom=False, transmission=False)
+            simu_x, simu_y_before = simulation.xy_simu(x_type='energy', y_type='attenuation')
             ax1.plot(simu_x, simu_y_before,
                      'c-.', label=simu_before_label, linewidth=1)
             # Save to df
