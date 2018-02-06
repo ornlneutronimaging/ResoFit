@@ -84,8 +84,10 @@ class Experiment(object):
         """
         if x_type not in ['energy', 'lambda']:
             raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
-        if list(kwargs.keys()) != ['offset_us', 'source_to_detector_m']:
-            raise ValueError("'{}' is not a valid **kwargs".format(kwargs))
+        _kwarg_list = ['offset_us', 'source_to_detector_m']
+        for each_kwarg in list(kwargs.keys()):
+            if each_kwarg not in _kwarg_list:
+                raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
         if 'offset_us' in kwargs.keys():
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
@@ -137,8 +139,10 @@ class Experiment(object):
         :param y_type:
         :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
         """
-        if list(kwargs.keys()) != ['offset_us', 'source_to_detector_m']:
-            raise ValueError("'{}' is not a valid **kwargs".format(kwargs))
+        _kwarg_list = ['offset_us', 'source_to_detector_m']
+        for each_kwarg in list(kwargs.keys()):
+            if each_kwarg not in _kwarg_list:
+                raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
         if 'offset_us' in kwargs.keys():
             self.offset_us = kwargs['offset_us']
         if 'source_to_detector_m' in kwargs.keys():
