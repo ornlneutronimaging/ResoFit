@@ -99,5 +99,5 @@ def cole_windsor_jparc(t, sig1, sig2, gam1, gam2, fraction, t0, norm_factor=1):
 def loglog_linear(x, slope, intercept):
     _x_log = np.log10(x)
     _y_log = slope * _x_log + intercept
-    y = 10 ** _y_log
+    y = np.power(10, _y_log)
     return y
