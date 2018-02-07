@@ -53,25 +53,6 @@ class NeutronPulse(object):
         if self.result_neutron_folder is None:
             self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
 
-    def __set_model(self, model_index):
-        if model_index == 1:
-            my_model = Model(ikeda_carpenter)
-        elif model_index == 2:
-            my_model = Model(cole_windsor)
-        elif model_index == 3:
-            my_model = Model(pseudo_voigt)
-        elif model_index == 4:
-            my_model = Model(ikeda_carpenter_jparc)
-        elif model_index == 5:
-            my_model = Model(cole_windsor_jparc)
-        else:
-            raise ValueError("Model index not exists, please refer to: '{}' ".format(self.model_map))
-
-        self.model = my_model
-        self.model_index = model_index
-        self.model_used = self.model_map[model_index]
-        self.model_param_names = my_model.param_names
-
     def plot_total(self, x_type='both'):
         x_type_list = ['energy', 'lambda', 'both']
         if x_type not in x_type_list:
@@ -122,8 +103,11 @@ class NeutronPulse(object):
             _params = _my_model.make_params()
             _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t)*_param_df['f_max'][_each_e])
             _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t)*_param_df['f_max'][_each_e])
-        pprint.pprint(_shape_dict_interp)
-        print(_shape_df_interp)
+        self.shape_dict_interp = _shape_dict_interp
+        self.shape_df_interp = _shape_df_interp
+        _shape_df_interp.set_index('t_us').plot()
+        plt.xlim(left=0, right=12)
+        plt.show()
         return _shape_dict_interp
 
     def _interpolate_param(self, e_ev):
@@ -281,6 +265,25 @@ class NeutronPulse(object):
             raise ValueError("'check_each' has to be 'True' in order to save figure")
 
         return out.best_values
+
+    def __set_model(self, model_index):
+        if model_index == 1:
+            my_model = Model(ikeda_carpenter)
+        elif model_index == 2:
+            my_model = Model(cole_windsor)
+        elif model_index == 3:
+            my_model = Model(pseudo_voigt)
+        elif model_index == 4:
+            my_model = Model(ikeda_carpenter_jparc)
+        elif model_index == 5:
+            my_model = Model(cole_windsor_jparc)
+        else:
+            raise ValueError("Model index not exists, please refer to: '{}' ".format(self.model_map))
+
+        self.model = my_model
+        self.model_index = model_index
+        self.model_used = self.model_map[model_index]
+        self.model_param_names = my_model.param_names
 
     def fit_shape(self, e_min, e_max,
                   drop=False, norm=True,

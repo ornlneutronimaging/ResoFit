@@ -17,4 +17,6 @@ neutron_pulse.fit_shape(e_min=1, e_max=500, drop=False, norm=True, check_each=Fa
 
 neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwrite_csv)
 
-neutron_pulse.make_shape([1, 3, 4, 5, 6])
+e = np.linspace(5, 100, 20)
+# neutron_pulse.make_shape([0.25, 1, 3, 4, 5, 6, 50, 100, 200])
+neutron_pulse.make_shape(e)
