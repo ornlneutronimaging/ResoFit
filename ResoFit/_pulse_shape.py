@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from lmfit import Model
 from lmfit.models import LinearModel
+from matplotlib import legend
 
 import ResoFit._utilities as fit_util
 from ResoFit.model import cole_windsor
@@ -26,8 +27,12 @@ class NeutronPulse(object):
         :param path: path to the '.dat' file
         :type path: str
         """
-        self.shape_total_df = load_neutron_total_shape(path)
+        self.shape_total_df = _load_neutron_total_shape(path)
         self.shape_dict = None
+        self.shape_df = None
+        self.shape_df_norm = None
+        self.shape_dict_interp = None
+        self.shape_df_interp = None
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -38,6 +43,7 @@ class NeutronPulse(object):
         self.e_max = None
         self.t = None
         self.result_neutron_folder = None
+        self._energy_list = None
 
         self.model_map = {1: 'ikeda_carpenter',
                           2: 'cole_windsor',
@@ -53,7 +59,20 @@ class NeutronPulse(object):
         if self.result_neutron_folder is None:
             self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
 
-    def plot_total(self, x_type='both'):
+    def load_shape_each(self, path, save_each=False):
+        """
+        Load each eV neutron pulse shape from .dat file
+
+        :param save_each:
+        :type save_each:
+        :param path: path to the '.dat' file
+        :type path: str
+        """
+        self.shape_dict = _load_neutron_each_shape(path, export=save_each)
+        self.shape_df, self.shape_df_norm = _shape_dict_to_dfs(self.shape_dict)
+        self.t = np.array(self.shape_df['t_us'])
+
+    def plot_shape_total(self, x_type='both'):
         x_type_list = ['energy', 'lambda', 'both']
         if x_type not in x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
@@ -72,21 +91,62 @@ class NeutronPulse(object):
         ax1.grid(axis='y', which='major', alpha=0.3)
         ax2.grid(axis='x', which='both', color='r', alpha=0.3)
         ax2.tick_params('x', colors='r', which='both')
-        plt.show()
+        # ax1.set_title('Neutron total flux', y=1.08, loc='left')
 
-    def load_shape_each(self, path, save_each=False):
-        """
-        Load each eV neutron pulse shape from .dat file
+    def plot_shape_each(self, e_min, e_max, logy=False, norm=False):
+        assert self.shape_dict is not None
+        if norm:
+            _shape_df = self.shape_df_norm
+            _y_label = 'Ratio out of max flux of each energy'
+        else:
+            _shape_df = self.shape_df
+            _y_label = 'Flux (n/sterad/pulse)'
 
-        :param save_each:
-        :type save_each:
-        :param path: path to the '.dat' file
-        :type path: str
-        """
-        self.shape_dict = load_neutron_each_shape(path, export=save_each)
-        self.t = np.array(self.shape_dict[100]['data_raw']['t_us'])
+        _energy_all = self.shape_df.set_index('t_us').columns
+        for _each in _energy_all:
+            if _each < e_min or _each > e_max:
+                _shape_df.drop(columns=_each, inplace=True)
+        self._energy_list = list(_shape_df.set_index('t_us').columns)
+        fig, ax1 = plt.subplots()
+        for each in self._energy_list:
+            if logy:
+                ax1.semilogy(_shape_df['t_us'], _shape_df[each], label=str(each)+' eV')
+            else:
+                ax1.plot(_shape_df['t_us'], _shape_df[each], label=str(each)+' eV')
+        ax1.legend(loc='best')
+        ax1.set_ylabel(_y_label)
+        ax1.set_xlabel(u'Time (μs)')
+        ax1.grid()
+        ax1.set_xlim(left=0, right=5)
+        ax1.set_title('Pulse shape for each energy')
+        # return ax1
 
-    def make_shape(self, e_ev):
+    def plot_shape_interp(self, e_ev, logy=False, norm=False):
+        _shape_df_interp = self._make_shape(e_ev=e_ev, norm=norm)
+        if norm:
+            _y_label = 'Ratio out of max flux of each energy'
+        else:
+            _y_label = 'Flux (n/sterad/pulse)'
+
+        _energy_interp_list = list(_shape_df_interp.set_index('t_us').columns)
+        fig, ax1 = plt.subplots()
+        for each in _energy_interp_list:
+            if logy:
+                ax1.semilogy(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each)+' eV')
+            else:
+                ax1.plot(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each)+' eV')
+        ax1.legend(loc='best')
+        ax1.set_ylabel(_y_label)
+        ax1.set_xlabel(u'Time (μs)')
+        ax1.grid()
+        ax1.set_xlim(left=0, right=5)
+        ax1.set_title('Pulse shape for each energy (interp.)')
+
+    def plot_shape_each_compare(self, e_min, e_max, norm=False):
+        self.plot_shape_each(e_min=e_min, e_max=e_max, norm=norm)
+        self.plot_shape_interp(e_ev=self._energy_list, norm=norm)
+
+    def _make_shape(self, e_ev, norm=False):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -101,14 +161,16 @@ class NeutronPulse(object):
             for _each_param in self.model_param_names:
                 _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
             _params = _my_model.make_params()
-            _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t)*_param_df['f_max'][_each_e])
-            _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t)*_param_df['f_max'][_each_e])
+            if norm:
+                _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t))
+                _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t))
+            else:
+                _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t) * _param_df['f_max'][_each_e])
+                _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t) * _param_df['f_max'][_each_e])
         self.shape_dict_interp = _shape_dict_interp
         self.shape_df_interp = _shape_df_interp
-        _shape_df_interp.set_index('t_us').plot()
-        plt.xlim(left=0, right=12)
-        plt.show()
-        return _shape_dict_interp
+
+        return _shape_df_interp
 
     def _interpolate_param(self, e_ev):
 
@@ -600,7 +662,7 @@ class ProtonPulse(object):
 
     def __init__(self, path):
         """"""
-        self.shape_df = load_proton_pulse(path)
+        self.shape_df = _load_proton_pulse(path)
 
     def fit_shape(self):
         t_ns = self.shape_df['t_ns']
@@ -611,7 +673,7 @@ class ProtonPulse(object):
 
 
 # Functions to load files #
-def load_neutron_total_shape(path):
+def _load_neutron_total_shape(path):
     p = np.genfromtxt(path)
     pp = p.T
     df1 = pd.DataFrame()
@@ -627,7 +689,7 @@ def load_neutron_total_shape(path):
     return df1
 
 
-def load_neutron_each_shape(path, export=False):
+def _load_neutron_each_shape(path, export=False):
     q = np.genfromtxt(path)
     qq = q.T
     df2 = pd.DataFrame()
@@ -679,7 +741,20 @@ def load_neutron_each_shape(path, export=False):
     return shape_dict
 
 
-def load_proton_pulse(path):
+def _shape_dict_to_dfs(shape_dict):
+    _first_key = list(shape_dict.keys())[0]
+    _t_us = shape_dict[_first_key]['data_raw']['t_us']
+    _shape_df = pd.DataFrame()
+    _shape_df_norm = pd.DataFrame()
+    _shape_df['t_us'] = _t_us
+    _shape_df_norm['t_us'] = _t_us
+    for each_key in shape_dict.keys():
+        _shape_df[each_key] = shape_dict[each_key]['data_raw']['f']
+        _shape_df_norm[each_key] = shape_dict[each_key]['data_raw']['f_norm']
+    return _shape_df, _shape_df_norm
+
+
+def _load_proton_pulse(path):
     df = pd.read_csv(path, sep=' ', skiprows=1, header=None)
     df.columns = ['t_ns', 'intensity']
     return df
