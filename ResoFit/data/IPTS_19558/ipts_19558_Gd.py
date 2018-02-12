@@ -10,14 +10,14 @@ import lmfit
 
 # Global parameters
 energy_min = 7
-energy_max = 600
+energy_max = 150
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 # layer_1 = 'U'
 # thickness_1 = 0.018
 # density_1 = None
 layer_2 = 'Gd'
-thickness_2 = 0.075
+thickness_2 = 0.150
 density_2 = None
 # layer_3 = 'Cd'
 # thickness_3 = 0.015
@@ -28,7 +28,7 @@ layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
 # layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
 folder = 'data/IPTS_19558/reso_data_19558'
-data_file = 'Gd_thin.csv'
+data_file = 'Gd_thick.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
@@ -63,7 +63,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres=0.13, min_dist=21)
+calibration.index_peak(thres=0.13, min_dist=25)
 
 calibration.plot(before=True, all_elements=False, peak_id='all', save_fig=False, total=True)
 
@@ -83,7 +83,7 @@ fit = FitResonance(spectra_file=spectra_file,
                    baseline=baseline)
 fit_result = fit.fit(layer, vary=fit_vary, each_step=each_step)
 fit.molar_conc()
-fit.index_peak(thres=0.10, min_dist=25)
+fit.index_peak(thres=0.15, min_dist=25)
 # fit.fit_iso(layer=layer_2)
 fit.plot(peak_id='all', interp=False)
 # fit.export('Exp_Gd_150_um.csv')

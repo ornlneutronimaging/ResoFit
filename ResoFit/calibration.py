@@ -159,11 +159,11 @@ class Calibration(Simulation):
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
-    def index_peak(self, thres=0.15, min_dist=2, rel_tol=5e-3, impr_reso=True, isotope=False):
+    def index_peak(self, thres, min_dist, map_thres=0.01, map_min_dist=20, rel_tol=5e-3, impr_reso=True, isotope=False):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres, min_dist=min_dist)
         # find peak map using Simulation.peak_map()
-        _peak_map = self.peak_map(thres=thres, min_dist=min_dist, impr_reso=impr_reso, isotope=isotope)
+        _peak_map = self.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso, isotope=isotope)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()

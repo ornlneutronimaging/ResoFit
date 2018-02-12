@@ -117,7 +117,7 @@ class Simulation(object):
 
         return _x, _y
 
-    def peak_map(self, thres=0.15, min_dist=1, impr_reso=True, isotope=False):
+    def peak_map(self, thres, min_dist, impr_reso=True, isotope=False):
         """
         Get peak map (eV and sigma) for each element and/or nuclide
 

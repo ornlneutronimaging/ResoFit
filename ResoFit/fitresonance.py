@@ -219,7 +219,7 @@ class FitResonance(Experiment):
 
         return self.fitted_layer.info
 
-    def index_peak(self, thres=0.15, min_dist=1, rel_tol=5e-3, isotope=False):
+    def index_peak(self, thres, min_dist, map_thres=0.01, map_min_dist=20, rel_tol=5e-3, isotope=False):
         if self.o_peak is None:
             self.find_peak(thres=thres, min_dist=min_dist)
         self.scale_peak_with_ev(energy_min=self.energy_min,
@@ -229,8 +229,8 @@ class FitResonance(Experiment):
         assert self.o_peak.peak_df is not None
         assert self.o_peak.peak_df_scaled is not None
 
-        _peak_map = self.fitted_simulation.peak_map(thres=thres,
-                                                    min_dist=min_dist,
+        _peak_map = self.fitted_simulation.peak_map(thres=map_thres,
+                                                    min_dist=map_min_dist,
                                                     impr_reso=True,
                                                     isotope=isotope)
         self.o_peak.peak_map_full = _peak_map
