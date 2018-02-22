@@ -6,6 +6,9 @@ import pandas as pd
 from lmfit import Model
 from lmfit.models import LinearModel
 from matplotlib import legend
+from ImagingReso._utilities import ev_to_s
+# import ImagingReso._utilities as reso_util
+
 
 import ResoFit._utilities as fit_util
 from ResoFit.model import cole_windsor
@@ -28,11 +31,13 @@ class NeutronPulse(object):
         :type path: str
         """
         self.shape_total_df = _load_neutron_total_shape(path)
-        self.shape_dict = None
-        self.shape_df = None
-        self.shape_df_norm = None
+        self.shape_dict_mcnp = None
+        self.shape_df_mcnp = None
+        self.shape_df_mcnp_norm = None
         self.shape_dict_interp = None
         self.shape_df_interp = None
+        self.shape_tof_dict_interp = None
+        self.shape_tof_df_interp = None
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -44,6 +49,7 @@ class NeutronPulse(object):
         self.t = None
         self.result_neutron_folder = None
         self._energy_list = None
+        self._energy_list_dropped = None
 
         self.model_map = {1: 'ikeda_carpenter',
                           2: 'cole_windsor',
@@ -68,11 +74,21 @@ class NeutronPulse(object):
         :param path: path to the '.dat' file
         :type path: str
         """
-        self.shape_dict = _load_neutron_each_shape(path, export=save_each)
-        self.shape_df, self.shape_df_norm = _shape_dict_to_dfs(self.shape_dict)
-        self.t = np.array(self.shape_df['t_us'])
+        self.shape_dict_mcnp = _load_neutron_each_shape(path, export=save_each)
+        self.shape_df_mcnp, self.shape_df_mcnp_norm = _shape_dict_to_dfs(self.shape_dict_mcnp)
+        self._energy_list = list(self.shape_df_mcnp.set_index('t_us').columns)
+
+        self.t = np.array(self.shape_df_mcnp['t_us'])
 
     def plot_shape_total(self, x_type='both'):
+        """
+        Plot the total beam shape obtained from MCNPX simulation
+
+        :param x_type:
+        :type x_type: str
+        :return: plot
+        :rtype: matplotlib
+        """
         x_type_list = ['energy', 'lambda', 'both']
         if x_type not in x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
@@ -93,36 +109,67 @@ class NeutronPulse(object):
         ax2.tick_params('x', colors='r', which='both')
         # ax1.set_title('Neutron total flux', y=1.08, loc='left')
 
-    def plot_shape_each(self, e_min, e_max, logy=False, norm=False):
-        assert self.shape_dict is not None
+    def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False):
+        """
+        Plot each eV beam shape obtained from MCNPX simulation
+
+        :param e_min:
+        :type e_min:
+        :param e_max:
+        :type e_max:
+        :param logy:
+        :type logy:
+        :param norm:
+        :type norm:
+        :return:
+        :rtype:
+        """
+        assert self.shape_dict_mcnp is not None
         if norm:
-            _shape_df = self.shape_df_norm
+            _shape_df = self.shape_df_mcnp_norm
             _y_label = 'Ratio out of max flux of each energy'
         else:
-            _shape_df = self.shape_df
+            _shape_df = self.shape_df_mcnp
             _y_label = 'Flux (n/sterad/pulse)'
 
-        _energy_all = self.shape_df.set_index('t_us').columns
+        # only the energy provided by MCNPX simulation will be filtered
+        assert self._energy_list is not None
+        _energy_all = self._energy_list
         for _each in _energy_all:
             if _each < e_min or _each > e_max:
                 _shape_df.drop(columns=_each, inplace=True)
-        self._energy_list = list(_shape_df.set_index('t_us').columns)
+        _energy_dropped = list(_shape_df.set_index('t_us').columns)
+        self._energy_list_dropped = _energy_dropped
         fig, ax1 = plt.subplots()
-        for each in self._energy_list:
+        for each in _energy_dropped:
             if logy:
-                ax1.semilogy(_shape_df['t_us'], _shape_df[each], label=str(each)+' eV')
+                ax1.semilogy(_shape_df['t_us'], _shape_df[each], label=str(each) + ' eV')
             else:
-                ax1.plot(_shape_df['t_us'], _shape_df[each], label=str(each)+' eV')
+                ax1.plot(_shape_df['t_us'], _shape_df[each], label=str(each) + ' eV')
         ax1.legend(loc='best')
         ax1.set_ylabel(_y_label)
         ax1.set_xlabel(u'Time (μs)')
         ax1.grid()
         ax1.set_xlim(left=0, right=5)
-        ax1.set_title('Pulse shape for each energy')
+        ax1.set_title('Energy dependent neutron pulse shape (MCNPX)')
+        # ax1.set_title('Pulse shape for each energy (MCNPX)')
         # return ax1
 
     def plot_shape_interp(self, e_ev, logy=False, norm=False):
-        _shape_df_interp = self._make_shape(e_ev=e_ev, norm=norm)
+        """
+        Plot each eV beam shape obtained from the fitting approach
+
+        :param e_ev:
+        :type e_ev:
+        :param logy:
+        :type logy:
+        :param norm:
+        :type norm:
+        :return:
+        :rtype:
+        """
+        self._make_shape(e_ev=e_ev, norm=norm)
+        _shape_df_interp = self.shape_df_interp
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
         else:
@@ -132,45 +179,122 @@ class NeutronPulse(object):
         fig, ax1 = plt.subplots()
         for each in _energy_interp_list:
             if logy:
-                ax1.semilogy(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each)+' eV')
+                ax1.semilogy(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each) + ' eV')
             else:
-                ax1.plot(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each)+' eV')
+                ax1.plot(_shape_df_interp['t_us'], _shape_df_interp[each], label=str(each) + ' eV')
         ax1.legend(loc='best')
         ax1.set_ylabel(_y_label)
         ax1.set_xlabel(u'Time (μs)')
         ax1.grid()
         ax1.set_xlim(left=0, right=5)
-        ax1.set_title('Pulse shape for each energy (interp.)')
+        ax1.set_title('Energy dependent neutron pulse shape (interp.)')
+        # ax1.set_title('Pulse shape for each energy (interp.)')
 
     def plot_shape_each_compare(self, e_min, e_max, norm=False):
-        self.plot_shape_each(e_min=e_min, e_max=e_max, norm=norm)
-        self.plot_shape_interp(e_ev=self._energy_list, norm=norm)
+        """
+        Plot each eV beam shape obtained from MCNPX simulation and current fitting approach to compare
+
+        :param e_min:
+        :type e_min:
+        :param e_max:
+        :type e_max:
+        :param norm:
+        :type norm:
+        :return:
+        :rtype:
+        """
+        self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm)
+        self.plot_shape_interp(e_ev=self._energy_list_dropped, norm=norm)
+
+    def plot_tof_shape_interp(self, e_ev, logy=False, norm=False):
+        """
+        Plot each eV beam shape obtained from the fitting approach
+
+        :param e_ev:
+        :type e_ev:
+        :param logy:
+        :type logy:
+        :param norm:
+        :type norm:
+        :return:
+        :rtype:
+        """
+        self._make_shape(e_ev=e_ev, norm=norm)
+        _shape_tof_dict_interp = self.shape_tof_dict_interp
+        if norm:
+            _y_label = 'Ratio out of max flux of each energy'
+        else:
+            _y_label = 'Flux (n/sterad/pulse)'
+
+        _energy_interp_list = list(_shape_tof_dict_interp.keys())
+        fig, ax1 = plt.subplots()
+        for each_e in _energy_interp_list:
+            if logy:
+                ax1.semilogy(_shape_tof_dict_interp[each_e]['tof_us'],
+                             _shape_tof_dict_interp[each_e]['data'],
+                             label=str(each_e) + ' eV')
+            else:
+                ax1.plot(_shape_tof_dict_interp[each_e]['tof_us'],
+                         _shape_tof_dict_interp[each_e]['data'],
+                         label=str(each_e) + ' eV')
+        ax1.legend(loc='best')
+        ax1.set_ylabel(_y_label)
+        ax1.set_xlabel(u'Time (μs)')
+        ax1.grid()
+        ax1.set_xlim(left=0, right=1000)
+        ax1.set_title('Energy dependent neutron pulse shape (interp.)')
+        # ax1.set_title('Pulse shape for each energy (interp.)')
 
     def _make_shape(self, e_ev, norm=False):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
-
+        e_ev.sort()
         _param_df = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         _my_model = self.model
         _shape_dict_interp = {}
         _shape_df_interp = pd.DataFrame()
         _shape_df_interp['t_us'] = self.t
+
+        _shape_tof_dict_interp = {}
+        _shape_tof_df_interp = pd.DataFrame()
+        _shape_tof_df_interp['t_us'] = self.t
+        print('For {} (m)'.format(16.45))
         for _each_e in e_ev:
             for _each_param in self.model_param_names:
                 _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
             _params = _my_model.make_params()
+            _tof_diff_us = ev_to_s(offset_us=0, source_to_detector_m=16.45, array=_each_e) * 1e6
+            print('{} (eV) neutrons spend {} (us)'.format(_each_e, _tof_diff_us))
             if norm:
-                _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t))
-                _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t))
+                _array = np.array(_my_model.eval(_params, t=self.t))
+                _shape_dict_interp[_each_e] = _array
+                _shape_df_interp[_each_e] = _array
+                # _shape_tof_dict_interp[_each_e]['t_us'] = self.t
+
+                _shape_tof_dict_interp[_each_e] = {}
+                _shape_tof_dict_interp[_each_e]['tof_us'] = self.t + _tof_diff_us
+                _shape_tof_dict_interp[_each_e]['data'] = _array
+                _shape_tof_df_interp['tof_us_' + str(_each_e)] = self.t + _tof_diff_us
+                _shape_tof_df_interp[_each_e] = _array
             else:
-                _shape_dict_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t) * _param_df['f_max'][_each_e])
-                _shape_df_interp[_each_e] = np.array(_my_model.eval(_params, t=self.t) * _param_df['f_max'][_each_e])
+                _array = np.array(_my_model.eval(_params, t=self.t) * _param_df['f_max'][_each_e])
+                _shape_dict_interp[_each_e] = _array
+                _shape_df_interp[_each_e] = _array
+
+                _shape_tof_dict_interp[_each_e] = {}
+                _shape_tof_dict_interp[_each_e]['tof_us'] = self.t + _tof_diff_us
+                _shape_tof_dict_interp[_each_e]['data'] = _array
+                _shape_tof_df_interp['tof_us_' + str(_each_e)] = self.t + _tof_diff_us
+                _shape_tof_df_interp[_each_e] = _array
+
         self.shape_dict_interp = _shape_dict_interp
         self.shape_df_interp = _shape_df_interp
+        self.shape_tof_dict_interp = _shape_tof_dict_interp
+        self.shape_tof_df_interp = _shape_tof_df_interp
 
-        return _shape_df_interp
+        # return _shape_df_interp
 
     def _interpolate_param(self, e_ev):
 
@@ -386,7 +510,7 @@ class NeutronPulse(object):
     def _fit_shape(self, drop, norm, show_init, check_each, save_fig):
         # Fitting starts
         param_dict_fitted = {}
-        for each_e in self.shape_dict.keys():
+        for each_e in self.shape_dict_mcnp.keys():
             if self.e_min <= each_e <= self.e_max:
                 print("Fitting [{} eV] ...".format(each_e))
                 param_dict_fitted[each_e] = {}
@@ -399,8 +523,8 @@ class NeutronPulse(object):
                     _flux_used = 'f_norm'
                 else:
                     _flux_used = 'f'
-                f = self.shape_dict[each_e][_data_used][_flux_used]
-                t = self.shape_dict[each_e][_data_used]['t_us']
+                f = self.shape_dict_mcnp[each_e][_data_used][_flux_used]
+                t = self.shape_dict_mcnp[each_e][_data_used]['t_us']
                 param_dict_fitted[each_e]['fitted_params'] = self.__fit_shape(f=f,
                                                                               t=t,
                                                                               e=each_e,
@@ -423,7 +547,7 @@ class NeutronPulse(object):
             _dict[each_param] = []
         f_max_list = []
         for each_e in e_list_fitted:
-            f_max_list.append(self.shape_dict[each_e]['f_max'])
+            f_max_list.append(self.shape_dict_mcnp[each_e]['f_max'])
             for each_param in param_list_fitted:
                 _dict[each_param].append(param_dict[each_e]['fitted_params'][each_param])
         _df = pd.DataFrame()
@@ -642,8 +766,8 @@ class NeutronPulse(object):
             self.shape_total_df.to_csv(filename)
 
     def _export_each_to_csv(self):
-        for index, each_energy in enumerate(self.shape_dict.keys()):
-            df = self.shape_dict[each_energy]
+        for index, each_energy in enumerate(self.shape_dict_mcnp.keys()):
+            df = self.shape_dict_mcnp[each_energy]
             file_name = 'energy_' + str(index + 1) + '.csv'
             df.to_csv(file_name, index=False)
             print("Neutron pulse shape of 'E = {} eV' has exported to './{}'".format(each_energy, file_name))

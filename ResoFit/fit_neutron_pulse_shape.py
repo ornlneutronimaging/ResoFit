@@ -8,6 +8,7 @@ path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutr
 path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
 
 neutron_pulse = NeutronPulse(path1, model_index=1)
+
 neutron_pulse.load_shape_each(path2)
 
 # neutron_pulse.plot_total()
@@ -23,6 +24,7 @@ neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwr
 
 # neutron_pulse.plot_shape_total()
 
-neutron_pulse.plot_shape_each_compare(e_min=15, e_max=100, norm=False)
+# neutron_pulse.plot_shape_each_compare(e_min=15, e_max=200, norm=False)
 
-
+e_list = np.linspace(10, 300, 30)
+neutron_pulse.plot_tof_shape_interp(e_ev=e_list, logy=False, norm=False)
