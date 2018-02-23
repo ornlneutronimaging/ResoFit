@@ -37,7 +37,7 @@ class NeutronPulse(object):
         self.shape_dict_interp = None
         self.shape_df_interp = None
         self.shape_tof_dict_interp = None
-        self.shape_tof_df_interp = None
+        # self.shape_tof_df_interp = None
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -165,6 +165,8 @@ class NeutronPulse(object):
         """
         Plot each eV beam shape obtained from the fitting approach
 
+        :param t_interp:
+        :type t_interp:
         :param e_ev:
         :type e_ev:
         :param logy:
@@ -202,10 +204,12 @@ class NeutronPulse(object):
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
         # ax1.set_title('Pulse shape for each energy (interp.)')
 
-    def plot_shape_each_compare(self, e_min, e_max, t_interp, norm=False):
+    def plot_shape_each_compare(self, e_min, e_max, t_interp=None, norm=False):
         """
         Plot each eV beam shape obtained from MCNPX simulation and current fitting approach to compare
 
+        :param t_interp:
+        :type t_interp:
         :param e_min:
         :type e_min:
         :param e_max:
@@ -215,6 +219,8 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
+        if t_interp is None:
+            t_interp = self.t
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm)
         self.plot_shape_interp(e_ev=self._energy_list_dropped, t_interp=t_interp, norm=norm)
 
@@ -222,6 +228,10 @@ class NeutronPulse(object):
         """
         Plot each eV beam shape obtained from the fitting approach
 
+        :param for_sum:
+        :type for_sum:
+        :param t_interp:
+        :type t_interp:
         :param e_ev:
         :type e_ev:
         :param logy:
@@ -274,12 +284,13 @@ class NeutronPulse(object):
         _my_model = self.model
         _shape_dict_interp = {}
         _shape_df_interp = pd.DataFrame()
+        _shape_df_interp['t_us'] = t_interp
 
         _shape_tof_dict_interp = {}
-        _shape_tof_df_interp = pd.DataFrame()
-        print('For {} (m)'.format(16.45))
-
+        _shape_tof_df_interp = None
         _tof_total_us_array = []
+
+        print('For {} (m)'.format(16.45))
 
         for _each_e in e_ev:
             for _each_param in self.model_param_names:
@@ -298,31 +309,36 @@ class NeutronPulse(object):
             _shape_tof_dict_interp[_each_e] = {}
             _shape_tof_dict_interp[_each_e]['tof_us'] = _current_tof_us
             _shape_tof_dict_interp[_each_e]['data'] = _array
-            _shape_tof_df_interp['tof_us_' + str(_each_e)] = _current_tof_us
-            _shape_tof_df_interp[_each_e] = _array
+
+        _tof_total_us_array.sort()
 
         if for_sum:
+            _shape_tof_df_interp = pd.DataFrame()
+            _shape_tof_df_interp['tof_us'] = _tof_total_us_array
             for _each_e in e_ev:
                 _current_t = _shape_tof_dict_interp[_each_e]['tof_us']
                 _t_min = _current_t[0]
-                _t_max = _current_t[-1]
+                # _t_max = _current_t[-1]
                 __tof_diff_us = _t_min - t_interp[0]
-                for _each_t in _tof_total_us_array:
-                    if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
-                        _current_t = np.append(_current_t, _each_t)
-                _current_t.sort()
-                _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
+                # for _each_t in _tof_total_us_array:
+                #     if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
+                #         _current_t = np.append(_current_t, _each_t)
+                # _current_t.sort()
+                # _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
+                _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _tof_total_us_array
+                _shape_tof_dict_interp[_each_e]['t_for_sum'] = _tof_total_us_array - __tof_diff_us
                 for _each_param in self.model_param_names:
                     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
                 _params = _my_model.make_params()
-                _array = _my_model.eval(_params, t=_current_t - __tof_diff_us)
+                print(_tof_total_us_array - __tof_diff_us)
+                _array = _my_model.eval(_params, t=_tof_total_us_array - __tof_diff_us)
                 _shape_tof_dict_interp[_each_e]['data_for_sum'] = _array
+                _shape_tof_df_interp[_each_e] = _array
 
         self.shape_dict_interp = _shape_dict_interp
         self.shape_df_interp = _shape_df_interp
         self.shape_tof_dict_interp = _shape_tof_dict_interp
         self.shape_tof_df_interp = _shape_tof_df_interp
-        # return _shape_df_interp
 
     def make_and_sum_tof_shape(self):
         pass
