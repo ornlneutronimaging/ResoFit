@@ -332,6 +332,8 @@ class NeutronPulse(object):
                 _params = _my_model.make_params()
                 print(_tof_total_us_array - __tof_diff_us)
                 _array = _my_model.eval(_params, t=_tof_total_us_array - __tof_diff_us)
+                if not norm:
+                    _array = _array * _param_df['f_max'][_each_e]
                 _shape_tof_dict_interp[_each_e]['data_for_sum'] = _array
                 _shape_tof_df_interp[_each_e] = _array
 
