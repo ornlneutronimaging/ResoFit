@@ -29,5 +29,5 @@ neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwr
 e_list = np.linspace(271, 300, 30)
 t_new = np.linspace(0.1, 30, 300)
 print(t_new)
-# neutron_pulse.plot_tof_shape_interp(e_ev=e_list, t_interp=t_new, logy=False, norm=False)
-neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
+neutron_pulse.plot_tof_shape_interp(e_ev=e_list, t_interp=t_new, for_sum=True, logy=False, norm=False)
+# neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)

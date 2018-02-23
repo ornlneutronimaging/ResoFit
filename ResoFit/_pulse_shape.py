@@ -218,7 +218,7 @@ class NeutronPulse(object):
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm)
         self.plot_shape_interp(e_ev=self._energy_list_dropped, t_interp=t_interp, norm=norm)
 
-    def plot_tof_shape_interp(self, e_ev, t_interp, logy=False, norm=False):
+    def plot_tof_shape_interp(self, e_ev, t_interp, for_sum=False, logy=False, norm=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -231,24 +231,28 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
-        self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm)
+        self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm)
         _shape_tof_dict_interp = self.shape_tof_dict_interp
+        _y_label = 'Flux (n/sterad/pulse)'
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
-        else:
-            _y_label = 'Flux (n/sterad/pulse)'
+        _x_tag = 'tof_us'
+        _y_tag = 'data'
+        if for_sum:
+            _x_tag = 'tof_us_for_sum'
+            _y_tag = 'data_for_sum'
 
         _energy_interp_list = list(_shape_tof_dict_interp.keys())
         fig, ax1 = plt.subplots()
         for each_e in _energy_interp_list:
             if logy:
-                ax1.semilogy(_shape_tof_dict_interp[each_e]['tof_us'],
-                             _shape_tof_dict_interp[each_e]['data'],
+                ax1.semilogy(_shape_tof_dict_interp[each_e][_x_tag],
+                             _shape_tof_dict_interp[each_e][_y_tag],
                              marker='.',
                              label=str(each_e) + ' eV')
             else:
-                ax1.plot(_shape_tof_dict_interp[each_e]['tof_us'],
-                         _shape_tof_dict_interp[each_e]['data'],
+                ax1.plot(_shape_tof_dict_interp[each_e][_x_tag],
+                         _shape_tof_dict_interp[each_e][_y_tag],
                          marker='.',
                          label=str(each_e) + ' eV')
         ax1.legend(loc='best')
