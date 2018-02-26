@@ -1,6 +1,6 @@
 from ResoFit._pulse_shape import NeutronPulse
 import numpy as np
-
+from ResoFit.simulation import Simulation
 overwrite_csv = False
 # path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
 # path2 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
@@ -32,3 +32,7 @@ t_new = np.linspace(0.1, 30, 300)
 neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
 neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
 # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
+
+# simulation = Simulation(energy_min=7, energy_max=150, energy_step=0.1, database='ENDF_VII')
+# simulation.add_layer(layer='Gd', layer_thickness_mm=0.15)
+# simulation._convolve_beam_shape()

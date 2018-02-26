@@ -6,6 +6,7 @@ from ImagingReso.resonance import Resonance
 import ResoFit._utilities as fit_util
 import pprint
 import peakutils as pku
+from ResoFit._pulse_shape import NeutronPulse
 
 
 class Simulation(object):
@@ -24,7 +25,7 @@ class Simulation(object):
         :param database:
         :type database:
         """
-        self.nergy_min = energy_min
+        self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
         self.database = database
@@ -32,8 +33,8 @@ class Simulation(object):
         self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step,
                                 database=database)
 
-        self.simu_x = None
-        self.simu_y = None
+        self.x_simu = None
+        self.y_simu = None
         self.layer_list = []
 
     def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
@@ -50,8 +51,8 @@ class Simulation(object):
                               thickness=layer_thickness_mm,
                               density=layer_density_gcm3)
         self.layer_list.append(layer)
-        self.simu_x = self.o_reso.total_signal['energy_eV']
-        self.simu_y = self.o_reso.total_signal['attenuation']
+        self.x_simu = self.o_reso.total_signal['energy_eV']
+        self.y_simu = self.o_reso.total_signal['attenuation']
 
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list):
         """
@@ -77,8 +78,8 @@ class Simulation(object):
         if element not in _elements:
             raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
         self.o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
-        self.simu_x = self.o_reso.total_signal['energy_eV']
-        self.simu_y = self.o_reso.total_signal['attenuation']
+        self.x_simu = self.o_reso.total_signal['energy_eV']
+        self.y_simu = self.o_reso.total_signal['attenuation']
 
     def x_angstrom(self):
         """
@@ -116,6 +117,27 @@ class Simulation(object):
         _y = self.o_reso.total_signal[y_type]
 
         return _x, _y
+
+    def _convolve_beam_shape(self):
+        path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
+        path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
+        overwrite_csv = False
+
+        neutron_pulse = NeutronPulse(path1, model_index=1)
+        neutron_pulse.load_shape_each(path2)
+        neutron_pulse.fit_shape(e_min=1, e_max=500, drop=False, norm=True, check_each=False, save_fig=False,
+                                overwrite_csv=overwrite_csv)
+        neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwrite_csv)
+        e_list = self.x_simu
+        t_new = np.linspace(0.1, 30, 300)
+        neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
+
+        e_simu = self.o_reso.total_signal['energy_eV']
+        print(e_list == e_simu)
+        self.neutron_pulse = neutron_pulse
+        df = self.neutron_pulse.shape_tof_df_interp.set_index('tof_us')
+
+        neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
 
     def peak_map(self, thres, min_dist, impr_reso=True, isotope=False):
         """

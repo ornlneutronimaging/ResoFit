@@ -95,8 +95,8 @@ class Calibration(Simulation):
         self.init_offset_us = offset_us
         if vary not in ['source_to_detector', 'offset', 'all', 'none']:
             raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all' 'none']")
-        simu_x = self.simu_x
-        simu_y = self.simu_y
+        simu_x = self.x_simu
+        simu_y = self.y_simu
 
         source_to_detector_vary_tag = True
         offset_vary_tag = True
@@ -316,7 +316,7 @@ class Calibration(Simulation):
 
         # Plot simulated total signal
         if total is True:
-            ax1.plot(self.simu_x, self.simu_y, 'b-', label=simu_label, linewidth=1)
+            ax1.plot(self.x_simu, self.y_simu, 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
 
@@ -350,7 +350,7 @@ class Calibration(Simulation):
             for _layer in _stack.keys():
                 for _element in _stack[_layer]['elements']:
                     _y_axis = _stack_signal[_layer][_element][y_axis_tag]
-                    ax1.plot(self.simu_x, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
+                    ax1.plot(self.x_simu, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
         # 4.
         if all_isotopes is True:
             # show signal from each isotopes
@@ -361,7 +361,7 @@ class Calibration(Simulation):
                 for _element in _stack[_layer]['elements']:
                     for _isotope in _stack[_layer][_element]['isotopes']['list']:
                         _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
-                        ax1.plot(self.simu_x, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
+                        ax1.plot(self.x_simu, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
@@ -370,7 +370,7 @@ class Calibration(Simulation):
             items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
-                ax1.plot(self.simu_x, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
+                ax1.plot(self.x_simu, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:

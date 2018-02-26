@@ -15,11 +15,11 @@ class TestSimulation(unittest.TestCase):
 
     def test_add_layer(self):
         simulation = self.simulation
-        self.assertIsNone(simulation.simu_x)
-        self.assertIsNone(simulation.simu_y)
+        self.assertIsNone(simulation.x_simu)
+        self.assertIsNone(simulation.y_simu)
         simulation.add_layer(layer='U', layer_thickness_mm=0.15)
-        _simu_x_returned = simulation.simu_x
-        _simu_y_returned = simulation.simu_y
+        _simu_x_returned = simulation.x_simu
+        _simu_y_returned = simulation.y_simu
         _simu_x_expected = np.array([7., 8., 9., 10.])
         _simu_y_expected = np.array([0.03699373, 0.00936537, 0.00854215, 0.00726004])
         self.assertAlmostEqual(_simu_x_returned[0], _simu_x_expected[0], delta=0.000001)
@@ -38,8 +38,8 @@ class TestSimulation(unittest.TestCase):
         _isotopic_ratio_list_wrong_len = [0., 0.99, 0.01]
         self.assertRaises(ValueError, simulation.set_isotopic_ratio,
                           layer='U', element='U', new_isotopic_ratio_list=_isotopic_ratio_list_wrong_len)
-        _simu_x_returned = simulation.simu_x
-        _simu_y_returned = simulation.simu_y
+        _simu_x_returned = simulation.x_simu
+        _simu_y_returned = simulation.y_simu
         _simu_x_expected = np.array([7., 8., 9., 10.])
         _simu_y_expected = np.array([0.06464851, 0.01259978, 0.11890677, 0.02255858])
         self.assertAlmostEqual(_simu_x_returned[0], _simu_x_expected[0], delta=0.000001)

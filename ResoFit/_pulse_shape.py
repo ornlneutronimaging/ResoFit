@@ -318,20 +318,21 @@ class NeutronPulse(object):
             for _each_e in e_ev:
                 _current_t = _shape_tof_dict_interp[_each_e]['tof_us']
                 _t_min = _current_t[0]
-                # _t_max = _current_t[-1]
+                _t_max = _current_t[-1]
                 __tof_diff_us = _t_min - t_interp[0]
-                # for _each_t in _tof_total_us_array:
-                #     if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
-                #         _current_t = np.append(_current_t, _each_t)
-                # _current_t.sort()
-                # _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
+                for _each_t in _tof_total_us_array:
+                    if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
+                        _current_t = np.append(_current_t, _each_t)
+                _current_t.sort()
+                _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
                 _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _tof_total_us_array
                 _shape_tof_dict_interp[_each_e]['t_for_sum'] = _tof_total_us_array - __tof_diff_us
                 for _each_param in self.model_param_names:
                     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
                 _params = _my_model.make_params()
-                print(_tof_total_us_array - __tof_diff_us)
+                print('Make shape for {} (eV) neutron'.format(_each_e))
                 _array = _my_model.eval(_params, t=_tof_total_us_array - __tof_diff_us)
+                print(_tof_total_us_array - __tof_diff_us)
                 if not norm:
                     _array = _array * _param_df['f_max'][_each_e]
                 _shape_tof_dict_interp[_each_e]['data_for_sum'] = _array
