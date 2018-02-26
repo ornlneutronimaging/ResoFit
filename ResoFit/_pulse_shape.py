@@ -39,6 +39,8 @@ class NeutronPulse(object):
         self.shape_tof_df_interp = None
         self.shape_tof_df_interp_proton = None
 
+        self.proton_df = None
+
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -316,8 +318,8 @@ class NeutronPulse(object):
             _shape_tof_df_interp = pd.DataFrame()
             _shape_tof_df_interp['tof_us'] = _tof_total_us_array
             if convolve_proton:
-                proton_df = _load_proton_pulse()
-                proton_y = proton_df['intensity']
+                self.proton_df = _load_proton_pulse()
+                proton_y = self.proton_df['intensity']
                 _shape_tof_df_interp_proton = pd.DataFrame()
                 _shape_tof_df_interp_proton['tof_us'] = _tof_total_us_array
             print('Making shape for:')
