@@ -37,6 +37,9 @@ class Simulation(object):
         self.y_simu = None
         self.layer_list = []
 
+        self.x_tof_us = None
+        self.y_att = None
+
     def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
         """
         Add layers and update x y values to pass
@@ -118,7 +121,7 @@ class Simulation(object):
 
         return _x, _y
 
-    def _convolve_beam_shape(self):
+    def _convolve_beam_shape(self, convolve_proton=True):
         path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
         path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
         overwrite_csv = False
@@ -130,14 +133,30 @@ class Simulation(object):
         neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwrite_csv)
         e_list = self.x_simu
         t_new = np.linspace(0.1, 30, 300)
-        neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
-
-        e_simu = self.o_reso.total_signal['energy_eV']
-        print(e_list == e_simu)
+        neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False,
+                                  convolve_proton=convolve_proton)
         self.neutron_pulse = neutron_pulse
-        df = self.neutron_pulse.shape_tof_df_interp.set_index('tof_us')
 
-        neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
+        tof_beam_shape_df = neutron_pulse.shape_tof_df_interp.set_index('tof_us')
+        tof_trans_df = tof_beam_shape_df * self.o_reso.total_signal['transmission']
+
+        tof_beam_shape_df['sum'] = tof_beam_shape_df.sum(axis=1)
+        tof_trans_df['sum'] = tof_trans_df.sum(axis=1)
+        print(tof_beam_shape_df)
+        print(tof_trans_df)
+
+        self.x_tof_us = np.array(tof_beam_shape_df.index)
+        self.y_att = 1 - np.array(tof_trans_df['sum'] / tof_beam_shape_df['sum'])
+
+        # tof_beam_shape_df_proton = neutron_pulse.shape_tof_df_interp_proton.set_index('tof_us')
+        # tof_trans_df_proton = tof_beam_shape_df_proton * self.o_reso.total_signal['transmission']
+        #
+        # tof_beam_shape_df_proton['sum'] = tof_beam_shape_df.sum(axis=1)
+        # tof_trans_df_proton['sum'] = tof_trans_df.sum(axis=1)
+        # print(tof_beam_shape_df)
+        # print(tof_trans_df)
+        #
+        # self.y_att_proton = 1 - np.array(tof_trans_df_proton['sum'] / tof_beam_shape_df_proton['sum'])
 
     def peak_map(self, thres, min_dist, impr_reso=True, isotope=False):
         """
@@ -179,7 +198,7 @@ class Simulation(object):
         # pprint.pprint(peak_dict)
         return peak_dict
 
-    def plot_simu(self, y_axis='attenuation', x_axis='energy', mixed=True, all_layers=False, all_elements=False,
+    def plot_simu(self, y_type='attenuation', x_type='energy', mixed=True, all_layers=False, all_elements=False,
                   all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
                   source_to_detector_m=16., lambda_max_angstroms=1, t_start_us=1):
         if len(self.layer_list) == 0:
@@ -189,7 +208,7 @@ class Simulation(object):
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_plot = items.shaped(items_list=items_to_plot)
 
-        self.o_reso.plot(y_axis=y_axis, x_axis=x_axis, mixed=mixed,
+        self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
                          all_layers=all_layers, all_elements=all_elements,
                          all_isotopes=all_isotopes, items_to_plot=items_to_plot,
                          lambda_max_angstroms=lambda_max_angstroms,

@@ -8,7 +8,7 @@ from lmfit.models import LinearModel
 from matplotlib import legend
 from ImagingReso._utilities import ev_to_s
 # import ImagingReso._utilities as reso_util
-
+from scipy import signal
 
 import ResoFit._utilities as fit_util
 from ResoFit.model import cole_windsor
@@ -34,10 +34,11 @@ class NeutronPulse(object):
         self.shape_dict_mcnp = None
         self.shape_df_mcnp = None
         self.shape_df_mcnp_norm = None
-        self.shape_dict_interp = None
         self.shape_df_interp = None
         self.shape_tof_dict_interp = None
-        # self.shape_tof_df_interp = None
+        self.shape_tof_df_interp = None
+        self.shape_tof_df_interp_proton = None
+
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -273,7 +274,7 @@ class NeutronPulse(object):
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
         # ax1.set_title('Pulse shape for each energy (interp.)')
 
-    def _make_shape(self, e_ev, t_interp, for_sum=False, norm=False):
+    def _make_shape(self, e_ev, t_interp, for_sum=False, norm=False, convolve_proton=True):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -282,12 +283,10 @@ class NeutronPulse(object):
         t_interp.sort()
         _param_df = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         _my_model = self.model
-        _shape_dict_interp = {}
         _shape_df_interp = pd.DataFrame()
         _shape_df_interp['t_us'] = t_interp
 
         _shape_tof_dict_interp = {}
-        _shape_tof_df_interp = None
         _tof_total_us_array = []
 
         print('For {} (m)'.format(16.45))
@@ -303,48 +302,90 @@ class NeutronPulse(object):
             _array = _my_model.eval(_params, t=t_interp)  # lmfit.model.eval() returns np.ndarray
             if not norm:
                 _array = _array * _param_df['f_max'][_each_e]
-            _shape_dict_interp[_each_e] = _array
             _shape_df_interp[_each_e] = _array
 
             _shape_tof_dict_interp[_each_e] = {}
             _shape_tof_dict_interp[_each_e]['tof_us'] = _current_tof_us
             _shape_tof_dict_interp[_each_e]['data'] = _array
 
-        _tof_total_us_array.sort()
+        self.shape_df_interp = _shape_df_interp
+
+        _tof_total_us_array.sort()  # list of all time that exist in all energy
 
         if for_sum:
             _shape_tof_df_interp = pd.DataFrame()
             _shape_tof_df_interp['tof_us'] = _tof_total_us_array
+            if convolve_proton:
+                proton_df = _load_proton_pulse()
+                proton_y = proton_df['intensity']
+                _shape_tof_df_interp_proton = pd.DataFrame()
+                _shape_tof_df_interp_proton['tof_us'] = _tof_total_us_array
+            print('Making shape for:')
             for _each_e in e_ev:
-                _current_t = _shape_tof_dict_interp[_each_e]['tof_us']
-                _t_min = _current_t[0]
-                _t_max = _current_t[-1]
+                __current_tof_us = _shape_tof_dict_interp[_each_e]['tof_us']
+                _t_min = __current_tof_us[0]
                 __tof_diff_us = _t_min - t_interp[0]
-                for _each_t in _tof_total_us_array:
-                    if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
-                        _current_t = np.append(_current_t, _each_t)
-                _current_t.sort()
-                _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
-                _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _tof_total_us_array
-                _shape_tof_dict_interp[_each_e]['t_for_sum'] = _tof_total_us_array - __tof_diff_us
+                _current_t_without_tof = _tof_total_us_array - __tof_diff_us
                 for _each_param in self.model_param_names:
                     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
                 _params = _my_model.make_params()
-                print('Make shape for {} (eV) neutron'.format(_each_e))
-                _array = _my_model.eval(_params, t=_tof_total_us_array - __tof_diff_us)
-                print(_tof_total_us_array - __tof_diff_us)
+                print('{} (eV) neutron ...'.format(_each_e))
+                _array = _my_model.eval(_params, t=_current_t_without_tof)
+                # print(_current_t_without_tof)
                 if not norm:
                     _array = _array * _param_df['f_max'][_each_e]
-                _shape_tof_dict_interp[_each_e]['data_for_sum'] = _array
+                    # print(len(_array))
+                    # print(len(_tof_total_us_array))
                 _shape_tof_df_interp[_each_e] = _array
+                if convolve_proton:
+                    conv = signal.convolve(_array, proton_y, mode='same')
+                    _shape_tof_df_interp_proton[_each_e] = conv
+                    self.shape_tof_df_interp_proton = _shape_tof_df_interp_proton
 
-        self.shape_dict_interp = _shape_dict_interp
-        self.shape_df_interp = _shape_df_interp
-        self.shape_tof_dict_interp = _shape_tof_dict_interp
-        self.shape_tof_df_interp = _shape_tof_df_interp
+            self.shape_tof_dict_interp = _shape_tof_dict_interp
+            self.shape_tof_df_interp = _shape_tof_df_interp
 
-    def make_and_sum_tof_shape(self):
-        pass
+        # if for_sum:
+        #     # _shape_tof_df_interp = pd.DataFrame()
+        #     # _shape_tof_df_interp['tof_us'] = _tof_total_us_array
+        #     for _each_e in e_ev:
+        #         _current_t = _shape_tof_dict_interp[_each_e]['tof_us']
+        #         _t_min = _current_t[0]
+        #         _t_max = _current_t[-1]
+        #         __tof_diff_us = _t_min - t_interp[0]
+        #         for _each_t in _tof_total_us_array:
+        #             if _each_t not in _current_t and _t_min <= _each_t <= _t_max:
+        #                 _current_t = np.append(_current_t, _each_t)
+        #         _current_t.sort()  # current time points + overlay region time points
+        #         _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _current_t
+        #         _shape_tof_dict_interp[_each_e]['tof_diff_us'] = __tof_diff_us
+        #         _shape_tof_dict_interp[_each_e]['tof_us_all'] = _tof_total_us_array
+        #         # _shape_tof_dict_interp[_each_e]['tof_us_for_sum'] = _tof_total_us_array
+        #         _current_t_without_tof = _current_t - __tof_diff_us
+        #         # _current_t_without_tof = _tof_total_us_array - __tof_diff_us
+        #         _shape_tof_dict_interp[_each_e]['t_without_tof'] = _current_t_without_tof
+        #         for _each_param in self.model_param_names:
+        #             _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
+        #         _params = _my_model.make_params()
+        #         print('Make shape for {} (eV) neutron:'.format(_each_e))
+        #         _array = _my_model.eval(_params, t=_current_t_without_tof)
+        #         # _array = _my_model.eval(_params, t=_tof_total_us_array - __tof_diff_us)
+        #         print(_current_t_without_tof)
+        #         print(_array)
+        #         # print(_tof_total_us_array - __tof_diff_us)
+        #         if not norm:
+        #             _array = _array * _param_df['f_max'][_each_e]
+        #         _shape_tof_dict_interp[_each_e]['data_for_sum'] = _array
+        #         if convolve_proton:
+        #             proton_df = _load_proton_pulse()
+        #             proton_y = proton_df['intensity']
+        #             conv = signal.convolve(_array, proton_y, mode='same')
+        #             _shape_tof_dict_interp[_each_e]['data_for_sum_convolved'] = conv
+
+        # # self.shape_dict_interp = _shape_dict_interp
+        # self.shape_df_interp = _shape_df_interp
+        # self.shape_tof_dict_interp = _shape_tof_dict_interp
+        # self.shape_tof_df_interp = _shape_tof_df_interp
 
     def _interpolate_param(self, e_ev):
 
@@ -928,7 +969,10 @@ def _shape_dict_to_dfs(shape_dict):
     return _shape_df, _shape_df_norm
 
 
-def _load_proton_pulse(path):
+proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+
+
+def _load_proton_pulse(path=proton_path):
     df = pd.read_csv(path, sep=' ', skiprows=1, header=None)
     df.columns = ['t_ns', 'intensity']
     return df
