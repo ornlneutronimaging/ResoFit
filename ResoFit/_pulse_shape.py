@@ -37,7 +37,7 @@ class NeutronPulse(object):
         self.shape_df_interp = None
         self.shape_tof_df_interp = None
         self.shape_tof_df_interp_proton = None
-
+        self.shape_tof_df_dir = None
         self.proton_df = _load_proton_pulse()
 
         self.result_shape_fit = None
@@ -178,7 +178,7 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
-        self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm)
+        self.make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm)
         _shape_df_interp = self.shape_df_interp
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
@@ -243,29 +243,27 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
-        self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm)
+        self.make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm)
         # _shape_tof_dict_interp = self.shape_tof_dict_interp
-        _tof_us = self.shape_tof_df_interp['tof_us']
-        _shape_tof_df_interp = self.shape_tof_df_interp.set_index('tof_us')
+        # _tof_us = self.shape_tof_df_interp['tof_us']
+        _shape_tof_df_interp = self.shape_tof_df_interp
+        # _shape_tof_df_interp = self.shape_tof_df_interp.set_index('tof_us')
         _y_label = 'Flux (n/sterad/pulse)'
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
-        # _x_tag = 'tof_us'
-        # _y_tag = 'data'
-        # if for_sum:
-        #     _x_tag = 'tof_us_for_sum'
-        #     _y_tag = 'data_for_sum'
+        _x_tag = 'tof_us'
 
-        _energy_interp_list = list(_shape_tof_df_interp.columns)
         fig, ax1 = plt.subplots()
-        for each_e in _energy_interp_list:
+        for each_e in e_ev:
+            if not for_sum:
+                _x_tag = str(each_e) + '_tof_us'
             if logy:
-                ax1.semilogy(_tof_us,
+                ax1.semilogy(_shape_tof_df_interp[_x_tag],
                              _shape_tof_df_interp[each_e],
                              marker='.',
                              label=str(each_e) + ' eV')
             else:
-                ax1.plot(_tof_us,
+                ax1.plot(_shape_tof_df_interp[_x_tag],
                          _shape_tof_df_interp[each_e],
                          marker='.',
                          label=str(each_e) + ' eV')
@@ -276,41 +274,80 @@ class NeutronPulse(object):
         ax1.set_xlim(left=0, right=1000)
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
 
-    # def make_shape(self, e_ev, t_interp, for_sum=False, norm=False, convolve_proton=True):
-    #
-    #     _model_s = self.model_used + '.csv'
-    #     _filename = 'Loglog_linear_within_' + _e_min + _e_max + _model_s
-    #     self.linear_df_dir = os.path.join(self.result_neutron_folder, _filename)
-    #
-    #     # File exists
-    #     if os.path.isfile(self.linear_df_dir):
-    #         print("'{}' exists...".format(self.linear_df_dir))
-    #         if overwrite_csv:
-    #             # Override==True, perform fitting and overwrite the .csv file
-    #             print("File overwriting...")
-    #             print("New fitting starts...")
-    #             # Fitting starts
-    #             self._fit_params(show_init=show_init,
-    #                              check_each=check_each,
-    #                              save_fig=save_fig,
-    #                              loglog_fit=loglog_fit)
-    #             print("File overwritten.")
-    #         else:
-    #             # Override==False, read the .csv file
-    #             self.linear_df = pd.read_csv(self.linear_df_dir)
-    #             print("File loaded.")
-    #
-    #     # File not exists, perform fitting
-    #     else:
-    #         print("No previous fitting file detected.\nNew fitting starts...")
-    #         # Making starts
-    #         self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm, convolve_proton=convolve_proton)
-
-    def _make_shape(self, e_ev, t_interp, for_sum=False, norm=False, convolve_proton=True):
+    def make_shape(self, e_ev, t_interp, for_sum=False, norm=False, convolve_proton=False, overwrite_csv=False):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
+        if isinstance(t_interp, int) or isinstance(t_interp, float):
+            raise ValueError("'t_interp' must be a list or array.")
+        e_ev.sort()
+        t_interp.sort()
+
+        _for_sum_s = ''
+        if for_sum:
+            _for_sum_s = '_for_sum'
+        _norm_s = ''
+        if norm:
+            _norm_s = '_norm'
+        _convolve_proton_s = ''
+        if convolve_proton:
+            _convolve_proton_s = '_proton'
+
+        _e_min = e_ev[0]
+        _e_max = e_ev[-1]
+        _e_nbr = len(e_ev) - 1
+        _e_step = (_e_max - _e_min) / _e_nbr
+
+        _e_str = '_eV_' + str(_e_min) + '_' + str(_e_max) + '_' + str(_e_step)
+
+        _t_min = t_interp[0]
+        _t_max = t_interp[-1]
+        _t_nbr = len(t_interp) - 1
+        _t_step = (_t_max - _t_min) / _t_nbr
+
+        _t_str = '_us_' + str(_t_min) + '_' + str(_t_max) + '_' + str(_t_step)
+
+        assert self.model_used is not None
+        _model_s = '_' + self.model_used + '.csv'
+
+        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _for_sum_s + _convolve_proton_s + _model_s
+        _shape_tof_df_dir = os.path.join(self.result_neutron_folder, _filename)
+        self.shape_tof_df_dir = _shape_tof_df_dir
+
+        # File exists
+        if os.path.isfile(_shape_tof_df_dir):
+            print("'{}' exists...".format(_shape_tof_df_dir))
+            if overwrite_csv:
+                # Override==True, perform making shape and overwrite the .csv file
+                print("File overwriting...")
+                print("New beam shape generation starts...")
+                # Making starts
+                self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
+                                 convolve_proton=convolve_proton, save_dir=_shape_tof_df_dir)
+                print("File overwritten.")
+            else:
+                # Override==False, read the .csv file
+                if convolve_proton:
+                    self.shape_tof_df_interp_proton = pd.read_csv(_shape_tof_df_dir,)
+                else:
+                    self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir, index_col=None)
+                print("TOF neutron beam shape file loaded.")
+
+        # File not exists, perform fitting
+        else:
+            print("No previous TOF neutron beam shape file detected.\nBeam shape generation starts...")
+            # Making starts
+            self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
+                             convolve_proton=convolve_proton, save_dir=_shape_tof_df_dir)
+
+    def _make_shape(self, e_ev, t_interp, for_sum, norm, convolve_proton, save_dir=None):
+        assert self.linear_df is not None
+        assert self.model is not None
+        if isinstance(e_ev, int) or isinstance(e_ev, float):
+            e_ev = [e_ev]
+        if isinstance(t_interp, int) or isinstance(t_interp, float):
+            raise ValueError("'t_interp' must be a list or array.")
         e_ev.sort()
         t_interp.sort()
 
@@ -339,7 +376,7 @@ class NeutronPulse(object):
 
             _tof_us_dict[_each_e] = _tof_diff_us
             if not for_sum:
-                _shape_tof_df_interp['tof_us'] = _current_tof_us
+                _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us
                 _shape_tof_df_interp[_each_e] = _array
 
         self.shape_df_interp = _shape_df_interp
@@ -372,6 +409,11 @@ class NeutronPulse(object):
                     self.shape_tof_df_interp_proton = _shape_tof_df_interp_proton
 
         self.shape_tof_df_interp = _shape_tof_df_interp
+
+        # Save shape_tof_df_interp as .csv
+        if save_dir is not None:
+            self.shape_tof_df_interp.to_csv(save_dir)
+            print("TOF neutron beam shape file has been saved at '{}'".format(save_dir))
 
     def _interpolate_param(self, e_ev):
 
