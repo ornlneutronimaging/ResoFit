@@ -259,12 +259,12 @@ class NeutronPulse(object):
                 _x_tag = str(each_e) + '_tof_us'
             if logy:
                 ax1.semilogy(_shape_tof_df_interp[_x_tag],
-                             _shape_tof_df_interp[each_e],
+                             _shape_tof_df_interp[str(each_e)],
                              marker='.',
                              label=str(each_e) + ' eV')
             else:
                 ax1.plot(_shape_tof_df_interp[_x_tag],
-                         _shape_tof_df_interp[each_e],
+                         _shape_tof_df_interp[str(each_e)],
                          marker='.',
                          label=str(each_e) + ' eV')
         ax1.legend(loc='best')
@@ -329,9 +329,9 @@ class NeutronPulse(object):
             else:
                 # Override==False, read the .csv file
                 if convolve_proton:
-                    self.shape_tof_df_interp_proton = pd.read_csv(_shape_tof_df_dir,)
+                    self.shape_tof_df_interp_proton = pd.read_csv(_shape_tof_df_dir)
                 else:
-                    self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir, index_col=None)
+                    self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir)
                 print("TOF neutron beam shape file loaded.")
 
         # File not exists, perform fitting
@@ -459,7 +459,7 @@ class NeutronPulse(object):
             else:
                 # Override==False, read the .csv file
                 self.linear_df = pd.read_csv(self.linear_df_dir)
-                print("File loaded.")
+                print("Parameters linear fitted file loaded.")
 
         # File not exists, perform fitting
         else:
@@ -508,6 +508,7 @@ class NeutronPulse(object):
             assert self.result_neutron_folder is not None
             assert self.linear_df_dir is not None
             _df.to_csv(path_or_buf=self.linear_df_dir, index=False)
+            print("Parameters linear fitting file has been saved at '{}'".format(self.linear_df_dir))
 
         return _df
 
@@ -618,7 +619,7 @@ class NeutronPulse(object):
             else:
                 # Override==False, read the .csv file
                 self.param_df = pd.read_csv(self.param_df_dir)
-                print("File loaded.")
+                print("Fitted parameters file loaded.")
 
         # File not exists, perform fitting
         else:
@@ -686,6 +687,7 @@ class NeutronPulse(object):
             assert self.result_neutron_folder is not None
             assert self.param_df_dir is not None
             _df.to_csv(path_or_buf=self.param_df_dir, index=False)
+            print("Parameters fitting file ({}) has been saved at '{}'".format(self.model_used, self.param_df_dir))
 
         return _df
 
