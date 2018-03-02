@@ -124,17 +124,20 @@ class Simulation(object):
     def _convolve_beam_shape(self, convolve_proton=True):
         path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
         path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
-        overwrite_csv = False
 
         neutron_pulse = NeutronPulse(path1, model_index=1)
         neutron_pulse.load_shape_each(path2)
-        neutron_pulse.fit_shape(e_min=1, e_max=500, drop=False, norm=True, check_each=False, save_fig=False,
-                                overwrite_csv=overwrite_csv)
-        neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwrite_csv)
+        neutron_pulse.fit_shape(e_min=1, e_max=500,
+                                drop=False, norm=True,
+                                check_each=False,
+                                save_fig=False,
+                                overwrite_csv=False)
+        neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
+
         e_list = self.x_simu
-        t_new = np.linspace(0.1, 30, 300)
-        neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False,
-                                  convolve_proton=convolve_proton)
+        # t_new = np.linspace(0.1, 30, 300)
+        neutron_pulse.make_shape(e_ev=e_list, t_interp=None, for_sum=True, norm=False,
+                                 convolve_proton=convolve_proton)
         self.neutron_pulse = neutron_pulse
 
         tof_beam_shape_df = neutron_pulse.shape_tof_df_interp.set_index('tof_us')

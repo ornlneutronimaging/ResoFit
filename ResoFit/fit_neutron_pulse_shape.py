@@ -31,10 +31,11 @@ neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=overwr
 
 
 e_list = np.linspace(1, 100, 100)
-t_new = np.linspace(0.1, 30, 300)
+# t_new = np.linspace(0.1, 30, 300)
+t_new = None
 # neutron_pulse.plot_shape_each_compare(e_min=15, e_max=200, norm=False, t_interp=None)
 # neutron_pulse.plot_shape_interp(e_ev=e_list, t_interp=t_new, logy=False, norm=False)
-neutron_pulse.plot_tof_shape_interp(e_ev=e_list, t_interp=t_new, for_sum=False, logy=False, norm=False)
+neutron_pulse.plot_tof_shape_interp(e_ev=e_list, t_interp=t_new, for_sum=True, logy=False, norm=False)
 plt.show()
 # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False, convolve_proton=True)
 # neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
