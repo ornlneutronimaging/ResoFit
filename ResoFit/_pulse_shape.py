@@ -36,7 +36,7 @@ class NeutronPulse(object):
         self.shape_df_mcnp_norm = None
         self.shape_df_interp = None
         self.shape_tof_df_interp = None
-        self.shape_tof_df_interp_proton = None
+        # self.shape_tof_df_interp_proton = None
         self.shape_tof_df_dir = None
         self.proton_df = _load_proton_pulse()
 
@@ -333,7 +333,7 @@ class NeutronPulse(object):
             else:
                 # Override==False, read the .csv file
                 if convolve_proton:
-                    self.shape_tof_df_interp_proton = pd.read_csv(_shape_tof_df_dir)
+                    self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir)
                 else:
                     self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir)
                 print("TOF neutron beam shape file loaded.")
