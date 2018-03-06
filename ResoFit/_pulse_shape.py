@@ -364,15 +364,10 @@ class NeutronPulse(object):
         _shape_tof_df_interp = pd.DataFrame()
         _tof_us_dict = {}
         _tof_total_us_array = []
-        # _tof_total_us_array_dropped = []
 
         print('For {} (m)'.format(16.45))
 
         for _each_e in e_ev:
-            # for _each_param in self.model_param_names:
-            #     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
-            # _params = _my_model.make_params()
-            # _array = _my_model.eval(_params, t=_shape_df_interp['t_us'])  # lmfit.model.eval() returns np.ndarray
             _array = self.__make_shape(e_ev=_each_e, t_us=_shape_df_interp['t_us'],
                                        param_df=_param_df_interp)  # lmfit.model.eval() returns np.ndarray
             if not norm:
@@ -386,10 +381,6 @@ class NeutronPulse(object):
             _current_tof_us = _t_array + _tof_diff_us
             _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
 
-            # if drop:
-            #     _current_tof_us_dropped = self.shape_dict_mcnp[_each_e]['data']['t_us'] + _tof_diff_us
-            #     _tof_total_us_array_dropped = np.append(_tof_total_us_array_dropped, _current_tof_us_dropped)
-
             if not for_sum:
                 _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us
                 _shape_tof_df_interp[str(_each_e)] = _array
@@ -398,13 +389,8 @@ class NeutronPulse(object):
         self.tof_us_dict = _tof_us_dict
 
         _tof_total_us_array.sort()  # list of all time that exist in all energy
-        # _tof_total_us_array_dropped.sort()
 
         if for_sum:
-            # if drop:
-            #     _tof_all = _tof_total_us_array_dropped
-            # else:
-            #     _tof_all = _tof_total_us_array
             _tof_all = _tof_total_us_array
             _shape_tof_df_interp['tof_us'] = _tof_all
             # if convolve_proton:
@@ -416,11 +402,7 @@ class NeutronPulse(object):
             for _each_e in e_ev:
                 __tof_diff_us = _tof_us_dict[_each_e]
                 _current_t_without_tof = _tof_all - __tof_diff_us
-                # for _each_param in self.model_param_names:
-                #     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
-                # _params = _my_model.make_params()
                 print('{} (eV) neutron ...'.format(_each_e))
-                # _array = _my_model.eval(_params, t=_current_t_without_tof)
                 _array = self.__make_shape(e_ev=_each_e, t_us=_current_t_without_tof,
                                            param_df=_param_df_interp)  # lmfit.model.eval() returns np.ndarray
                 if not norm:
@@ -442,7 +424,6 @@ class NeutronPulse(object):
         if isinstance(t_us, int) or isinstance(t_us, float):
             raise ValueError("'t_us' must be a list or array for shape interpolation.")
         _my_model = self.model
-        # _param_df = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         for _each_param in self.model_param_names:
             _my_model.set_param_hint(_each_param, value=param_df[_each_param][e_ev])
         _params = _my_model.make_params()
