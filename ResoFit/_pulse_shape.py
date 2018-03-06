@@ -350,35 +350,46 @@ class NeutronPulse(object):
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
-        if isinstance(t_interp, int) or isinstance(t_interp, float):
-            raise ValueError("'t_interp' must be a list or array.")
         e_ev.sort()
-        t_interp.sort()
 
-        _param_df = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
-        _my_model = self.model
+        if t_interp is not None:
+            t_interp.sort()
+            _t_array = t_interp
+        else:
+            _t_array = self.t
+
+        _param_df_interp = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         _shape_df_interp = pd.DataFrame()
-        _shape_df_interp['t_us'] = t_interp
+        _shape_df_interp['t_us'] = _t_array
         _shape_tof_df_interp = pd.DataFrame()
         _tof_us_dict = {}
         _tof_total_us_array = []
+        # _tof_total_us_array_dropped = []
 
         print('For {} (m)'.format(16.45))
 
         for _each_e in e_ev:
-            for _each_param in self.model_param_names:
-                _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
-            _params = _my_model.make_params()
-            _tof_diff_us = ev_to_s(offset_us=0, source_to_detector_m=16.45, array=_each_e) * 1e6
-            print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
-            _current_tof_us = t_interp + _tof_diff_us
-            _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
-            _array = _my_model.eval(_params, t=_shape_df_interp['t_us'])  # lmfit.model.eval() returns np.ndarray
+            # for _each_param in self.model_param_names:
+            #     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
+            # _params = _my_model.make_params()
+            # _array = _my_model.eval(_params, t=_shape_df_interp['t_us'])  # lmfit.model.eval() returns np.ndarray
+            _array = self.__make_shape(e_ev=_each_e, t_us=_shape_df_interp['t_us'],
+                                       param_df=_param_df_interp)  # lmfit.model.eval() returns np.ndarray
             if not norm:
-                _array = _array * _param_df['f_max'][_each_e]
+                _array = _array * _param_df_interp['f_max'][_each_e]
             _shape_df_interp[_each_e] = _array
 
+            _tof_diff_us = ev_to_s(offset_us=0, source_to_detector_m=16.45, array=_each_e) * 1e6
+            print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
             _tof_us_dict[_each_e] = _tof_diff_us
+
+            _current_tof_us = _t_array + _tof_diff_us
+            _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
+
+            # if drop:
+            #     _current_tof_us_dropped = self.shape_dict_mcnp[_each_e]['data']['t_us'] + _tof_diff_us
+            #     _tof_total_us_array_dropped = np.append(_tof_total_us_array_dropped, _current_tof_us_dropped)
+
             if not for_sum:
                 _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us
                 _shape_tof_df_interp[str(_each_e)] = _array
@@ -387,9 +398,15 @@ class NeutronPulse(object):
         self.tof_us_dict = _tof_us_dict
 
         _tof_total_us_array.sort()  # list of all time that exist in all energy
+        # _tof_total_us_array_dropped.sort()
 
         if for_sum:
-            _shape_tof_df_interp['tof_us'] = _tof_total_us_array
+            # if drop:
+            #     _tof_all = _tof_total_us_array_dropped
+            # else:
+            #     _tof_all = _tof_total_us_array
+            _tof_all = _tof_total_us_array
+            _shape_tof_df_interp['tof_us'] = _tof_all
             # if convolve_proton:
             #     assert self.proton_df is not None
             #     proton_y = self.proton_df['intensity']
@@ -398,14 +415,16 @@ class NeutronPulse(object):
             print('Making shape for:')
             for _each_e in e_ev:
                 __tof_diff_us = _tof_us_dict[_each_e]
-                _current_t_without_tof = _tof_total_us_array - __tof_diff_us
-                for _each_param in self.model_param_names:
-                    _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
-                _params = _my_model.make_params()
+                _current_t_without_tof = _tof_all - __tof_diff_us
+                # for _each_param in self.model_param_names:
+                #     _my_model.set_param_hint(_each_param, value=_param_df[_each_param][_each_e])
+                # _params = _my_model.make_params()
                 print('{} (eV) neutron ...'.format(_each_e))
-                _array = _my_model.eval(_params, t=_current_t_without_tof)
+                # _array = _my_model.eval(_params, t=_current_t_without_tof)
+                _array = self.__make_shape(e_ev=_each_e, t_us=_current_t_without_tof,
+                                           param_df=_param_df_interp)  # lmfit.model.eval() returns np.ndarray
                 if not norm:
-                    _array = _array * _param_df['f_max'][_each_e]
+                    _array = _array * _param_df_interp['f_max'][_each_e]
                 _shape_tof_df_interp[str(_each_e)] = _array
                 # if convolve_proton:
                 #     conv = signal.convolve(_array, proton_y, mode='same')
@@ -416,8 +435,19 @@ class NeutronPulse(object):
 
         # Save shape_tof_df_interp as .csv
         if save_dir is not None:
-            self.shape_tof_df_interp.to_csv(save_dir)
+            self.shape_tof_df_interp.to_csv(save_dir, index=False)
             print("TOF neutron beam shape file has been saved at '{}'".format(save_dir))
+
+    def __make_shape(self, e_ev, t_us, param_df):
+        if isinstance(t_us, int) or isinstance(t_us, float):
+            raise ValueError("'t_us' must be a list or array for shape interpolation.")
+        _my_model = self.model
+        # _param_df = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
+        for _each_param in self.model_param_names:
+            _my_model.set_param_hint(_each_param, value=param_df[_each_param][e_ev])
+        _params = _my_model.make_params()
+        _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
+        return _array
 
     def _interpolate_param(self, e_ev):
 
@@ -888,7 +918,7 @@ class NeutronPulse(object):
         if filename is None:
             self.shape_total_df.to_clipboard(excel=True)
         else:
-            self.shape_total_df.to_csv(filename)
+            self.shape_total_df.to_csv(filename, index=False)
 
     def _export_each_to_csv(self):
         for index, each_energy in enumerate(self.shape_dict_mcnp.keys()):
