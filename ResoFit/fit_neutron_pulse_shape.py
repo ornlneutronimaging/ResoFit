@@ -36,7 +36,7 @@ t_new = None
 # neutron_pulse.plot_shape_each_compare(e_min=15, e_max=200, norm=False, t_interp=None)
 # neutron_pulse.plot_shape_interp(e_ev=e_list, t_interp=t_new, logy=False, norm=False)
 neutron_pulse.plot_tof_shape_interp(e_ev=e_list, t_interp=t_new, for_sum=True, logy=False, norm=False)
-plt.show()
+# plt.show()
 # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False, convolve_proton=True)
 # neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
 # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)

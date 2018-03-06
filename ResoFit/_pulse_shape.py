@@ -373,7 +373,7 @@ class NeutronPulse(object):
             print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
             _current_tof_us = t_interp + _tof_diff_us
             _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
-            _array = _my_model.eval(_params, t=t_interp)  # lmfit.model.eval() returns np.ndarray
+            _array = _my_model.eval(_params, t=_shape_df_interp['t_us'])  # lmfit.model.eval() returns np.ndarray
             if not norm:
                 _array = _array * _param_df['f_max'][_each_e]
             _shape_df_interp[_each_e] = _array
@@ -381,7 +381,7 @@ class NeutronPulse(object):
             _tof_us_dict[_each_e] = _tof_diff_us
             if not for_sum:
                 _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us
-                _shape_tof_df_interp[_each_e] = _array
+                _shape_tof_df_interp[str(_each_e)] = _array
 
         self.shape_df_interp = _shape_df_interp
         self.tof_us_dict = _tof_us_dict
@@ -406,7 +406,7 @@ class NeutronPulse(object):
                 _array = _my_model.eval(_params, t=_current_t_without_tof)
                 if not norm:
                     _array = _array * _param_df['f_max'][_each_e]
-                _shape_tof_df_interp[_each_e] = _array
+                _shape_tof_df_interp[str(_each_e)] = _array
                 # if convolve_proton:
                 #     conv = signal.convolve(_array, proton_y, mode='same')
                 #     _shape_tof_df_interp_proton[_each_e] = conv
