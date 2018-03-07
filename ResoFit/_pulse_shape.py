@@ -136,7 +136,11 @@ class NeutronPulse(object):
 
         # only the energy provided by MCNPX simulation will be filtered
         assert self._energy_list is not None
-        _energy_all = self._energy_list
+        if self._energy_list_dropped is None:
+            _energy_all = self._energy_list
+        else:
+            _energy_all = self._energy_list_dropped
+
         for _each in _energy_all:
             if _each < e_min or _each > e_max:
                 _shape_df.drop(columns=_each, inplace=True)
@@ -163,10 +167,14 @@ class NeutronPulse(object):
         # ax1.set_title('Pulse shape for each energy (MCNPX)')
         # return ax1
 
-    def plot_shape_interp(self, e_ev, t_interp, logy=False, norm=False):
+    def plot_shape_interp(self, e_ev, t_interp=None, logy=False, norm=False, for_sum=False, convolve_proton=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
+        :param convolve_proton:
+        :type convolve_proton:
+        :param for_sum:
+        :type for_sum:
         :param t_interp:
         :type t_interp:
         :param e_ev:
@@ -178,7 +186,9 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
-        self.make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm)
+        if t_interp is None:
+            t_interp = self.t
+        self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm, for_sum=for_sum, convolve_proton=convolve_proton)
         _shape_df_interp = self.shape_df_interp
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
@@ -206,27 +216,35 @@ class NeutronPulse(object):
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
         # ax1.set_title('Pulse shape for each energy (interp.)')
 
-    def plot_shape_each_compare(self, e_min, e_max, t_interp=None, norm=False):
+    def plot_shape_each_compare(self, e_min, e_max, t_interp=None, logy=False, norm=False, for_sum=False,
+                                convolve_proton=False):
         """
         Plot each eV beam shape obtained from MCNPX simulation and current fitting approach to compare
 
-        :param t_interp:
-        :type t_interp:
         :param e_min:
         :type e_min:
         :param e_max:
         :type e_max:
+        :param t_interp:
+        :type t_interp:
+        :param logy:
+        :type logy:
         :param norm:
         :type norm:
+        :param for_sum:
+        :type for_sum:
+        :param convolve_proton:
+        :type convolve_proton:
         :return:
         :rtype:
         """
-        if t_interp is None:
-            t_interp = self.t
-        self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm)
-        self.plot_shape_interp(e_ev=self._energy_list_dropped, t_interp=t_interp, norm=norm)
+        # if t_interp is None:
+        #     t_interp = self.t
+        self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
+        self.plot_shape_interp(e_ev=self._energy_list_dropped, t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum,
+                               convolve_proton=convolve_proton)
 
-    def plot_tof_shape_interp(self, e_ev, t_interp=None, for_sum=False, logy=False, norm=False, convolve_proton=True):
+    def plot_tof_shape_interp(self, e_ev, t_interp=None, for_sum=False, logy=False, norm=False, convolve_proton=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -245,13 +263,14 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
+        if isinstance(e_ev, int) or isinstance(e_ev, float):
+            e_ev = [e_ev]
         if t_interp is None:
             t_interp = self.t
-        self.make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm, convolve_proton=convolve_proton)
-        # _shape_tof_dict_interp = self.shape_tof_dict_interp
-        # _tof_us = self.shape_tof_df_interp['tof_us']
+        elif isinstance(t_interp, int) or isinstance(t_interp, float):
+            raise ValueError("'t_interp' must be a list or array.")
+        self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm, convolve_proton=convolve_proton)
         _shape_tof_df_interp = self.shape_tof_df_interp
-        # _shape_tof_df_interp = self.shape_tof_df_interp.set_index('tof_us')
         _y_label = 'Flux (n/sterad/pulse)'
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
@@ -275,7 +294,7 @@ class NeutronPulse(object):
         ax1.set_ylabel(_y_label)
         ax1.set_xlabel(u'Time (μs)')
         ax1.grid()
-        ax1.set_xlim(left=0, right=1000)
+        ax1.set_xlim(left=0, right=1200)
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
 
     def make_shape(self, e_ev, t_interp=None, for_sum=False, norm=False, convolve_proton=False, overwrite_csv=False):
