@@ -179,13 +179,14 @@ class Simulation(object):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         _stack_sigma = self.o_reso.stack_sigma
+        _stack_signal = self.o_reso.stack_signal
         _layer_list = self.layer_list
-        _x_energy = _stack_sigma[_layer_list[0]][_layer_list[0]]['energy_eV']
+        _x_energy = _stack_signal[_layer_list[0]][_layer_list[0]]['energy_eV']
         # peak_dict = {'energy_eV': _x_energy}
         peak_dict = {}
         for _ele in _layer_list:
-            _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
-            # peak_dict[_ele] = {'sigma_b': _ele_sigma, }
+            _ele_sigma = _stack_signal[_ele][_ele]['attenuation']
+            # _ele_sigma = _stack_sigma[_ele][_ele]['sigma_b']
             peak_dict[_ele] = {}
             _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_sigma,
                                           thres=thres, min_dist=min_dist, impr_reso=impr_reso)

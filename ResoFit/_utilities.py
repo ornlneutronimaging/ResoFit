@@ -86,12 +86,6 @@ def set_plt(plt, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
         plt.grid()
 
 
-# def peak_plt(plt, peak_df, peak_map_indexed, peak):
-#     plt.plot(self.peak_df_scaled['x'],
-#                      self.peak_df_scaled['y'],
-#                      'kx', label='_nolegend_')
-
-
 def rm_baseline(y, deg=7, max_it=None, tol=None):
     if y.max() < 0:
         raise ValueError("y.max() < 0")
@@ -458,7 +452,7 @@ class Peak(object):
                 pars.update(_model.make_params())
                 pars[_prefix + 'amplitude'].value = 3.0
                 pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
-                pars[_prefix + 'sigma'].value = 2.0
+                pars[_prefix + 'sigma'].set(2.0, min=0.5, max=50)
                 model += _model
                 self.prefix_list.append(_prefix)
         _out = model.fit(_y, pars, x=_x)
@@ -522,11 +516,12 @@ class Peak(object):
         for _keys in self.peak_map_indexed.keys():
             _live_location = self.peak_map_indexed[_keys]['peak_span']
             _img_num_list = _live_location['img_num']
-            _live_location['time_s'] = list(self.x_s.loc[_img_num_list])
-            _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.loc[_img_num_list]),
+            _live_location['time_s'] = list(self.x_s.reindex(_img_num_list))
+            _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.reindex(_img_num_list)),
                                                             offset_us=offset_us,
                                                             source_to_detector_m=source_to_detector_m)
-            _live_location['y'] = list(self.y.loc[_img_num_list])
+            _live_location['y'] = list(self.y.reindex(_img_num_list))
+            # _live_location['y'] = list(self.y.loc[_img_num_list])
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

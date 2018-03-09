@@ -40,7 +40,7 @@ each_step = False
 before = False
 table = True
 grid = True
-peak_label = 'all'
+peak_label = 'indexed'
 # items_to_plot = ['238-U', '235-U', 'Gd']
 # items_to_plot = ['U-238', 'Gd-156', 'U']
 # items_to_plot = [layer_1, layer_2]
@@ -69,34 +69,34 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=False)
-calibration.index_peak(thres=0.11, min_dist=21, impr_reso=False)
-# calibration.analyze_peak(report=False, show_fit=True)
+calibration.index_peak(thres=0.15, min_dist=25, rel_tol=0.0028, impr_reso=False)
+calibration.analyze_peak(report=False, show_fit=True)
 
 calibration.plot(before=False, total=False, table=table,
                  peak_id=peak_label, peak_mark=False,
                  grid=True, items_to_plot=items_to_plot, interp=False)
 
-# Fit sample density or thickness
-fit = FitResonance(spectra_file=spectra_file,
-                   data_file=data_file,
-                   folder=folder,
-                   repeat=repeat,
-                   energy_min=energy_min,
-                   energy_max=energy_max,
-                   energy_step=energy_step,
-                   calibrated_offset_us=calibration.calibrated_offset_us,
-                   calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
-                   norm_to_file=norm_to_file,
-                   slice_start=image_start,
-                   slice_end=image_end,
-                   baseline=baseline)
-pprint.pprint(fit.fitted_simulation)
-fit_result = fit.fit(layer, vary='density', each_step=each_step)
-
-# Fit isotope ratios (under development)
-# fit.fit_iso(layer=layer_1, each_step=True)
-
-fit.molar_conc()
-fit.index_peak(thres=0.15, min_dist=25)
-fit.plot(before=before, table=table, grid=grid, peak_id=peak_label,
-         items_to_plot=items_to_plot, interp=False, error=False)
+# # Fit sample density or thickness
+# fit = FitResonance(spectra_file=spectra_file,
+#                    data_file=data_file,
+#                    folder=folder,
+#                    repeat=repeat,
+#                    energy_min=energy_min,
+#                    energy_max=energy_max,
+#                    energy_step=energy_step,
+#                    calibrated_offset_us=calibration.calibrated_offset_us,
+#                    calibrated_source_to_detector_m=calibration.calibrated_source_to_detector_m,
+#                    norm_to_file=norm_to_file,
+#                    slice_start=image_start,
+#                    slice_end=image_end,
+#                    baseline=baseline)
+# pprint.pprint(fit.fitted_simulation)
+# fit_result = fit.fit(layer, vary='density', each_step=each_step)
+#
+# # Fit isotope ratios (under development)
+# # fit.fit_iso(layer=layer_1, each_step=True)
+#
+# fit.molar_conc()
+# fit.index_peak(thres=0.11, min_dist=21)
+# fit.plot(before=before, table=table, grid=grid, peak_id=peak_label,
+#          items_to_plot=items_to_plot, interp=False, error=False)
