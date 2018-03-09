@@ -121,7 +121,7 @@ class Simulation(object):
 
         return _x, _y
 
-    def _convolve_beam_shape(self, convolve_proton):
+    def _convolve_beam_shape(self, convolve_proton, sigma=None):
         path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
         path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
 
@@ -137,7 +137,7 @@ class Simulation(object):
         e_list = self.x_simu
         # t_new = np.linspace(0.1, 30, 300)
         neutron_pulse.make_shape(e_ev=e_list, t_interp=None, for_sum=True, norm=False,
-                                 convolve_proton=convolve_proton, overwrite_csv=False)
+                                 convolve_proton=convolve_proton, sigma=sigma, overwrite_csv=False)
         self.neutron_pulse = neutron_pulse
 
         tof_beam_shape_df = neutron_pulse.shape_tof_df_interp.set_index('tof_us')
@@ -145,8 +145,8 @@ class Simulation(object):
 
         tof_beam_shape_df['sum'] = tof_beam_shape_df.sum(axis=1)
         tof_trans_df['sum'] = tof_trans_df.sum(axis=1)
-        print(tof_beam_shape_df)
-        print(tof_trans_df)
+        # print(tof_beam_shape_df)
+        # print(tof_trans_df)
 
         self.x_tof_us = np.array(tof_beam_shape_df.index)
         self.y_att = 1 - np.array(tof_trans_df['sum'] / tof_beam_shape_df['sum'])

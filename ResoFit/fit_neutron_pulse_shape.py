@@ -40,7 +40,8 @@ import matplotlib.pyplot as plt
 # # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False, convolve_proton=True)
 # # neutron_pulse.shape_tof_df_interp.set_index('tof_us').sum(axis=1).plot()
 # # neutron_pulse._make_shape(e_ev=e_list, t_interp=t_new, for_sum=True, norm=False)
-convolve_proton = False
+
+convolve_proton = True
 if convolve_proton:
     title = 'Proton convolved'
 else:
@@ -63,4 +64,9 @@ simulation.plot_simu(x_type='time', source_to_detector_m=16.45, offset_us=2.67)
 plt.plot(simulation.x_tof_us-2.9, simulation.y_att, label='Convolution')
 experiment1.plot_raw(x_type='time', time_unit='us')
 plt.title(title)
-plt.show()
+# # plt.show()
+
+
+# proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+#
+# proton_pulse = ProtonPulse(path=proton_path)

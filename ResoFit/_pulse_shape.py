@@ -18,7 +18,7 @@ from ResoFit.model import ikeda_carpenter
 from ResoFit.model import ikeda_carpenter_jparc
 from ResoFit.model import loglog_linear
 
-import pprint
+import lmfit
 
 
 class NeutronPulse(object):
@@ -36,9 +36,8 @@ class NeutronPulse(object):
         self.shape_df_mcnp_norm = None
         self.shape_df_interp = None
         self.shape_tof_df_interp = None
-        # self.shape_tof_df_interp_proton = None
         self.shape_tof_df_dir = None
-        self.proton_df = _load_proton_pulse()
+        self.proton_pulse = ProtonPulse(path=proton_path)
 
         self.result_shape_fit = None
         self.param_df_dir = None
@@ -297,7 +296,8 @@ class NeutronPulse(object):
         ax1.set_xlim(left=0, right=1200)
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
 
-    def make_shape(self, e_ev, t_interp=None, for_sum=False, norm=False, convolve_proton=False, overwrite_csv=False):
+    def make_shape(self, e_ev, t_interp=None, for_sum=False, norm=False, convolve_proton=False, sigma=None,
+                   overwrite_csv=False):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -349,7 +349,7 @@ class NeutronPulse(object):
                 print("New beam shape generation starts...")
                 # Making starts
                 self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
-                                 convolve_proton=convolve_proton, save_dir=_shape_tof_df_dir)
+                                 convolve_proton=convolve_proton, sigma=sigma, save_dir=_shape_tof_df_dir)
                 print("File overwritten.")
             else:
                 # Override==False, read the .csv file
@@ -364,9 +364,9 @@ class NeutronPulse(object):
             print("No previous TOF neutron beam shape file detected.\nBeam shape generation starts...")
             # Making starts
             self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
-                             convolve_proton=convolve_proton, save_dir=_shape_tof_df_dir)
+                             convolve_proton=convolve_proton, sigma=sigma, save_dir=_shape_tof_df_dir)
 
-    def _make_shape(self, e_ev, t_interp, for_sum, norm, convolve_proton, save_dir=None):
+    def _make_shape(self, e_ev, t_interp, for_sum, norm, convolve_proton, sigma, save_dir=None):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -392,7 +392,8 @@ class NeutronPulse(object):
             _array = self._make_single_shape(e_ev=_each_e,
                                              t_us=_shape_df_interp['t_us'],
                                              param_df=_param_df_interp,
-                                             convolve_proton=convolve_proton)
+                                             convolve_proton=convolve_proton,
+                                             sigma=sigma)
             _temp_df = pd.DataFrame()
             _temp_df['t_us'] = _shape_df_interp['t_us']
             _temp_df['f_norm'] = _array
@@ -430,7 +431,8 @@ class NeutronPulse(object):
                 _array = self._make_single_shape(e_ev=_each_e,
                                                  t_us=_current_t_without_tof,
                                                  param_df=_param_df_interp,
-                                                 convolve_proton=convolve_proton)
+                                                 convolve_proton=convolve_proton,
+                                                 sigma=sigma)
                 if not norm:
                     _array = _array * _param_df_interp['f_max'][_each_e]
                 _shape_tof_df_interp[str(_each_e)] = _array
@@ -442,7 +444,7 @@ class NeutronPulse(object):
             self.shape_tof_df_interp.to_csv(save_dir, index=False)
             print("TOF neutron beam shape file has been saved at '{}'".format(save_dir))
 
-    def _make_single_shape(self, e_ev, t_us, param_df, convolve_proton):
+    def _make_single_shape(self, e_ev, t_us, param_df, convolve_proton, sigma):
         # if not isinstance(e_ev, int) or isinstance(e_ev, float):
         #     raise ValueError("'e_ev' must be a number for single shape generation.")
         if isinstance(t_us, int) or isinstance(t_us, float):
@@ -453,8 +455,11 @@ class NeutronPulse(object):
         _params = _my_model.make_params()
         _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
         if convolve_proton:
-            assert self.proton_df is not None
-            proton_y = self.proton_df['intensity']
+            if sigma is not None:
+                self.proton_pulse.make_new_shape(sigma=sigma, verbose=True)
+                proton_y = self.proton_pulse.shape_df_new['intensity']
+            else:
+                proton_y = self.proton_pulse.shape_df['intensity']
             _conv = np.convolve(_array, proton_y, mode='same')
             _array = _conv
 
@@ -953,13 +958,34 @@ class ProtonPulse(object):
     def __init__(self, path):
         """"""
         self.shape_df = _load_proton_pulse(path)
+        self.model = None
+        self.params = None
+        self.shape_df_new = self.shape_df
 
     def fit_shape(self):
         t_ns = self.shape_df['t_ns']
         intensity = self.shape_df['intensity']
+        _model = lmfit.models.GaussianModel()
+        _proton_params = _model.guess(data=intensity, x=t_ns)
+        result = _model.fit(data=intensity, x=t_ns, params=_proton_params)
+        _best_params = result.params
+        self.model = _model
+        self.params = _best_params
         # my_model = Model(guass)
         # result = my_model.fit((intensity, params, t=t_ns))
-        pass
+
+    def make_new_shape(self, sigma, verbose=False):
+        if self.params is None:
+            self.fit_shape()
+        _params = self.params
+        _params.add('sigma', sigma)
+        if verbose:
+            print("---------- Before ---------")
+            self.params.pretty_print()
+            print("---------- After ----------")
+            _params.pretty_print()
+        self.params = _params
+        self.shape_df_new['intensity'] = self.model.eval(params=_params, x=self.shape_df['t_ns'])
 
 
 # Functions to load files #
