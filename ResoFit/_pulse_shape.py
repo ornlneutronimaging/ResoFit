@@ -20,6 +20,8 @@ from ResoFit.model import loglog_linear
 
 import lmfit
 
+proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+
 
 class NeutronPulse(object):
 
@@ -457,13 +459,20 @@ class NeutronPulse(object):
         if convolve_proton:
             if sigma is not None:
                 self.proton_pulse.make_new_shape(sigma=sigma, verbose=True)
-                proton_y = self.proton_pulse.shape_df_new['intensity']
-            else:
-                proton_y = self.proton_pulse.shape_df['intensity']
+            proton_y = self.proton_pulse.shape_df_current['intensity']
+            if len(_array) < len(proton_y):
+                self.proton_pulse.trunc_df(rel_tol=0.01)
+                proton_y = self.proton_pulse.shape_df_current['intensity']
+                if len(_array) < len(proton_y):
+                    raise ValueError(
+                        "The length of proton array is too long, proton({}) <= array({}) required.".format(
+                            len(proton_y),
+                            len(_array)))
             _conv = np.convolve(_array, proton_y, mode='same')
-            _array = _conv
+        else:
+            _conv = _array
 
-        return _array
+        return _conv
 
     def _interpolate_param(self, e_ev):
 
@@ -960,7 +969,7 @@ class ProtonPulse(object):
         self.shape_df = _load_proton_pulse(path)
         self.model = None
         self.params = None
-        self.shape_df_new = self.shape_df
+        self.shape_df_current = self.shape_df
 
     def fit_shape(self):
         t_ns = self.shape_df['t_ns']
@@ -985,7 +994,15 @@ class ProtonPulse(object):
             print("---------- After ----------")
             _params.pretty_print()
         self.params = _params
-        self.shape_df_new['intensity'] = self.model.eval(params=_params, x=self.shape_df['t_ns'])
+        self.shape_df_current['intensity'] = self.model.eval(params=_params, x=self.shape_df['t_ns'])
+
+    def trunc_df(self, rel_tol=0.01):
+        _temp_df = self.shape_df_current
+        _max = max(_temp_df['intensity'])
+        _temp_df['norm'] = _temp_df['intensity'] / _max
+        _temp_df = _temp_df.drop(_temp_df[_temp_df.norm <= rel_tol].index)
+        _temp_df.reset_index(drop=True, inplace=True)
+        self.shape_df_current = _temp_df
 
 
 # Functions to load files #
@@ -1068,9 +1085,6 @@ def _shape_dict_to_dfs(shape_dict):
         _shape_df[each_key] = shape_dict[each_key]['data_raw']['f']
         _shape_df_norm[each_key] = shape_dict[each_key]['data_raw']['f_norm']
     return _shape_df, _shape_df_norm
-
-
-proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
 
 
 def _load_proton_pulse(path=proton_path):
