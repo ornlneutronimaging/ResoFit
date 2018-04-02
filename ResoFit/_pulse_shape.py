@@ -320,6 +320,10 @@ class NeutronPulse(object):
         _convolve_proton_s = ''
         if convolve_proton:
             _convolve_proton_s = '_proton'
+        if sigma is not None:
+            _sigma_s = '_' + str(sigma)
+        else:
+            _sigma_s = ''
 
         _e_min = e_ev[0]
         _e_max = e_ev[-1]
@@ -338,7 +342,7 @@ class NeutronPulse(object):
         assert self.model_used is not None
         _model_s = '_' + self.model_used + '.csv'
 
-        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _for_sum_s + _convolve_proton_s + _model_s
+        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _for_sum_s + _convolve_proton_s + _sigma_s + _model_s
         _shape_tof_df_dir = os.path.join(self.result_neutron_folder, _filename)
         self.shape_tof_df_dir = _shape_tof_df_dir
 

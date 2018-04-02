@@ -204,7 +204,7 @@ class Simulation(object):
 
     def plot_simu(self, y_type='attenuation', x_type='energy', mixed=True, all_layers=False, all_elements=False,
                   all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
-                  source_to_detector_m=16., lambda_max_angstroms=1, t_start_us=1):
+                  source_to_detector_m=16., t_start_us=1):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         if items_to_plot is not None:
@@ -215,7 +215,6 @@ class Simulation(object):
         self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
                          all_layers=all_layers, all_elements=all_elements,
                          all_isotopes=all_isotopes, items_to_plot=items_to_plot,
-                         lambda_max_angstroms=lambda_max_angstroms,
                          source_to_detector_m=source_to_detector_m,
                          offset_us=offset_us,
                          time_resolution_us=time_resolution_us,

@@ -49,7 +49,7 @@ else:
 
 simulation = Simulation(energy_min=7, energy_max=150, energy_step=0.1, database='ENDF_VII')
 simulation.add_layer(layer='Gd', layer_thickness_mm=0.15)
-simulation._convolve_beam_shape(convolve_proton=convolve_proton)
+simulation._convolve_beam_shape(convolve_proton=convolve_proton, sigma=300)
 
 folder = 'data/IPTS_19558/reso_data_19558'
 data_file1 = 'Gd_thick.csv'

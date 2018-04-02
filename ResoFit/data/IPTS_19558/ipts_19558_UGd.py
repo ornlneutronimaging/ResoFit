@@ -69,7 +69,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=False)
-calibration.index_peak(thres=0.15, min_dist=25, rel_tol=0.0028, impr_reso=False)
+calibration.index_peak(thres=0.13, min_dist=21, rel_tol=0.0028, impr_reso=False)
 calibration.analyze_peak(report=False, show_fit=True)
 
 calibration.plot(before=False, total=False, table=table,

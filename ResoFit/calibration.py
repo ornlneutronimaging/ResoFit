@@ -429,8 +429,8 @@ class Calibration(Simulation):
             _filename = 'calibration_' + _sample_name + '.png'
             plt.savefig(_filename, dpi=600, transparent=True)
             plt.close()
-        else:
-            plt.show()
+        # else:
+        #     plt.show()
 
     def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
                     all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
