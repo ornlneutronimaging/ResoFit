@@ -20,7 +20,8 @@ from ResoFit.model import loglog_linear
 
 import lmfit
 
-proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+# proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+proton_path = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
 
 
 class NeutronPulse(object):
@@ -968,43 +969,46 @@ class ProtonPulse(object):
 
     def __init__(self, path):
         """"""
-        self.shape_df = _load_proton_pulse(path)
+        self._shape_df = _load_proton_pulse(path)
+        self._params = None
+        self.new_params = None
+        self.new_shape_df = None
         self.model = None
-        self.params = None
-        self.shape_df_current = self.shape_df
+        self.trunc_new_shape_df = None
 
     def fit_shape(self):
-        t_ns = self.shape_df['t_ns']
-        intensity = self.shape_df['intensity']
+        t_ns = self._shape_df['t_ns']
+        intensity = self._shape_df['intensity']
         _model = lmfit.models.GaussianModel()
         _proton_params = _model.guess(data=intensity, x=t_ns)
         result = _model.fit(data=intensity, x=t_ns, params=_proton_params)
-        _best_params = result.params
         self.model = _model
-        self.params = _best_params
-        # my_model = Model(guass)
-        # result = my_model.fit((intensity, params, t=t_ns))
+        self._params = result.params
+        result.params.pretty_print()
 
     def make_new_shape(self, sigma, verbose=False):
-        if self.params is None:
+        if self._params is None:
             self.fit_shape()
-        _params = self.params
+        _params = self._params
         _params.add('sigma', sigma)
         if verbose:
             print("---------- Before ---------")
-            self.params.pretty_print()
+            self._params.pretty_print()
             print("---------- After ----------")
             _params.pretty_print()
-        self.params = _params
-        self.shape_df_current['intensity'] = self.model.eval(params=_params, x=self.shape_df['t_ns'])
+        self.new_params = _params
+        self.new_shape_df = pd.DataFrame()
+        self.new_shape_df['t_ns'] = self._shape_df['t_ns']
+        self.new_shape_df['intensity'] = self.model.eval(params=_params, x=self._shape_df['t_ns'])
 
     def trunc_df(self, rel_tol=0.01):
-        _temp_df = self.shape_df_current
+        assert self.new_shape_df is not None
+        _temp_df = self.new_shape_df
         _max = max(_temp_df['intensity'])
         _temp_df['norm'] = _temp_df['intensity'] / _max
         _temp_df = _temp_df.drop(_temp_df[_temp_df.norm <= rel_tol].index)
         _temp_df.reset_index(drop=True, inplace=True)
-        self.shape_df_current = _temp_df
+        self.trunc_new_shape_df = _temp_df
 
 
 # Functions to load files #
