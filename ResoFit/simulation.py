@@ -121,7 +121,7 @@ class Simulation(object):
 
         return _x, _y
 
-    def _convolve_beam_shape(self, convolve_proton, sigma=None):
+    def _convolve_neutron_beam_shape(self, source_to_detector_m):
         path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
         path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
 
@@ -137,7 +137,9 @@ class Simulation(object):
         e_list = self.x_simu
         # t_new = np.linspace(0.1, 30, 300)
         neutron_pulse.make_shape(e_ev=e_list, t_interp=None, for_sum=True, norm=False,
-                                 convolve_proton=convolve_proton, sigma=sigma, overwrite_csv=False)
+                                 source_to_detector_m=source_to_detector_m,
+                                 # convolve_proton=convolve_proton, sigma=sigma,
+                                 overwrite_csv=False)
         self.neutron_pulse = neutron_pulse
 
         tof_beam_shape_df = neutron_pulse.shape_tof_df_interp.set_index('tof_us')
