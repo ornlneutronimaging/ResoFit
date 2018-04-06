@@ -113,6 +113,8 @@ class NeutronPulse(object):
         ax2.tick_params('x', colors='r', which='both')
         # ax1.set_title('Neutron total flux', y=1.08, loc='left')
 
+        return fig
+
     def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False):
         """
         Plot each eV beam shape obtained from MCNPX simulation
@@ -167,7 +169,7 @@ class NeutronPulse(object):
         ax1.set_xlim(left=0, right=5)
         ax1.set_title('Energy dependent neutron pulse shape (MCNPX)')
         # ax1.set_title('Pulse shape for each energy (MCNPX)')
-        # return ax1
+        return fig
 
     def plot_shape_interp(self, e_ev, t_interp=None, logy=False, norm=False, for_sum=False, source_to_detector_m=None):
         """
@@ -218,6 +220,7 @@ class NeutronPulse(object):
         ax1.set_xlim(left=0, right=5)
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
         # ax1.set_title('Pulse shape for each energy (interp.)')
+        return fig
 
     def plot_shape_each_compare(self, e_min, e_max, t_interp=None, logy=False, norm=False, for_sum=False):
         """
@@ -298,6 +301,7 @@ class NeutronPulse(object):
         ax1.grid()
         ax1.set_xlim(left=0, right=1200)
         ax1.set_title('Energy dependent neutron pulse shape (interp.)')
+        return fig
 
     def make_shape(self, e_ev, source_to_detector_m, t_interp=None, for_sum=False, norm=False,
                    # convolve_proton=False, sigma=None,
