@@ -990,11 +990,12 @@ class ProtonPulse(object):
         self._params = result.params
         result.params.pretty_print()
 
-    def make_new_shape(self, sigma, verbose=False):
+    def make_new_shape(self, sigma, amplitude, verbose=False):
         if self._params is None:
             self.fit_shape()
         _params = self._params
         _params.add('sigma', sigma)
+        _params.add('amplitude', amplitude)
         if verbose:
             print("---------- Before ---------")
             self._params.pretty_print()
