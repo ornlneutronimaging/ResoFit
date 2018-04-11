@@ -339,10 +339,11 @@ class NeutronPulse(object):
 
         _t_min = t_interp[0]
         _t_max = t_interp[-1]
-        _t_nbr = len(t_interp) - 1
-        _t_step = (_t_max - _t_min) / _t_nbr
+        _t_nbr = len(t_interp)
+        # _t_nbr = len(t_interp) - 1
+        # _t_step = (_t_max - _t_min) / _t_nbr
 
-        _t_str = '_us_' + str(_t_min) + '_' + str(_t_max) + '_' + str(_t_step)
+        _t_str = '_us_' + str(_t_min) + '_' + str(_t_max) + '_' + str(_t_nbr)
 
         assert self.model_used is not None
         _model_s = '_' + self.model_used + '.csv'
@@ -978,7 +979,7 @@ class ProtonPulse(object):
         self.new_params = None
         self.new_shape_df = None
         self.model = None
-        self.trunc_new_shape_df = None
+        self._new_shape_df = None
 
     def fit_shape(self):
         t_ns = self._shape_df['t_ns']
@@ -989,13 +990,15 @@ class ProtonPulse(object):
         self.model = _model
         self._params = result.params
         result.params.pretty_print()
+        return result
 
-    def make_new_shape(self, sigma, amplitude, verbose=False):
+    def make_new_shape(self, sigma, amplitude=None, verbose=False):
         if self._params is None:
             self.fit_shape()
         _params = self._params
         _params.add('sigma', sigma)
-        _params.add('amplitude', amplitude)
+        if amplitude is not None:
+            _params.add('amplitude', amplitude)
         if verbose:
             print("---------- Before ---------")
             self._params.pretty_print()
@@ -1013,7 +1016,7 @@ class ProtonPulse(object):
         _temp_df['norm'] = _temp_df['intensity'] / _max
         _temp_df = _temp_df.drop(_temp_df[_temp_df.norm <= rel_tol].index)
         _temp_df.reset_index(drop=True, inplace=True)
-        self.trunc_new_shape_df = _temp_df
+        self._new_shape_df = _temp_df
 
 
 # Functions to load files #

@@ -121,9 +121,11 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
             if _baseline is True:  # baseline removal only works for peaks instead of dips currently
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw)
-        elif y_type == 'transmission':
+        else:
+            assert y_type == 'transmission'
             if _baseline is True:  # baseline removal only works for peaks instead of dips currently
-                raise ValueError("Baseline removal only works for peaks instead of dips!")
+                y_exp_raw = fit_util.rm_envelope(y_exp_raw)
+                # raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         return y_exp_raw
 
@@ -396,7 +398,7 @@ class Experiment(object):
 
         # Plot
         plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
-        plt.ylim(ymax=1.01)
+        plt.ylim(top=1.01, bottom=-0.01)
         plt.xlabel(x_axis_label)
         plt.ylabel(y_axis_label)
         plt.legend(loc='best')

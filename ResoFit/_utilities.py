@@ -93,6 +93,14 @@ def rm_baseline(y, deg=7, max_it=None, tol=None):
     return y - baseline
 
 
+def rm_envelope(y, deg=7, max_it=None, tol=None):
+    if y.max() < 0:
+        raise ValueError("y.max() < 0")
+    envelope = pku.envelope(y=y, deg=deg, max_it=max_it, tol=tol)
+    # return y + y.max() - envelope
+    return y + 1 - envelope
+
+
 class Items(object):
     def __init__(self, o_reso, database='ENDF_VIII'):
         self.o_reso = o_reso

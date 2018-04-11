@@ -25,7 +25,6 @@ setup(
         'numpy',
         'pandas',
         'ImagingReso',
-        'pprint',
         'scipy',
         'lmfit',
         'peakutils',
