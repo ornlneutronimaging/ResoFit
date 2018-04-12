@@ -8,7 +8,7 @@ source_to_detector_m = 16.45
 
 simulation = Simulation(energy_min=7, energy_max=150, energy_step=0.1, database='ENDF_VII')
 simulation.add_layer(layer='Gd', layer_thickness_mm=0.075)
-# simulation._convolve_neutron_beam_shape(source_to_detector_m=source_to_detector_m, model_index=1)
+simulation._convolve_neutron_beam_shape(source_to_detector_m=source_to_detector_m, model_index=1)
 # model_index:
 # 1: 'ikeda_carpenter',
 # 2: 'cole_windsor',
@@ -25,8 +25,8 @@ experiment1 = Experiment(data_file=data_file1,
                          baseline=True)
 # experiment1.slice(slice_start=300, reset_index=False)
 # peak_df = experiment1.find_peak()
-# simulation.plot_simu(x_type='time', source_to_detector_m=source_to_detector_m, offset_us=2.67)
-# plt.plot(simulation.x_tof_us - 2.9, simulation.y_att, label='Simulated Data')
+simulation.plot_simu(x_type='time', source_to_detector_m=source_to_detector_m, offset_us=2.67)
+plt.plot(simulation.x_tof_us - 2.9, simulation.y_att, label='Simulated Data')
 experiment1.plot_raw(x_type='time', time_unit='us')
 # plt.title(title)
 plt.show()
