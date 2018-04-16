@@ -992,18 +992,30 @@ class ProtonPulse(object):
         result.params.pretty_print()
         return result
 
-    def make_new_shape(self, sigma, amplitude=None, verbose=False):
+    def make_new_shape(self,
+                       sigma=None,
+                       center=None,
+                       amplitude=None,
+                       fwhm=None,
+                       height=None):
         if self._params is None:
             self.fit_shape()
         _params = self._params
-        _params.add('sigma', sigma)
+        if sigma is not None:
+            _params.add('sigma', sigma)
+        if center is not None:
+            _params.add('center', center)
         if amplitude is not None:
             _params.add('amplitude', amplitude)
-        if verbose:
-            print("---------- Before ---------")
-            self._params.pretty_print()
-            print("---------- After ----------")
-            _params.pretty_print()
+        if fwhm is not None:
+            _params.add('fwhm', fwhm)
+        if height is not None:
+            _params.add('height', height)
+        # if verbose:
+        #     print("---------- Before ---------")
+        #     self._params.pretty_print()
+        #     print("---------- After ----------")
+        _params.pretty_print()
         self.new_params = _params
         self.new_shape_df = pd.DataFrame()
         self.new_shape_df['t_ns'] = self._shape_df['t_ns']
