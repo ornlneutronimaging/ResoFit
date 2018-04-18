@@ -171,7 +171,7 @@ class NeutronPulse(object):
         # ax1.set_title('Pulse shape for each energy (MCNPX)')
         return fig
 
-    def plot_shape_interp(self, e_ev, t_interp=None, logy=False, norm=False, for_sum=False, source_to_detector_m=None):
+    def plot_shape_interp(self, e_ev, source_to_detector_m, t_interp=None, logy=False, norm=False, for_sum=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -222,7 +222,7 @@ class NeutronPulse(object):
         # ax1.set_title('Pulse shape for each energy (interp.)')
         return fig
 
-    def plot_shape_each_compare(self, e_min, e_max, t_interp=None, logy=False, norm=False, for_sum=False):
+    def plot_shape_each_compare(self, e_min, e_max, source_to_detector_m, t_interp=None, logy=False, norm=False, for_sum=False):
         """
         Plot each eV beam shape obtained from MCNPX simulation and current fitting approach to compare
 
@@ -230,6 +230,8 @@ class NeutronPulse(object):
         :type e_min:
         :param e_max:
         :type e_max:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
         :param t_interp:
         :type t_interp:
         :param logy:
@@ -246,7 +248,9 @@ class NeutronPulse(object):
         # if t_interp is None:
         #     t_interp = self.t
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
-        self.plot_shape_interp(e_ev=self._energy_list_dropped, t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum)
+        self.plot_shape_interp(e_ev=self._energy_list_dropped,
+                               source_to_detector_m=source_to_detector_m,
+                               t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum)
 
     def plot_tof_shape_interp(self, e_ev, source_to_detector_m, t_interp=None, for_sum=False, logy=False, norm=False):
         """
