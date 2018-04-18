@@ -84,33 +84,65 @@ class NeutronPulse(object):
 
         self.t = np.array(self.shape_df_mcnp['t_us'])
 
-    def plot_shape_total(self, x_type='both'):
+    def plot_shape_total(self, x1_type='energy', x2_type='lambda', source_to_detector_m=None):
         """
         Plot the total beam shape obtained from MCNPX simulation
 
-        :param x_type:
-        :type x_type: str
+        :param x1_type:
+        :type x1_type:
+        :param x2_type:
+        :type x2_type:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
         :return: plot
         :rtype: matplotlib
         """
-        x_type_list = ['energy', 'lambda', 'both']
-        if x_type not in x_type_list:
+        x_type_list = ['energy', 'lambda', 'time', 'none']
+        if x1_type not in x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
+        if x1_type == 'time' or x2_type == 'time':
+            if source_to_detector_m is None:
+                raise ValueError("Please specify the source-to-detector distance in m.")
+        if x1_type == x2_type:
+            x2_type = 'none'
 
         fig, ax1 = plt.subplots()
-        ax1.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], 'b.')
+        if x1_type == 'energy':
+            ax1.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], 'b.')
+            ax1.set_xlabel('Energy (eV)', color='b')
+        elif x1_type == 'lambda':
+            ax1.loglog(self.shape_total_df['l_angstrom'], self.shape_total_df['f(l)'], 'b.')
+            ax1.set_xlabel(u"Wavelength (\u212B)", color='b')
+            ax1.invert_xaxis()
+        elif x1_type == 'time':
+            ax1.loglog(ev_to_s(array=self.shape_total_df['E_eV'],
+                               offset_us=0,
+                               source_to_detector_m=source_to_detector_m)*1e6,
+                       self.shape_total_df['f(l)'], 'b.')
+            ax1.set_xlabel(u"Time-of-flight (\u03BCs)", color='b')
+            ax1.invert_xaxis()
         ax1.set_ylabel('Flux (n/sterad/pulse)')
-        ax1.set_xlabel('Energy (eV)', color='b')
         ax1.tick_params('x', colors='b', which='both')
-
-        ax2 = ax1.twiny()
-        ax2.loglog(self.shape_total_df['l_angstrom'], self.shape_total_df['f(l)'], 'rx')
-        ax2.set_xlabel(u"Wavelength (\u212B)", color='r')
-        ax2.invert_xaxis()
         ax1.grid(axis='x', which='both', color='b', alpha=0.3)
         ax1.grid(axis='y', which='major', alpha=0.3)
-        ax2.grid(axis='x', which='both', color='r', alpha=0.3)
-        ax2.tick_params('x', colors='r', which='both')
+        if x2_type != 'none':
+            ax2 = ax1.twiny()
+            if x2_type == 'energy':
+                ax2.loglog(self.shape_total_df['E_eV'], self.shape_total_df['f(E)'], 'rx')
+                ax2.set_xlabel('Energy (eV)', color='r')
+            elif x2_type == 'lambda':
+                ax2.loglog(self.shape_total_df['l_angstrom'], self.shape_total_df['f(l)'], 'rx')
+                ax2.set_xlabel(u"Wavelength (\u212B)", color='r')
+                ax2.invert_xaxis()
+            elif x2_type == 'time':
+                ax2.loglog(ev_to_s(array=self.shape_total_df['E_eV'],
+                                   offset_us=0,
+                                   source_to_detector_m=source_to_detector_m) / 1e6,
+                           self.shape_total_df['f(l)'], 'rx')
+                ax2.set_xlabel(u"Time-of-flight (\u03BCs)", color='r')
+                ax2.invert_xaxis()
+            ax2.grid(axis='x', which='both', color='r', alpha=0.3)
+            ax2.tick_params('x', colors='r', which='both')
         # ax1.set_title('Neutron total flux', y=1.08, loc='left')
 
         return fig
@@ -164,7 +196,7 @@ class NeutronPulse(object):
                          label=str(each) + ' eV')
         ax1.legend(loc='best')
         ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (μs)')
+        ax1.set_xlabel(u'Time (\u03BCs)')
         ax1.grid()
         ax1.set_xlim(left=0, right=5)
         ax1.set_title('Energy dependent neutron pulse shape (MCNPX)')
@@ -193,12 +225,17 @@ class NeutronPulse(object):
         if t_interp is None:
             t_interp = self.t
         self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm, for_sum=for_sum,
-                         source_to_detector_m=source_to_detector_m)
+                         source_to_detector_m=source_to_detector_m, print_tof=False)
         _shape_df_interp = self.shape_df_interp
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
         else:
             _y_label = 'Flux (n/sterad/pulse)'
+
+        if for_sum:
+            for_sum_s = ' for sum'
+        else:
+            for_sum_s = ''
 
         _energy_interp_list = list(_shape_df_interp.set_index('t_us').columns)
         fig, ax1 = plt.subplots()
@@ -215,10 +252,10 @@ class NeutronPulse(object):
                          label=str(each) + ' eV')
         ax1.legend(loc='best')
         ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (μs)')
+        ax1.set_xlabel(u'Time (\u03BCs)')
         ax1.grid()
         ax1.set_xlim(left=0, right=5)
-        ax1.set_title('Energy dependent neutron pulse shape (interp.)')
+        ax1.set_title('Energy dependent neutron pulse shape (interp. {})'.format(for_sum_s))
         # ax1.set_title('Pulse shape for each energy (interp.)')
         return fig
 
@@ -240,8 +277,6 @@ class NeutronPulse(object):
         :type norm:
         :param for_sum:
         :type for_sum:
-        :param convolve_proton:
-        :type convolve_proton:
         :return:
         :rtype:
         """
@@ -278,12 +313,16 @@ class NeutronPulse(object):
         elif isinstance(t_interp, int) or isinstance(t_interp, float):
             raise ValueError("'t_interp' must be a list or array.")
         self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
-                         source_to_detector_m=source_to_detector_m)
+                         source_to_detector_m=source_to_detector_m, print_tof=False)
         _shape_tof_df_interp = self.shape_tof_df_interp
         _y_label = 'Flux (n/sterad/pulse)'
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
         _x_tag = 'tof_us'
+        if for_sum:
+            for_sum_s = ' for sum'
+        else:
+            for_sum_s = ''
 
         fig, ax1 = plt.subplots()
         for each_e in e_ev:
@@ -301,10 +340,10 @@ class NeutronPulse(object):
                          label=str(each_e) + ' eV')
         ax1.legend(loc='best')
         ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (μs)')
+        ax1.set_xlabel(u'Time (\u03BCs)')
         ax1.grid()
         ax1.set_xlim(left=0, right=1200)
-        ax1.set_title('Energy dependent neutron pulse shape (interp.)')
+        ax1.set_title('Energy dependent neutron pulse shape (interp.{})'.format(for_sum_s))
         return fig
 
     def make_shape(self, e_ev, source_to_detector_m, t_interp=None, for_sum=False, norm=False,
@@ -366,7 +405,9 @@ class NeutronPulse(object):
                 # Making starts
                 self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
                                  source_to_detector_m=source_to_detector_m,
-                                 save_dir=_shape_tof_df_dir)
+                                 save_dir=_shape_tof_df_dir,
+                                 print_tof=True,
+                                 )
                 print("File overwritten.")
             else:
                 # Override==False, read the .csv file
@@ -379,9 +420,11 @@ class NeutronPulse(object):
             # Making starts
             self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
                              source_to_detector_m=source_to_detector_m,
-                             save_dir=_shape_tof_df_dir)
+                             save_dir=_shape_tof_df_dir,
+                             print_tof=True,
+                             )
 
-    def _make_shape(self, e_ev, t_interp, for_sum, norm, source_to_detector_m, save_dir=None):
+    def _make_shape(self, e_ev, t_interp, for_sum, norm, source_to_detector_m, print_tof, save_dir=None):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -401,7 +444,8 @@ class NeutronPulse(object):
         _tof_us_dict = {}
         _tof_total_us_array = []
 
-        print('For {} (m)'.format(source_to_detector_m))
+        if print_tof:
+            print('For {} (m)'.format(source_to_detector_m))
 
         for _each_e in e_ev:
             _array = self._make_single_shape(e_ev=_each_e,
@@ -418,7 +462,8 @@ class NeutronPulse(object):
             _shape_df_interp[_each_e] = _array
 
             _tof_diff_us = ev_to_s(offset_us=0, source_to_detector_m=source_to_detector_m, array=_each_e) * 1e6
-            print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
+            if print_tof:
+                print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
             _tof_us_dict[_each_e] = _tof_diff_us
             _current_tof_us = _t_array + _tof_diff_us
 
@@ -437,11 +482,13 @@ class NeutronPulse(object):
         if for_sum:
             _tof_all = _tof_total_us_array
             _shape_tof_df_interp['tof_us'] = _tof_all
-            print('Making shape for:')
+            if print_tof is True:
+                print('Making shape for:')
             for _each_e in e_ev:
                 __tof_diff_us = _tof_us_dict[_each_e]
                 _current_t_without_tof = _tof_all - __tof_diff_us
-                print('{} (eV) neutron ...'.format(_each_e))
+                if print_tof is True:
+                    print('{} (eV) neutron ...'.format(_each_e))
                 _array = self._make_single_shape(e_ev=_each_e,
                                                  t_us=_current_t_without_tof,
                                                  param_df=_param_df_interp,
@@ -898,7 +945,7 @@ class NeutronPulse(object):
         if check_each:
             assert self.result_shape_fit is not None
             _y_label = 'Normalized neutron flux (arb. unit)'
-            _x_label = 'Time (µs)'
+            _x_label = 'Time (\u03BCs)'
             _e_text = str(e) + ' eV'
             if show_init is True:
                 self.result_shape_fit.plot(xlabel=_x_label, ylabel=_y_label)
