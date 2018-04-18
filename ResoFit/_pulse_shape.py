@@ -137,7 +137,7 @@ class NeutronPulse(object):
             elif x2_type == 'time':
                 ax2.loglog(ev_to_s(array=self.shape_total_df['E_eV'],
                                    offset_us=0,
-                                   source_to_detector_m=source_to_detector_m) / 1e6,
+                                   source_to_detector_m=source_to_detector_m)*1e6,
                            self.shape_total_df['f(l)'], 'rx')
                 ax2.set_xlabel(u"Time-of-flight (\u03BCs)", color='r')
                 ax2.invert_xaxis()
@@ -1050,6 +1050,8 @@ class ProtonPulse(object):
                        fwhm=None,
                        height=None):
         if self._params is None:
+            self.fit_shape()
+        if all([sigma, center, amplitude, fwhm, height]) is None:
             self.fit_shape()
         _params = self._params
         if sigma is not None:
