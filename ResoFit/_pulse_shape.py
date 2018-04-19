@@ -40,7 +40,10 @@ class NeutronPulse(object):
         self.shape_df_interp = None
         self.shape_tof_df_interp = None
         self.shape_tof_df_dir = None
+
         self.proton_pulse = ProtonPulse(path=proton_path)
+        self.proton_pulse.fit_shape()
+        # self.proton_pulse
 
         self.result_shape_fit = None
         self.param_df_dir = None
@@ -59,7 +62,7 @@ class NeutronPulse(object):
                           2: 'cole_windsor',
                           3: 'pseudo_voigt',
                           4: 'ikeda_carpenter_jparc',
-                          5: 'cole_windsor_jparc'
+                          5: 'cole_windsor_jparc',
                           }
         self.model_index = None
         self.model_used = None
@@ -280,8 +283,6 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
-        # if t_interp is None:
-        #     t_interp = self.t
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
         self.plot_shape_interp(e_ev=self._energy_list_dropped,
                                source_to_detector_m=source_to_detector_m,
