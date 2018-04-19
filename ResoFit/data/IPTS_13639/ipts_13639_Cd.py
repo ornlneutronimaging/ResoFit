@@ -41,7 +41,7 @@ offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
                           spectra_file=spectra_file,
-                          raw_layer=layer,
+                          layer=layer,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,

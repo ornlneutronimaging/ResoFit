@@ -26,7 +26,7 @@ class TestCalibration(unittest.TestCase):
 
         self.calibration = Calibration(data_file=self.data_file,
                                        spectra_file=self.spectra_file,
-                                       raw_layer=layer,
+                                       layer=layer,
                                        energy_min=energy_min,
                                        energy_max=energy_max,
                                        energy_step=energy_step,

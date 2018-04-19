@@ -206,7 +206,8 @@ class NeutronPulse(object):
         # ax1.set_title('Pulse shape for each energy (MCNPX)')
         return fig
 
-    def plot_shape_interp(self, e_ev, source_to_detector_m, t_interp=None, logy=False, norm=False, for_sum=False):
+    def plot_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
+                          t_interp=None, logy=False, norm=False, for_sum=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -228,7 +229,8 @@ class NeutronPulse(object):
         if t_interp is None:
             t_interp = self.t
         self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm, for_sum=for_sum,
-                         source_to_detector_m=source_to_detector_m, print_tof=False)
+                         source_to_detector_m=source_to_detector_m, print_tof=False,
+                         conv_proton=conv_proton, proton_params=proton_params)
         _shape_df_interp = self.shape_df_interp
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
@@ -262,7 +264,8 @@ class NeutronPulse(object):
         # ax1.set_title('Pulse shape for each energy (interp.)')
         return fig
 
-    def plot_shape_each_compare(self, e_min, e_max, source_to_detector_m, t_interp=None, logy=False, norm=False, for_sum=False):
+    def plot_shape_each_compare(self, e_min, e_max, source_to_detector_m, conv_proton, proton_params={},
+                                t_interp=None, logy=False, norm=False, for_sum=False):
         """
         Plot each eV beam shape obtained from MCNPX simulation and current fitting approach to compare
 
@@ -286,9 +289,11 @@ class NeutronPulse(object):
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
         self.plot_shape_interp(e_ev=self._energy_list_dropped,
                                source_to_detector_m=source_to_detector_m,
+                               conv_proton=conv_proton, proton_params=proton_params,
                                t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum)
 
-    def plot_tof_shape_interp(self, e_ev, source_to_detector_m, t_interp=None, for_sum=False, logy=False, norm=False):
+    def plot_tof_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
+                              t_interp=None, for_sum=False, logy=False, norm=False):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -314,7 +319,8 @@ class NeutronPulse(object):
         elif isinstance(t_interp, int) or isinstance(t_interp, float):
             raise ValueError("'t_interp' must be a list or array.")
         self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
-                         source_to_detector_m=source_to_detector_m, print_tof=False)
+                         source_to_detector_m=source_to_detector_m, print_tof=False,
+                         conv_proton=conv_proton, proton_params=proton_params)
         _shape_tof_df_interp = self.shape_tof_df_interp
         _y_label = 'Flux (n/sterad/pulse)'
         if norm:
@@ -347,9 +353,8 @@ class NeutronPulse(object):
         ax1.set_title('Energy dependent neutron pulse shape (interp.{})'.format(for_sum_s))
         return fig
 
-    def make_shape(self, e_ev, source_to_detector_m, t_interp=None, for_sum=False, norm=False,
-                   # convolve_proton=False, sigma=None,
-                   overwrite_csv=False):
+    def make_shape(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
+                   t_interp=None, for_sum=False, norm=False, overwrite_csv=False):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -360,6 +365,8 @@ class NeutronPulse(object):
         if t_interp is None:
             t_interp = self.t
         t_interp.sort()
+
+        # construct the str for the file name
         _distance_s = '_' + str(source_to_detector_m) + 'm'
         _for_sum_s = ''
         if for_sum:
@@ -367,12 +374,13 @@ class NeutronPulse(object):
         _norm_s = ''
         if norm:
             _norm_s = '_norm'
-        # _convolve_proton_s = ''
-        # if convolve_proton:
-        #     _convolve_proton_s = '_proton'
-        # _sigma_s = ''
-        # if sigma is not None:
-        #     _sigma_s = '_' + str(sigma)
+        _conv_proton_s = ''
+        if conv_proton:
+            _conv_proton_s = '_proton'
+        _proton_param_s = ''
+        # if len(proton_params) > 0:
+        for _param in proton_params.keys():
+            _proton_param_s = _proton_param_s + '_' + _param + '_' + str(proton_params[_param])
 
         _e_min = e_ev[0]
         _e_max = e_ev[-1]
@@ -384,15 +392,14 @@ class NeutronPulse(object):
         _t_min = t_interp[0]
         _t_max = t_interp[-1]
         _t_nbr = len(t_interp)
-        # _t_nbr = len(t_interp) - 1
-        # _t_step = (_t_max - _t_min) / _t_nbr
 
         _t_str = '_us_' + str(_t_min) + '_' + str(_t_max) + '_' + str(_t_nbr)
 
         assert self.model_used is not None
         _model_s = '_' + self.model_used + '.csv'
 
-        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _for_sum_s + _distance_s + _model_s
+        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _conv_proton_s + _proton_param_s\
+                    + _for_sum_s + _distance_s + _model_s
         _shape_tof_df_dir = os.path.join(self.result_neutron_folder, _filename)
         self.shape_tof_df_dir = _shape_tof_df_dir
 
@@ -408,6 +415,8 @@ class NeutronPulse(object):
                                  source_to_detector_m=source_to_detector_m,
                                  save_dir=_shape_tof_df_dir,
                                  print_tof=True,
+                                 conv_proton=conv_proton,
+                                 proton_params=proton_params,
                                  )
                 print("File overwritten.")
             else:
@@ -423,9 +432,12 @@ class NeutronPulse(object):
                              source_to_detector_m=source_to_detector_m,
                              save_dir=_shape_tof_df_dir,
                              print_tof=True,
+                             conv_proton=conv_proton,
+                             proton_params=proton_params,
                              )
 
-    def _make_shape(self, e_ev, t_interp, for_sum, norm, source_to_detector_m, print_tof, save_dir=None):
+    def _make_shape(self, e_ev, t_interp, for_sum, norm, source_to_detector_m, print_tof,
+                    conv_proton, proton_params={}, save_dir=None):
         assert self.linear_df is not None
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
@@ -452,7 +464,8 @@ class NeutronPulse(object):
             _array = self._make_single_shape(e_ev=_each_e,
                                              t_us=_shape_df_interp['t_us'],
                                              param_df=_param_df_interp,
-                                             )
+                                             conv_proton=conv_proton,
+                                             proton_params=proton_params)
             _temp_df = pd.DataFrame()
             _temp_df['t_us'] = _shape_df_interp['t_us']
             _temp_df['f_norm'] = _array
@@ -493,7 +506,8 @@ class NeutronPulse(object):
                 _array = self._make_single_shape(e_ev=_each_e,
                                                  t_us=_current_t_without_tof,
                                                  param_df=_param_df_interp,
-                                                 )
+                                                 conv_proton=conv_proton,
+                                                 proton_params=proton_params)
                 if not norm:
                     _array = _array * _param_df_interp['f_max'][_each_e]
                 _shape_tof_df_interp[str(_each_e)] = _array
@@ -505,7 +519,7 @@ class NeutronPulse(object):
             self.shape_tof_df_interp.to_csv(save_dir, index=False)
             print("TOF neutron beam shape file has been saved at '{}'".format(save_dir))
 
-    def _make_single_shape(self, e_ev, t_us, param_df):
+    def _make_single_shape(self, e_ev, t_us, param_df, conv_proton, proton_params={}):
         # if not isinstance(e_ev, int) or isinstance(e_ev, float):
         #     raise ValueError("'e_ev' must be a number for single shape generation.")
         if isinstance(t_us, int) or isinstance(t_us, float):

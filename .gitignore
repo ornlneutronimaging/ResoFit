@@ -110,6 +110,7 @@ ENV/
 .idea/**/modules.xml
 .idea/**/vcs.xml
 .DS_Store
+.pytest_cache
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/

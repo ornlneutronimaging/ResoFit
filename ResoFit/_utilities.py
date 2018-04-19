@@ -102,6 +102,10 @@ def rm_envelope(y, deg=7, max_it=None, tol=None):
 
 
 class Items(object):
+    """
+    A easier way to specify layers/elements/isotopes for in plot()/export()
+
+    """
     def __init__(self, o_reso, database='ENDF_VIII'):
         self.o_reso = o_reso
         self.shaped_list = None
@@ -128,6 +132,8 @@ class Items(object):
 
     def values(self, y_axis_type='attenuation'):
         # plot specified from 'items_to_plot'
+        if self.shaped_list is None:
+            raise ValueError("'.shaped_list' is empty, please run '.shaped()' first.")
         if y_axis_type != 'sigma':
             _stack = self.o_reso.stack_signal
         else:
@@ -135,6 +141,7 @@ class Items(object):
             y_axis_type = 'sigma_b'
         y_axis_tag = y_axis_type
         _y_axis_dict = {}
+
         for _each_path in self.shaped_list:
             _label = _each_path[-1]
             if len(_each_path) == 3:

@@ -14,7 +14,7 @@ from ResoFit._utilities import Peak
 
 
 class Calibration(Simulation):
-    def __init__(self, spectra_file, data_file, raw_layer,
+    def __init__(self, spectra_file, data_file, layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  repeat=1, folder='data', baseline=False,
                  database='ENDF_VII'):
@@ -25,8 +25,8 @@ class Calibration(Simulation):
         :type spectra_file:
         :param data_file:
         :type data_file:
-        :param raw_layer:
-        :type raw_layer:
+        :param layer: Layer()
+        :type layer:
         :param energy_min:
         :type energy_min:
         :param energy_max:
@@ -44,10 +44,10 @@ class Calibration(Simulation):
                          energy_max=energy_max,
                          energy_step=energy_step,
                          database=database)
-        for _each_layer in list(raw_layer.info.keys()):
+        for _each_layer in list(layer.info.keys()):
             self.add_layer(layer=_each_layer,
-                           layer_thickness_mm=raw_layer.info[_each_layer]['thickness']['value'],
-                           layer_density_gcm3=raw_layer.info[_each_layer]['density']['value'])
+                           layer_thickness_mm=layer.info[_each_layer]['thickness']['value'],
+                           layer_density_gcm3=layer.info[_each_layer]['density']['value'])
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -67,7 +67,7 @@ class Calibration(Simulation):
         self.baseline = baseline
         # self.calibrated_residual = None
         self.params_to_calibrate = None
-        self.raw_layer = raw_layer
+        self.raw_layer = layer
         self.database = database
 
         # self.peak_df_scaled = None
