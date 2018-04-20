@@ -53,7 +53,8 @@ class NeutronPulse(object):
         self.model_param_names = None
         self.e_min = None
         self.e_max = None
-        self.t = None
+        self.t_us_MCNPX = None
+        self.t_us = np.linspace(5e-2, 1.85e2, 18496)
         self.result_neutron_folder = None
         self._energy_list = None
         self._energy_list_dropped = None
@@ -85,7 +86,7 @@ class NeutronPulse(object):
         self.shape_df_mcnp, self.shape_df_mcnp_norm = _shape_dict_to_dfs(self.shape_dict_mcnp)
         self._energy_list = list(self.shape_df_mcnp.set_index('t_us').columns)
 
-        self.t = np.array(self.shape_df_mcnp['t_us'])
+        self.t_us_MCNPX = np.array(self.shape_df_mcnp['t_us'])
 
     def plot_shape_total(self, x1_type='energy', x2_type='lambda', source_to_detector_m=None):
         """
@@ -211,23 +212,27 @@ class NeutronPulse(object):
         """
         Plot each eV beam shape obtained from the fitting approach
 
-        :param for_sum:
-        :type for_sum:
-        :param t_interp:
-        :type t_interp:
         :param e_ev:
         :type e_ev:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :param conv_proton:
+        :type conv_proton:
+        :param proton_params:
+        :type proton_params:
+        :param t_interp:
+        :type t_interp:
         :param logy:
         :type logy:
         :param norm:
         :type norm:
-        :param source_to_detector_m:
-        :type source_to_detector_m:
+        :param for_sum:
+        :type for_sum:
         :return:
         :rtype:
         """
         if t_interp is None:
-            t_interp = self.t
+            t_interp = self.t_us_MCNPX
         self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm, for_sum=for_sum,
                          source_to_detector_m=source_to_detector_m, print_tof=False,
                          conv_proton=conv_proton, proton_params=proton_params)
@@ -275,6 +280,10 @@ class NeutronPulse(object):
         :type e_max:
         :param source_to_detector_m:
         :type source_to_detector_m:
+        :param conv_proton:
+        :type conv_proton:
+        :param proton_params:
+        :type proton_params:
         :param t_interp:
         :type t_interp:
         :param logy:
@@ -297,27 +306,29 @@ class NeutronPulse(object):
         """
         Plot each eV beam shape obtained from the fitting approach
 
-        :param for_sum:
-        :type for_sum:
-        :param t_interp:
-        :type t_interp:
         :param e_ev:
         :type e_ev:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :param conv_proton:
+        :type conv_proton:
+        :param proton_params:
+        :type proton_params:
+        :param t_interp:
+        :type t_interp:
+        :param for_sum:
+        :type for_sum:
         :param logy:
         :type logy:
         :param norm:
         :type norm:
-        :param source_to_detector_m:
-        :type source_to_detector_m:
         :return:
         :rtype:
         """
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
         if t_interp is None:
-            t_interp = self.t
-        elif isinstance(t_interp, int) or isinstance(t_interp, float):
-            raise ValueError("'t_interp' must be a list or array.")
+            t_interp = self.t_us
         self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
                          source_to_detector_m=source_to_detector_m, print_tof=False,
                          conv_proton=conv_proton, proton_params=proton_params)
@@ -359,11 +370,11 @@ class NeutronPulse(object):
         assert self.model is not None
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
-        if isinstance(t_interp, int) or isinstance(t_interp, float):
-            raise ValueError("'t_interp' must be a list or array.")
         e_ev.sort()
         if t_interp is None:
-            t_interp = self.t
+            t_interp = self.t_us_MCNPX
+        if isinstance(t_interp, int) or isinstance(t_interp, float):
+            raise ValueError("'t_interp' must be a list or array.")
         t_interp.sort()
 
         # construct the str for the file name
@@ -443,12 +454,13 @@ class NeutronPulse(object):
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
         e_ev.sort()
-
         if t_interp is not None:
             t_interp.sort()
             _t_array = t_interp
         else:
-            _t_array = self.t
+            _t_array = self.t_us_MCNPX
+        if isinstance(_t_array, int) or isinstance(_t_array, float):
+            raise ValueError("'t_interp' must be a list or array.")
 
         _param_df_interp = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         _shape_df_interp = pd.DataFrame()
@@ -529,7 +541,7 @@ class NeutronPulse(object):
             _my_model.set_param_hint(_each_param, value=param_df[_each_param][e_ev])
         _params = _my_model.make_params()
         _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
-        # if convolve_proton:
+        # if conv_proton:
         #     if sigma is not None:
         #         self.proton_pulse.make_new_shape(sigma=sigma, verbose=True)
         #     proton_y = self.proton_pulse.shape_df_current['intensity']
@@ -544,7 +556,6 @@ class NeutronPulse(object):
         #     _conv = np.convolve(_array, proton_y, mode='same')
         # else:
         #     _conv = _array
-
         # return _conv
         return _array
 
@@ -1061,12 +1072,10 @@ class ProtonPulse(object):
     def make_new_shape(self,
                        sigma=None,
                        center=None,
-                       amplitude=None,
-                       fwhm=None,
-                       height=None):
+                       amplitude=None):
         if self._params is None:
             self.fit_shape()
-        if all([sigma, center, amplitude, fwhm, height]) is None:
+        if all([sigma, center, amplitude]) is None:
             self.fit_shape()
         _params = self._params
         if sigma is not None:
@@ -1075,10 +1084,6 @@ class ProtonPulse(object):
             _params.add('center', center)
         if amplitude is not None:
             _params.add('amplitude', amplitude)
-        if fwhm is not None:
-            _params.add('fwhm', fwhm)
-        if height is not None:
-            _params.add('height', height)
         # if verbose:
         #     print("---------- Before ---------")
         #     self._params.pretty_print()
