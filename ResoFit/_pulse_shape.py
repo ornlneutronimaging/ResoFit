@@ -20,8 +20,8 @@ from ResoFit.model import loglog_linear
 
 import lmfit
 
-proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
-# proton_path = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+# proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+proton_path = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
 
 
 class NeutronPulse(object):
@@ -42,7 +42,7 @@ class NeutronPulse(object):
         self.shape_tof_df_dir = None
 
         self.proton_pulse = ProtonPulse(path=proton_path)
-        self.proton_pulse.fit_shape()
+        # self.proton_pulse.fit_shape()
         # self.proton_pulse
 
         self.result_shape_fit = None
@@ -88,6 +88,16 @@ class NeutronPulse(object):
 
         self.t_us_MCNPX = np.array(self.shape_df_mcnp['t_us'])
 
+    def _form_energy_list_dropped(self, e_min, e_max):
+        assert self._energy_list is not None
+        _energy_list_dropped = []
+        for _each_e in self._energy_list:
+            if e_min <= _each_e <= e_max:
+                _energy_list_dropped.append(_each_e)
+        _energy_list_dropped.sort()
+        self._energy_list_dropped = _energy_list_dropped
+        return _energy_list_dropped
+
     def plot_shape_total(self, x1_type='energy', x2_type='lambda', source_to_detector_m=None):
         """
         Plot the total beam shape obtained from MCNPX simulation
@@ -121,7 +131,7 @@ class NeutronPulse(object):
         elif x1_type == 'time':
             ax1.loglog(ev_to_s(array=self.shape_total_df['E_eV'],
                                offset_us=0,
-                               source_to_detector_m=source_to_detector_m)*1e6,
+                               source_to_detector_m=source_to_detector_m) * 1e6,
                        self.shape_total_df['f(l)'], 'b.')
             ax1.set_xlabel(u"Time-of-flight (\u03BCs)", color='b')
             ax1.invert_xaxis()
@@ -141,7 +151,7 @@ class NeutronPulse(object):
             elif x2_type == 'time':
                 ax2.loglog(ev_to_s(array=self.shape_total_df['E_eV'],
                                    offset_us=0,
-                                   source_to_detector_m=source_to_detector_m)*1e6,
+                                   source_to_detector_m=source_to_detector_m) * 1e6,
                            self.shape_total_df['f(l)'], 'rx')
                 ax2.set_xlabel(u"Time-of-flight (\u03BCs)", color='r')
                 ax2.invert_xaxis()
@@ -174,20 +184,22 @@ class NeutronPulse(object):
             _shape_df = self.shape_df_mcnp
             _y_label = 'Flux (n/sterad/pulse)'
 
-        # only the energy provided by MCNPX simulation will be filtered
-        assert self._energy_list is not None
-        if self._energy_list_dropped is None:
-            _energy_all = self._energy_list
-        else:
-            _energy_all = self._energy_list_dropped
+        # assert self._energy_list is not None
+        # if self._energy_list_dropped is None:
+        #     _energy_all = self._energy_list
+        # else:
+        #     _energy_all = self._energy_list_dropped
+        #
+        # for _each in _energy_all:
+        #     if _each < e_min or _each > e_max:
+        #         _shape_df.drop(columns=_each, inplace=True)
+        # _energy_dropped = list(_shape_df.set_index('t_us').columns)
+        # self._energy_list_dropped = _energy_dropped
 
-        for _each in _energy_all:
-            if _each < e_min or _each > e_max:
-                _shape_df.drop(columns=_each, inplace=True)
-        _energy_dropped = list(_shape_df.set_index('t_us').columns)
-        self._energy_list_dropped = _energy_dropped
+        # Only the energy provided by MCNPX simulation will be filtered
+        _energy_list_dropped = self._form_energy_list_dropped(e_min=e_min, e_max=e_max)
         fig, ax1 = plt.subplots()
-        for each in _energy_dropped:
+        for each in _energy_list_dropped:
             if logy:
                 ax1.semilogy(_shape_df['t_us'],
                              _shape_df[each],
@@ -232,7 +244,7 @@ class NeutronPulse(object):
         :rtype:
         """
         if t_interp is None:
-            t_interp = self.t_us_MCNPX
+            t_interp = self.t_us
         self._make_shape(e_ev=e_ev, t_interp=t_interp, norm=norm, for_sum=for_sum,
                          source_to_detector_m=source_to_detector_m, print_tof=False,
                          conv_proton=conv_proton, proton_params=proton_params)
@@ -295,8 +307,11 @@ class NeutronPulse(object):
         :return:
         :rtype:
         """
+        if t_interp is None:
+            t_interp = self.t_us_MCNPX
+        _energy_list_dropped = self._form_energy_list_dropped(e_min=e_min, e_max=e_max)
         self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
-        self.plot_shape_interp(e_ev=self._energy_list_dropped,
+        self.plot_shape_interp(e_ev=_energy_list_dropped,
                                source_to_detector_m=source_to_detector_m,
                                conv_proton=conv_proton, proton_params=proton_params,
                                t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum)
@@ -372,7 +387,8 @@ class NeutronPulse(object):
             e_ev = [e_ev]
         e_ev.sort()
         if t_interp is None:
-            t_interp = self.t_us_MCNPX
+            # t_interp = self.t_us_MCNPX
+            t_interp = self.t_us
         if isinstance(t_interp, int) or isinstance(t_interp, float):
             raise ValueError("'t_interp' must be a list or array.")
         t_interp.sort()
@@ -409,7 +425,7 @@ class NeutronPulse(object):
         assert self.model_used is not None
         _model_s = '_' + self.model_used + '.csv'
 
-        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _conv_proton_s + _proton_param_s\
+        _filename = 'TOF_shape' + _e_str + _t_str + _norm_s + _conv_proton_s + _proton_param_s \
                     + _for_sum_s + _distance_s + _model_s
         _shape_tof_df_dir = os.path.join(self.result_neutron_folder, _filename)
         self.shape_tof_df_dir = _shape_tof_df_dir
@@ -437,7 +453,8 @@ class NeutronPulse(object):
 
         # File not exists, perform fitting
         else:
-            print("No previous TOF neutron beam shape file detected.\nBeam shape generation starts...")
+            print("No previous TOF neutron beam shape file named '{}' detected.".format(_shape_tof_df_dir))
+            print("Beam shape generation starts...")
             # Making starts
             self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
                              source_to_detector_m=source_to_detector_m,
@@ -473,16 +490,16 @@ class NeutronPulse(object):
             print('For {} (m)'.format(source_to_detector_m))
 
         for _each_e in e_ev:
-            _array = self._make_single_shape(e_ev=_each_e,
-                                             t_us=_shape_df_interp['t_us'],
-                                             param_df=_param_df_interp,
-                                             conv_proton=conv_proton,
-                                             proton_params=proton_params)
-            _temp_df = pd.DataFrame()
-            _temp_df['t_us'] = _shape_df_interp['t_us']
-            _temp_df['f_norm'] = _array
-            _temp_df = _temp_df.drop(_temp_df[_temp_df.f_norm <= 0.0001].index)
-            _temp_df.reset_index(drop=True, inplace=True)
+            _t_us, _array = self._make_single_shape(e_ev=_each_e,
+                                                    t_us=_shape_df_interp['t_us'],
+                                                    param_df=_param_df_interp,
+                                                    conv_proton=conv_proton,
+                                                    proton_params=proton_params)
+            # _temp_df = pd.DataFrame()
+            # _temp_df['t_us'] = _t_us
+            # _temp_df['f_norm'] = _array
+            # _temp_df = _temp_df.drop(_temp_df[_temp_df.f_norm <= 0.0001].index)
+            # _temp_df.reset_index(drop=True, inplace=True)
             if not norm:
                 _array = _array * _param_df_interp['f_max'][_each_e]
             _shape_df_interp[_each_e] = _array
@@ -493,8 +510,9 @@ class NeutronPulse(object):
             _tof_us_dict[_each_e] = _tof_diff_us
             _current_tof_us = _t_array + _tof_diff_us
 
-            _temp_t_array = _temp_df['t_us'] + _tof_diff_us
-            _tof_total_us_array = np.append(_tof_total_us_array, _temp_t_array)
+            # _temp_t_array = _temp_df['t_us'] + _tof_diff_us
+            # _tof_total_us_array = np.append(_tof_total_us_array, _temp_t_array)
+            _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
 
             if not for_sum:
                 _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us
@@ -504,7 +522,7 @@ class NeutronPulse(object):
         self.tof_us_dict = _tof_us_dict
 
         _tof_total_us_array.sort()  # list of all time that exist in all energy
-
+        # print(_tof_total_us_array)
         if for_sum:
             _tof_all = _tof_total_us_array
             _shape_tof_df_interp['tof_us'] = _tof_all
@@ -515,14 +533,15 @@ class NeutronPulse(object):
                 _current_t_without_tof = _tof_all - __tof_diff_us
                 if print_tof is True:
                     print('{} (eV) neutron ...'.format(_each_e))
-                _array = self._make_single_shape(e_ev=_each_e,
-                                                 t_us=_current_t_without_tof,
-                                                 param_df=_param_df_interp,
-                                                 conv_proton=conv_proton,
-                                                 proton_params=proton_params)
+                _t_us, _array = self._make_single_shape(e_ev=_each_e,
+                                                        t_us=_current_t_without_tof,
+                                                        param_df=_param_df_interp,
+                                                        conv_proton=conv_proton,
+                                                        proton_params=proton_params)
                 if not norm:
                     _array = _array * _param_df_interp['f_max'][_each_e]
                 _shape_tof_df_interp[str(_each_e)] = _array
+            # _shape_tof_df_interp.insert(loc=0, column='tof_us', value=_t_us)
 
         self.shape_tof_df_interp = _shape_tof_df_interp
 
@@ -536,28 +555,21 @@ class NeutronPulse(object):
         #     raise ValueError("'e_ev' must be a number for single shape generation.")
         if isinstance(t_us, int) or isinstance(t_us, float):
             raise ValueError("'t_us' must be a list or array for shape interpolation.")
+        t_us = np.array(t_us)
         _my_model = self.model
         for _each_param in self.model_param_names:
             _my_model.set_param_hint(_each_param, value=param_df[_each_param][e_ev])
         _params = _my_model.make_params()
         _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
-        # if conv_proton:
-        #     if sigma is not None:
-        #         self.proton_pulse.make_new_shape(sigma=sigma, verbose=True)
-        #     proton_y = self.proton_pulse.shape_df_current['intensity']
-        #     if len(_array) < len(proton_y):
-        #         self.proton_pulse.trunc_df(rel_tol=0.01)
-        #         proton_y = self.proton_pulse.shape_df_current['intensity']
-        #         if len(_array) < len(proton_y):
-        #             raise ValueError(
-        #                 "The length of proton array is too long, proton({}) <= array({}) required.".format(
-        #                     len(proton_y),
-        #                     len(_array)))
-        #     _conv = np.convolve(_array, proton_y, mode='same')
-        # else:
-        #     _conv = _array
-        # return _conv
-        return _array
+        _x = t_us
+        if conv_proton:
+            self.proton_pulse.make_new_shape(proton_params=proton_params)
+            _proton_x = self.proton_pulse.new_shape_df['t_ns'] / 1000 + t_us[-1]
+            _proton_y = self.proton_pulse.new_shape_df['intensity']
+            _array = np.convolve(_array, _proton_y, mode='full')
+            _x = np.append(t_us, _proton_x[1:])
+            assert len(_x) == len(_array)
+        return _x, _array
 
     def _interpolate_param(self, e_ev):
 
@@ -741,7 +753,7 @@ class NeutronPulse(object):
         # [1: 'ikeda_carpenter', 2: 'cole_windsor', 3: 'pseudo_voigt']
         self.e_min = e_min
         self.e_max = e_max
-
+        self._form_energy_list_dropped(e_min=e_min, e_max=e_max)
         # File name of fitted_param_df.csv
         assert self.model_used is not None
         _e_min = str(self.e_min) + 'eV_'
@@ -1052,43 +1064,38 @@ class ProtonPulse(object):
     def __init__(self, path):
         """"""
         self._shape_df = _load_proton_pulse(path)
-        self._params = None
+        self.params = None
         self.new_params = None
         self.new_shape_df = None
         self.model = None
         self._new_shape_df = None
+        self._fit_shape()
 
-    def fit_shape(self):
+    def _fit_shape(self, print_params=False):
         t_ns = self._shape_df['t_ns']
         intensity = self._shape_df['intensity']
         _model = lmfit.models.GaussianModel()
         _proton_params = _model.guess(data=intensity, x=t_ns)
         result = _model.fit(data=intensity, x=t_ns, params=_proton_params)
         self.model = _model
-        self._params = result.params
-        result.params.pretty_print()
+        self.params = result.params
+        if print_params:
+            result.params.pretty_print()
         return result
 
-    def make_new_shape(self,
-                       sigma=None,
-                       center=None,
-                       amplitude=None):
-        if self._params is None:
-            self.fit_shape()
-        if all([sigma, center, amplitude]) is None:
-            self.fit_shape()
-        _params = self._params
-        if sigma is not None:
-            _params.add('sigma', sigma)
-        if center is not None:
-            _params.add('center', center)
-        if amplitude is not None:
-            _params.add('amplitude', amplitude)
-        # if verbose:
-        #     print("---------- Before ---------")
-        #     self._params.pretty_print()
-        #     print("---------- After ----------")
-        _params.pretty_print()
+    def make_new_shape(self, proton_params={}, print_params=False):
+        # if self.params is None:
+        #     self._fit_shape()
+        if len(proton_params) < 1:
+            self._fit_shape()
+            _params = self.params
+        else:
+            _params = self.params
+            for each_par in proton_params.keys():
+                if each_par in ['sigma', 'center', 'amplitude']:
+                    _params.add(each_par, proton_params[each_par])
+        if print_params:
+            _params.pretty_print()
         self.new_params = _params
         self.new_shape_df = pd.DataFrame()
         self.new_shape_df['t_ns'] = self._shape_df['t_ns']
