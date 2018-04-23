@@ -32,7 +32,9 @@ mcnp_plot_lim_dict = {'x_min': 0,
                       'y_min': -0.05,
                       'y_max': 1.05}
 plot_x_range = mcnp_plot_lim_dict['x_max'] - mcnp_plot_lim_dict['x_min']
-custom_cycler = cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'])
+default_cycler = cycler('color',
+                        ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+                         '#bcbd22', '#17becf'])
 
 
 class NeutronPulse(object):
@@ -169,10 +171,9 @@ class NeutronPulse(object):
             ax2.grid(axis='x', which='both', color='r', alpha=0.3)
             ax2.tick_params('x', colors='r', which='both')
         # ax1.set_title('Neutron total flux', y=1.08, loc='left')
+        # return fig
 
-        return fig
-
-    def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False, ax1=None):
+    def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False, ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from MCNPX simulation
 
@@ -195,64 +196,38 @@ class NeutronPulse(object):
             _shape_df = self.shape_df_mcnp
             _y_label = 'Flux (n/sterad/pulse)'
 
-        # assert self._energy_list is not None
-        # if self._energy_list_dropped is None:
-        #     _energy_all = self._energy_list
-        # else:
-        #     _energy_all = self._energy_list_dropped
-        #
-        # for _each in _energy_all:
-        #     if _each < e_min or _each > e_max:
-        #         _shape_df.drop(columns=_each, inplace=True)
-        # _energy_dropped = list(_shape_df.set_index('t_us').columns)
-        # self._energy_list_dropped = _energy_dropped
-
         # Only the energy provided by MCNPX simulation will be filtered
         _energy_list_dropped = self._form_energy_list_dropped(e_min=e_min, e_max=e_max)
-        if ax1 is None:
-            fig, ax1 = plt.subplots()
-            if len(_energy_list_dropped) <= 5:
-                ax1.legend(loc='best')
-            else:
-                _flux_max = max(_shape_df[_energy_list_dropped[-1]])
-                ax1.annotate(str(_energy_list_dropped[-1]) + ' eV',
-                             xy=(.41 * plot_x_range, _flux_max * 0.3), xycoords='data',
-                             xytext=(.06 * plot_x_range, _flux_max * .98), textcoords='data',
-                             arrowprops=dict(arrowstyle="fancy",
-                                             # linestyle="dashed",
-                                             color="k",
-                                             patchB=None,
-                                             shrinkB=0,
-                                             connectionstyle="arc3,rad=0.3",
-                                             alpha=0.7
-                                             ),
-                             )
-                ax1.annotate(str(_energy_list_dropped[0]) + ' eV',
-                             xy=(.43 * plot_x_range, _flux_max * 0.28), xycoords='data',
-                             )
-        ax1.set_prop_cycle(custom_cycler)
+        if ax_mpl is None:
+            fig, ax_mpl = plt.subplots()
+        ax_mpl.set_prop_cycle(default_cycler)
         for each in _energy_list_dropped:
             if logy:
-                ax1.semilogy(_shape_df['t_us'],
-                             _shape_df[each],
-                             linestyle='--',
-                             marker='.',
-                             label=str(each) + ' eV')
+                ax_mpl.semilogy(_shape_df['t_us'],
+                                _shape_df[each],
+                                linestyle='-',
+                                marker='o',
+                                label=str(each) + ' eV (MCNPX)')
             else:
-                ax1.plot(_shape_df['t_us'],
-                         _shape_df[each],
-                         linestyle='--',
-                         marker='.',
-                         label=str(each) + ' eV')
-        ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (\u03BCs)')
-        ax1.grid()
-        ax1.set_title('Energy dependent neutron pulse shape (MCNPX)')
-        ax1.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
-        return ax1
+                ax_mpl.plot(_shape_df['t_us'],
+                            _shape_df[each],
+                            linestyle='-',
+                            marker='o',
+                            label=str(each) + ' eV (MCNPX)')
+        ax_mpl.set_ylabel(_y_label)
+        ax_mpl.set_xlabel(u'Time (\u03BCs)')
+        ax_mpl.grid()
+        if len(_energy_list_dropped) <= 7:
+            ax_mpl.legend()
+        else:
+            if plt_arrow:
+                _plot_ev_arrow_as_legend(ax=ax_mpl, ev_list=_energy_list_dropped)
+        ax_mpl.set_title('Energy dependent neutron pulse shape (MCNPX)')
+        ax_mpl.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
+        return ax_mpl
 
     def plot_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
-                          t_interp=None, logy=False, norm=False, for_sum=False, ax1=None):
+                          t_interp=None, logy=False, norm=False, for_sum=False, ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -292,47 +267,37 @@ class NeutronPulse(object):
             for_sum_s = ''
 
         _energy_interp_list = list(_shape_df_interp.set_index('t_us').columns)
-        if ax1 is None:
-            fig, ax1 = plt.subplots()
-            if len(_energy_interp_list) <= 5:
-                ax1.legend(loc='best')
-            else:
-                _flux_max = max(_shape_df_interp[_energy_interp_list[-1]])
-                ax1.annotate(str(_energy_interp_list[-1]) + ' eV',
-                             xy=(.41 * plot_x_range, _flux_max * 0.3), xycoords='data',
-                             xytext=(.06 * plot_x_range, _flux_max * .98), textcoords='data',
-                             arrowprops=dict(arrowstyle="fancy",
-                                             # linestyle="dashed",
-                                             color="k",
-                                             patchB=None,
-                                             shrinkB=0,
-                                             connectionstyle="arc3,rad=0.3",
-                                             alpha=0.7
-                                             ),
-                             )
-                ax1.annotate(str(_energy_interp_list[0]) + ' eV',
-                             xy=(.43 * plot_x_range, _flux_max * 0.28), xycoords='data',
-                             )
-        ax1.set_prop_cycle(custom_cycler)
+        _energy_interp_list.sort()
+        if ax_mpl is None:
+            fig, ax_mpl = plt.subplots()
+        ax_mpl.set_prop_cycle(default_cycler)
         for each in _energy_interp_list:
             if logy:
-                ax1.semilogy(_shape_df_interp['t_us'],
-                             _shape_df_interp[each],
-                             linestyle='-',
-                             marker='X',
-                             label=str(each) + ' eV')
+                ax_mpl.semilogy(_shape_df_interp['t_us'],
+                                _shape_df_interp[each],
+                                linestyle='--',
+                                marker='o',
+                                mfc='none',
+                                label=str(each) + ' eV (interp. {})'.format(for_sum_s))
             else:
-                ax1.plot(_shape_df_interp['t_us'],
-                         _shape_df_interp[each],
-                         linestyle='-',
-                         marker='X',
-                         label=str(each) + ' eV')
-        ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (\u03BCs)')
-        ax1.grid()
-        ax1.set_title('Energy dependent neutron pulse shape (interp. {})'.format(for_sum_s))
-        ax1.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
-        return ax1
+                ax_mpl.plot(_shape_df_interp['t_us'],
+                            _shape_df_interp[each],
+                            linestyle='--',
+                            marker='o',
+                            mfc='none',
+                            label=str(each) + ' eV (interp. {})'.format(for_sum_s))
+        ax_mpl.set_ylabel(_y_label)
+        ax_mpl.set_xlabel(u'Time (\u03BCs)')
+        ax_mpl.grid()
+        if len(_energy_interp_list) <= 7:
+            ax_mpl.legend()
+        else:
+            if plt_arrow:
+                _plot_ev_arrow_as_legend(ax=ax_mpl, ev_list=_energy_interp_list)
+
+        ax_mpl.set_title('Energy dependent neutron pulse shape (interp. {})'.format(for_sum_s))
+        ax_mpl.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
+        return ax_mpl
 
     def plot_shape_each_compare(self, e_min, e_max, source_to_detector_m, conv_proton, proton_params={},
                                 t_interp=None, logy=False, norm=False, for_sum=False):
@@ -363,17 +328,20 @@ class NeutronPulse(object):
         if t_interp is None:
             t_interp = self.t_us_mcnp
         _energy_list_dropped = self._form_energy_list_dropped(e_min=e_min, e_max=e_max)
-        ax_mcnp = self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy)
+        ax_mcnp = self.plot_shape_mcnp(e_min=e_min, e_max=e_max, norm=norm, logy=logy, plt_arrow=False)
         ax = self.plot_shape_interp(e_ev=_energy_list_dropped,
                                     source_to_detector_m=source_to_detector_m,
                                     conv_proton=conv_proton, proton_params=proton_params,
-                                    t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum, ax1=ax_mcnp)
-        ax.set_title('Energy dependent neutron pulse shape MCNP and interp.')
+                                    t_interp=t_interp, logy=logy, norm=norm, for_sum=for_sum, ax_mpl=ax_mcnp)
+        ax.set_title('Energy dependent neutron pulse shape MCNPX vs. interp.')
+        if len(_energy_list_dropped) <= 7:
+            ax.legend()
+        ax.grid()
 
         return ax
 
     def plot_tof_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
-                              t_interp=None, for_sum=False, logy=False, norm=False):
+                              t_interp=None, for_sum=False, logy=False, norm=False, ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -398,6 +366,7 @@ class NeutronPulse(object):
         """
         if isinstance(e_ev, int) or isinstance(e_ev, float):
             e_ev = [e_ev]
+        e_ev.sort()
         if t_interp is None:
             t_interp = self.t_us_mcnp
         self._make_shape(e_ev=e_ev, t_interp=t_interp, for_sum=for_sum, norm=norm,
@@ -413,27 +382,32 @@ class NeutronPulse(object):
         else:
             for_sum_s = ''
 
-        fig, ax1 = plt.subplots()
+        if ax_mpl is None:
+            fig, ax_mpl = plt.subplots()
         for each_e in e_ev:
             if not for_sum:
                 _x_tag = str(each_e) + '_tof_us'
             if logy:
-                ax1.semilogy(_shape_tof_df_interp[_x_tag],
-                             _shape_tof_df_interp[str(each_e)],
-                             marker='.',
-                             label=str(each_e) + ' eV')
+                ax_mpl.semilogy(_shape_tof_df_interp[_x_tag],
+                                _shape_tof_df_interp[str(each_e)],
+                                marker='.',
+                                label=str(each_e) + ' eV')
             else:
-                ax1.plot(_shape_tof_df_interp[_x_tag],
-                         _shape_tof_df_interp[str(each_e)],
-                         marker='.',
-                         label=str(each_e) + ' eV')
-        ax1.legend(loc='best')
-        ax1.set_ylabel(_y_label)
-        ax1.set_xlabel(u'Time (\u03BCs)')
-        ax1.grid()
-        ax1.set_xlim(left=0, right=1200)
-        ax1.set_title('Energy dependent neutron pulse shape (interp.{})'.format(for_sum_s))
-        return fig
+                ax_mpl.plot(_shape_tof_df_interp[_x_tag],
+                            _shape_tof_df_interp[str(each_e)],
+                            marker='.',
+                            label=str(each_e) + ' eV')
+        if len(e_ev) <= 7:
+            ax_mpl.legend()
+        else:
+            if plt_arrow:
+                _plot_ev_arrow_as_legend(ax=ax_mpl, ev_list=e_ev)
+        ax_mpl.set_ylabel(_y_label)
+        ax_mpl.set_xlabel(u'Time (\u03BCs)')
+        ax_mpl.grid()
+        ax_mpl.set_xlim(left=0, right=1200)
+        ax_mpl.set_title('Energy dependent neutron pulse shape (interp.{})'.format(for_sum_s))
+        return ax_mpl
 
     def make_shape(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
                    t_interp=None, for_sum=False, norm=False, overwrite_csv=False):
@@ -1275,3 +1249,25 @@ def _load_proton_pulse(path=proton_path):
     df = _df.round(5)
     df[df < 0] = 0
     return df
+
+
+def _plot_ev_arrow_as_legend(ax, ev_list):
+    bbox_props = dict(boxstyle="round,pad=0.1", fc="w", ec="k", lw=0.5, alpha=0.4)
+    ax.annotate(str(ev_list[-1]) + ' eV',
+                xy=(.65, .65), xycoords='figure fraction',
+                xytext=(.21, .83), textcoords='figure fraction',
+                arrowprops=dict(arrowstyle="fancy",
+                                # linestyle="dashed",
+                                color="k",
+                                patchB=None,
+                                shrinkB=0,
+                                connectionstyle="arc3",
+                                alpha=0.55
+                                ),
+                bbox=bbox_props
+                )
+    ax.annotate(str(ev_list[0]) + ' eV',
+                xy=(.63, .62), xycoords='figure fraction',
+                bbox=bbox_props
+                )
+    return ax
