@@ -278,14 +278,14 @@ class NeutronPulse(object):
                                 linestyle='--',
                                 marker='o',
                                 mfc='none',
-                                label=str(each) + ' eV (interp. {})'.format(for_sum_s))
+                                label=str(each) + ' eV (interp.)')
             else:
                 ax_mpl.plot(_shape_df_interp['t_us'],
                             _shape_df_interp[each],
                             linestyle='--',
                             marker='o',
                             mfc='none',
-                            label=str(each) + ' eV (interp. {})'.format(for_sum_s))
+                            label=str(each) + ' eV (interp.)')
         ax_mpl.set_ylabel(_y_label)
         ax_mpl.set_xlabel(u'Time (\u03BCs)')
         ax_mpl.grid()
@@ -374,29 +374,45 @@ class NeutronPulse(object):
                          conv_proton=conv_proton, proton_params=proton_params)
         _shape_tof_df_interp = self.shape_tof_df_interp
         _y_label = 'Flux (n/sterad/pulse)'
+
         if norm:
             _y_label = 'Ratio out of max flux of each energy'
         _x_tag = 'tof_us'
+        _for_sum_s = ''
         if for_sum:
-            for_sum_s = ' for sum'
-        else:
-            for_sum_s = ''
+            _for_sum_s = '_for_sum'
+        _norm_s = ''
+        if norm:
+            _norm_s = '_norm'
+        _conv_proton_s = ''
+        if conv_proton:
+            _conv_proton_s = '_proton'
+        _proton_param_s = ''
+        for _param in proton_params.keys():
+            _proton_param_s = _proton_param_s + '_' + _param + '_' + str(proton_params[_param])
+        _details_s = _norm_s + _conv_proton_s + _proton_param_s + _for_sum_s
+        _title_s = 'Energy dependent neutron pulse shape (interp. {})'.format(_details_s)
 
         if ax_mpl is None:
             fig, ax_mpl = plt.subplots()
+        ax_mpl.set_prop_cycle(default_cycler)
         for each_e in e_ev:
             if not for_sum:
                 _x_tag = str(each_e) + '_tof_us'
             if logy:
                 ax_mpl.semilogy(_shape_tof_df_interp[_x_tag],
                                 _shape_tof_df_interp[str(each_e)],
-                                marker='.',
-                                label=str(each_e) + ' eV')
+                                linestyle='--',
+                                marker='o',
+                                mfc='none',
+                                label=str(each_e) + ' eV (interp.{})'.format(_proton_param_s))
             else:
                 ax_mpl.plot(_shape_tof_df_interp[_x_tag],
                             _shape_tof_df_interp[str(each_e)],
-                            marker='.',
-                            label=str(each_e) + ' eV')
+                            linestyle='--',
+                            marker='o',
+                            mfc='none',
+                            label=str(each_e) + ' eV (interp.{})'.format(_proton_param_s))
         if len(e_ev) <= 7:
             ax_mpl.legend()
         else:
@@ -406,8 +422,27 @@ class NeutronPulse(object):
         ax_mpl.set_xlabel(u'Time (\u03BCs)')
         ax_mpl.grid()
         ax_mpl.set_xlim(left=0, right=1200)
-        ax_mpl.set_title('Energy dependent neutron pulse shape (interp.{})'.format(for_sum_s))
+        ax_mpl.set_title(_title_s)
         return ax_mpl
+
+    def plot_to_compare_proton_cov(self, e_ev, source_to_detector_m, conv_proton, sigma_list, tof=True,
+                                   t_interp=None, for_sum=False, logy=False, norm=False, plt_arrow=True):
+        _list_of_dicts = []
+        for _e_sigma in sigma_list:
+            _list_of_dicts.append({'sigma': _e_sigma})
+        fig, ax1 = plt.subplots()
+        for _e_param_dict in _list_of_dicts:
+            if tof:
+                ax1 = self.plot_tof_shape_interp(e_ev=e_ev, source_to_detector_m=source_to_detector_m,
+                                                 conv_proton=conv_proton, proton_params=_e_param_dict,
+                                                 t_interp=t_interp, for_sum=for_sum, logy=logy, norm=norm, ax_mpl=ax1,
+                                                 plt_arrow=plt_arrow)
+            else:
+                ax1 = self.plot_shape_interp(e_ev=e_ev, source_to_detector_m=source_to_detector_m,
+                                             conv_proton=conv_proton, proton_params=_e_param_dict,
+                                             t_interp=t_interp, for_sum=for_sum, logy=logy, norm=norm, ax_mpl=ax1,
+                                             plt_arrow=plt_arrow)
+        return ax1
 
     def make_shape(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
                    t_interp=None, for_sum=False, norm=False, overwrite_csv=False):
@@ -435,7 +470,6 @@ class NeutronPulse(object):
         if conv_proton:
             _conv_proton_s = '_proton'
         _proton_param_s = ''
-        # if len(proton_params) > 0:
         for _param in proton_params.keys():
             _proton_param_s = _proton_param_s + '_' + _param + '_' + str(proton_params[_param])
 
@@ -539,7 +573,7 @@ class NeutronPulse(object):
             _shape_df_interp[_each_e] = _array
             _tof_diff_us = ev_to_s(offset_us=0, source_to_detector_m=source_to_detector_m, array=_each_e) * 1e6
             if print_tof:
-                print('{} (eV) neutron spend {} (us)'.format(_each_e, _tof_diff_us))
+                print('{} (eV) neutron spent {} (us)'.format(_each_e, _tof_diff_us))
             _tof_us_dict[_each_e] = _tof_diff_us
             _current_tof_us = t_interp + _tof_diff_us
 
@@ -1124,16 +1158,14 @@ class ProtonPulse(object):
         return result
 
     def make_new_shape(self, proton_params={}, print_params=False):
-        # if self.params is None:
-        #     self._fit_shape()
+        _check_proton_params_dict_keys(proton_params)
         if len(proton_params) < 1:
             self._fit_shape()
             _params = self.params
         else:
             _params = self.params
             for each_par in proton_params.keys():
-                if each_par in ['sigma', 'center', 'amplitude']:
-                    _params.add(each_par, proton_params[each_par])
+                _params.add(each_par, proton_params[each_par])
         if print_params:
             _params.pretty_print()
         self.new_params = _params
@@ -1152,6 +1184,20 @@ class ProtonPulse(object):
     #     _temp_df.reset_index(drop=True, inplace=True)
     #     self._new_shape_df = _temp_df
 
+
+def _check_proton_params_dict_keys(proton_params):
+    _key_list = ['sigma', 'center', 'amplitude']
+    for each_par in proton_params.keys():
+        if each_par not in _key_list:
+            raise ValueError("'{}' is not a valid param name, accepted keys are: '{}'.".format(each_par, _key_list))
+
+
+# def _break_proton_params(proton_params):
+#     _list_of_dict = []
+#     _dict = {}
+#     for each_par in proton_params.keys():
+#         _list = proton_params[each_par]
+#         for _i in _list
 
 # Functions to load files #
 def _load_neutron_total_shape(path):
