@@ -54,8 +54,8 @@ class Simulation(object):
                               thickness=layer_thickness_mm,
                               density=layer_density_gcm3)
         self.layer_list.append(layer)
-        self.x_simu = self.o_reso.total_signal['energy_eV']
-        self.y_simu = self.o_reso.total_signal['attenuation']
+        self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
+        self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list):
         """
@@ -81,8 +81,8 @@ class Simulation(object):
         if element not in _elements:
             raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
         self.o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
-        self.x_simu = self.o_reso.total_signal['energy_eV']
-        self.y_simu = self.o_reso.total_signal['attenuation']
+        self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
+        self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
     def x_angstrom(self):
         """
