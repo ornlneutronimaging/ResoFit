@@ -35,6 +35,8 @@ plot_x_range = mcnp_plot_lim_dict['x_max'] - mcnp_plot_lim_dict['x_min']
 default_cycler = cycler('color',
                         ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
                          '#bcbd22', '#17becf'])
+# fmt_list = ['o--', 'v--', 's--', 'p--', 'D--', 'h--', '^--', '<--', '>--', 'o--']
+marker_list = ['o', 'v', 's', '^', 'D', 'h', '<', '>', 'x', 'p']
 
 
 class NeutronPulse(object):
@@ -173,7 +175,7 @@ class NeutronPulse(object):
         # ax1.set_title('Neutron total flux', y=1.08, loc='left')
         # return fig
 
-    def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False, ax_mpl=None, plt_arrow=True):
+    def plot_shape_mcnp(self, e_min, e_max, logy=False, norm=False, marker='o', ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from MCNPX simulation
 
@@ -206,13 +208,15 @@ class NeutronPulse(object):
                 ax_mpl.semilogy(_shape_df['t_us'],
                                 _shape_df[each],
                                 linestyle='-',
-                                marker='o',
+                                marker=marker,
+                                # fmt=marker,
                                 label=str(each) + ' eV (MCNPX)')
             else:
                 ax_mpl.plot(_shape_df['t_us'],
                             _shape_df[each],
                             linestyle='-',
-                            marker='o',
+                            marker=marker,
+                            # fmt=marker,
                             label=str(each) + ' eV (MCNPX)')
         ax_mpl.set_ylabel(_y_label)
         ax_mpl.set_xlabel(u'Time (\u03BCs)')
@@ -227,7 +231,7 @@ class NeutronPulse(object):
         return ax_mpl
 
     def plot_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
-                          t_interp=None, logy=False, norm=False, for_sum=False, ax_mpl=None, plt_arrow=True):
+                          t_interp=None, logy=False, norm=False, for_sum=False, marker='o', ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -276,14 +280,16 @@ class NeutronPulse(object):
                 ax_mpl.semilogy(_shape_df_interp['t_us'],
                                 _shape_df_interp[each],
                                 linestyle='--',
-                                marker='o',
+                                marker=marker,
+                                # fmt=fmt,
                                 mfc='none',
                                 label=str(each) + ' eV (interp.)')
             else:
                 ax_mpl.plot(_shape_df_interp['t_us'],
                             _shape_df_interp[each],
                             linestyle='--',
-                            marker='o',
+                            marker=marker,
+                            # fmt=fmt,
                             mfc='none',
                             label=str(each) + ' eV (interp.)')
         ax_mpl.set_ylabel(_y_label)
@@ -296,7 +302,7 @@ class NeutronPulse(object):
                 _plot_ev_arrow_as_legend(ax=ax_mpl, ev_list=_energy_interp_list)
 
         ax_mpl.set_title('Energy dependent neutron pulse shape (interp. {})'.format(for_sum_s))
-        ax_mpl.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
+        # ax_mpl.set_xlim(left=mcnp_plot_lim_dict['x_min'], right=mcnp_plot_lim_dict['x_max'])
         return ax_mpl
 
     def plot_shape_each_compare(self, e_min, e_max, source_to_detector_m, conv_proton, proton_params={},
@@ -341,7 +347,7 @@ class NeutronPulse(object):
         return ax
 
     def plot_tof_shape_interp(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
-                              t_interp=None, for_sum=False, logy=False, norm=False, ax_mpl=None, plt_arrow=True):
+                              t_interp=None, for_sum=False, logy=False, norm=False, marker='o', ax_mpl=None, plt_arrow=True):
         """
         Plot each eV beam shape obtained from the fitting approach
 
@@ -403,14 +409,14 @@ class NeutronPulse(object):
                 ax_mpl.semilogy(_shape_tof_df_interp[_x_tag],
                                 _shape_tof_df_interp[str(each_e)],
                                 linestyle='--',
-                                marker='o',
+                                marker=marker,
                                 mfc='none',
                                 label=str(each_e) + ' eV (interp.{})'.format(_proton_param_s))
             else:
                 ax_mpl.plot(_shape_tof_df_interp[_x_tag],
                             _shape_tof_df_interp[str(each_e)],
                             linestyle='--',
-                            marker='o',
+                            marker=marker,
                             mfc='none',
                             label=str(each_e) + ' eV (interp.{})'.format(_proton_param_s))
         if len(e_ev) <= 7:
@@ -421,27 +427,27 @@ class NeutronPulse(object):
         ax_mpl.set_ylabel(_y_label)
         ax_mpl.set_xlabel(u'Time (\u03BCs)')
         ax_mpl.grid()
-        ax_mpl.set_xlim(left=0, right=1200)
+        # ax_mpl.set_xlim(left=0, right=1200)
         ax_mpl.set_title(_title_s)
         return ax_mpl
 
-    def plot_to_compare_proton_cov(self, e_ev, source_to_detector_m, conv_proton, sigma_list, tof=True,
+    def plot_to_compare_proton_conv(self, e_ev, source_to_detector_m, conv_proton, sigma_list, tof=True,
                                    t_interp=None, for_sum=False, logy=False, norm=False, plt_arrow=True):
         _list_of_dicts = []
         for _e_sigma in sigma_list:
             _list_of_dicts.append({'sigma': _e_sigma})
         fig, ax1 = plt.subplots()
-        for _e_param_dict in _list_of_dicts:
+        for i, _e_param_dict in enumerate(_list_of_dicts):
             if tof:
                 ax1 = self.plot_tof_shape_interp(e_ev=e_ev, source_to_detector_m=source_to_detector_m,
                                                  conv_proton=conv_proton, proton_params=_e_param_dict,
                                                  t_interp=t_interp, for_sum=for_sum, logy=logy, norm=norm, ax_mpl=ax1,
-                                                 plt_arrow=plt_arrow)
+                                                 plt_arrow=plt_arrow, marker=marker_list[i])
             else:
                 ax1 = self.plot_shape_interp(e_ev=e_ev, source_to_detector_m=source_to_detector_m,
                                              conv_proton=conv_proton, proton_params=_e_param_dict,
                                              t_interp=t_interp, for_sum=for_sum, logy=logy, norm=norm, ax_mpl=ax1,
-                                             plt_arrow=plt_arrow)
+                                             plt_arrow=plt_arrow, marker=marker_list[i])
         return ax1
 
     def make_shape(self, e_ev, source_to_detector_m, conv_proton, proton_params={},
