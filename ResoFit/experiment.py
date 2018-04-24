@@ -309,7 +309,7 @@ class Experiment(object):
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
                  y_type='attenuation', baseline=None,
-                 x_type='energy', time_unit='us', **kwargs):
+                 x_type='energy', time_unit='us', ax_mpl=None,**kwargs):
         """
         Display the loaded signal from data and spectra files.
         :param energy_xmax: maximum x-axis energy value to display
@@ -350,7 +350,8 @@ class Experiment(object):
         #     legend_label = 'Exp_raw'
         # else:
         #     legend_label = 'Exp_raw_detrended'
-
+        if ax_mpl is None:
+            fig, ax_mpl = plt.subplots()
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
@@ -358,12 +359,12 @@ class Experiment(object):
             if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
                 # angstrom = False
-                plt.xlim(xmin=0, xmax=energy_xmax)
+                ax_mpl.set_xlim(xmin=0, xmax=energy_xmax)
             else:
                 x_axis_label = u"Wavelength (\u212B)"
                 # angstrom = True
                 if lambda_xmax is not None:
-                    plt.xlim(xmin=0, xmax=lambda_xmax)
+                    ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
             x_exp_raw = self.x_raw(x_type=x_type,
                                    offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
@@ -384,24 +385,25 @@ class Experiment(object):
             if x_type == 'number':
                 x_axis_label = 'Image number (#)'
                 x_exp_raw = self.data.index.values
-        if x_axis_label is None:
-            raise ValueError("x_axis_label does NOT exist, please check.")
+        assert x_axis_label is not None
 
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline)
         if y_type == 'transmission':
             y_axis_label = 'Neutron Transmission'
+            ax_mpl.set_ylim(top=1.01 * max(y_exp_raw), bottom=-0.01)
         else:
             y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline)
+            ax_mpl.set_ylim(top=1.01, bottom=0.99 * min(y_exp_raw))
 
         # Plot
-        plt.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
-        plt.ylim(top=1.01, bottom=-0.01)
-        plt.xlabel(x_axis_label)
-        plt.ylabel(y_axis_label)
-        plt.legend(loc='best')
+        ax_mpl.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
+        ax_mpl.set_xlabel(x_axis_label)
+        ax_mpl.set_ylabel(y_axis_label)
+        ax_mpl.legend(loc='best')
+        return ax_mpl
 
     def export_raw(self, filename=None,
                    y_type='attenuation', baseline=False,

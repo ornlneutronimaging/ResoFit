@@ -1149,7 +1149,7 @@ class ProtonPulse(object):
         self.new_shape_df = None
         self.model = None
         self._new_shape_df = None
-        self._fit_shape()
+        self._fit_shape(print_params=True)
 
     def _fit_shape(self, print_params=False):
         t_ns = self._shape_df['t_ns']
