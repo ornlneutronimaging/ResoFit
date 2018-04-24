@@ -33,7 +33,7 @@ class Simulation(object):
         self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step,
                                 database=database)
 
-        self.x_simu = None
+        self.x_simu = None  # must be in energy
         self.y_simu = None
         self.layer_list = []
 
@@ -84,22 +84,40 @@ class Simulation(object):
         self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
-    def x_angstrom(self):
+    def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None):
         """
         Convert x to angstrom
 
         :return: x in angstrom
         """
-        _x = reso_util.ev_to_angstroms(self.o_reso.total_signal['energy_eV'])
+        x_type_list = ['energy', 'lambda', 'time']
+        _x = self.x_simu
+        if x_type == 'energy':
+            _x = _x
+        elif x_type == 'time':
+            if offset_us or source_to_detector_m is None:
+                raise ValueError("'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
+            _x = reso_util.ev_to_s(array=_x, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+        elif x_type == 'lambda':
+            _x = reso_util.ev_to_angstroms(_x)
+        else:
+            raise ValueError("'{}' is not valid for 'x_type=', type accepted are: '{}'".format(x_type, x_type_list))
         return _x
 
-    def y_transmission(self):
+    def get_y(self, y_type='transmission'):
         """
         Convert y to transmission
 
         :return: x in transmission
         """
-        _y = self.o_reso.total_signal['transmission']
+        y_type_list = ['transmission', 'attenuation']
+        _y = self.y_simu
+        if y_type == 'attenuation':
+            _y = _y
+        elif y_type == 'transmission':
+            _y = 1 - _y
+        else:
+            raise ValueError("'{}' is not valid for 'y_type=', type accepted are: '{}'".format(y_type, y_type_list))
         return _y
 
     def xy_simu(self, x_type='energy', y_type='attenuation'):
@@ -114,14 +132,11 @@ class Simulation(object):
         :return: x and y arrays
         :rtype: array
         """
-        _x = self.o_reso.total_signal['energy_eV']
-        if x_type == 'lambda':
-            _x = reso_util.ev_to_angstroms(_x)
-        _y = self.o_reso.total_signal[y_type]
-
+        _x = self.get_x(x_type=x_type)
+        _y = self.get_y(y_type=y_type)
         return _x, _y
 
-    def _convolve_neutron_beam_shape(self, source_to_detector_m, conv_proton, model_index=1, proton_params={}):
+    def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, model_index=1, proton_params={}):
         path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
         path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
         # path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
@@ -135,8 +150,7 @@ class Simulation(object):
                                 overwrite_csv=False)
         neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
 
-        e_list = self.x_simu
-        # t_new = np.linspace(0.1, 30, 300)
+        e_list = self.x_simu  # must be in energy
         neutron_pulse.make_shape(e_ev=e_list, t_interp=None, for_sum=True, norm=False,
                                  source_to_detector_m=source_to_detector_m,
                                  conv_proton=conv_proton, proton_params=proton_params,

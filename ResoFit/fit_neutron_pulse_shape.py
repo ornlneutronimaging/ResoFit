@@ -9,10 +9,10 @@ source_to_detector_m = 16.45
 
 simulation = Simulation(energy_min=7, energy_max=150, energy_step=0.1, database='ENDF_VII')
 simulation.add_layer(layer='Gd', layer_thickness_mm=0.075)
-simulation._convolve_neutron_beam_shape(source_to_detector_m=source_to_detector_m,
-                                        model_index=1,
-                                        conv_proton=True,
-                                        proton_params={})
+simulation._convolve_beam_shapes(source_to_detector_m=source_to_detector_m,
+                                 model_index=1,
+                                 conv_proton=True,
+                                 proton_params={})
 # model_index:
 # 1: 'ikeda_carpenter',
 # 2: 'cole_windsor',

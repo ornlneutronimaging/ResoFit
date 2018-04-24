@@ -54,7 +54,7 @@ class TestSimulation(unittest.TestCase):
     def test_x_angstrom(self):
         simulation = self.simulation
         simulation.add_layer(layer='U', layer_thickness_mm=0.15)
-        _x_returned = simulation.x_angstrom()
+        _x_returned = simulation.get_x(x_type='lambda')
         _x_expected = np.array([0.10809189, 0.10111071, 0.09532809, 0.09043617])
         self.assertAlmostEqual(_x_returned[0], _x_expected[0], delta=0.000001)
         self.assertAlmostEqual(_x_returned[1], _x_expected[1], delta=0.000001)
@@ -64,8 +64,8 @@ class TestSimulation(unittest.TestCase):
     def test_y_tansmission(self):
         simulation = self.simulation
         simulation.add_layer(layer='U', layer_thickness_mm=0.15)
-        _y_returned = simulation.y_transmission()
-        _y_expected = np.array([ 0.96300627,  0.99063463,  0.99145785,  0.99273996])
+        _y_returned = simulation.get_y(y_type='transmission')
+        _y_expected = np.array([0.96300627, 0.99063463, 0.99145785, 0.99273996])
         self.assertAlmostEqual(_y_returned[0], _y_expected[0], delta=0.000001)
         self.assertAlmostEqual(_y_returned[1], _y_expected[1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[2], _y_expected[2], delta=0.000001)
@@ -96,8 +96,3 @@ class TestSimulation(unittest.TestCase):
         self.assertAlmostEqual(_y_returned[1], _y_expected[1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[2], _y_expected[2], delta=0.000001)
         self.assertAlmostEqual(_y_returned[3], _y_expected[3], delta=0.000001)
-
-
-
-
-
