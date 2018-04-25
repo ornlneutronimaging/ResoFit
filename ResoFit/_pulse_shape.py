@@ -1196,12 +1196,12 @@ class ProtonPulse(object):
         result = _model.fit(data=intensity, x=t_ns, params=_proton_params)
         self.model = _model
         self.params = result.params
+        sig_fit_s = str(round(self.params.valuesdict()['sigma'], 2))
         if self._shape_df_fit is None:
             self._shape_df_fit = pd.DataFrame()
             _new_array = self.model.eval(params=result.params, x=self._shape_df['t_ns'])
-            _new_array[_new_array < 0] = 0
             self._shape_df_fit['t_ns'] = self._shape_df['t_ns']
-            self._shape_df_fit['intensity'] = _new_array.round(5)
+            self._shape_df_fit['Fit (\u03C3={})'.format(sig_fit_s)] = _new_array.round(5)
         if print_params:
             print("Fitted params for raw proton pulse shape:")
             result.params.pretty_print()
@@ -1218,26 +1218,30 @@ class ProtonPulse(object):
         if print_params:
             print("Fitted params for simulated proton pulse shape:")
             _new_params.pretty_print()
+        sig_fit_s = str(round(_new_params.valuesdict()['sigma'], 2))
         _new_shape_df = pd.DataFrame()
         _new_shape_df['t_ns'] = self._shape_df['t_ns']
         _new_array = self.model.eval(params=_new_params, x=self._shape_df['t_ns'])
-        _new_array[_new_array < 0] = 0
         _new_shape_df['intensity'] = _new_array.round(5)
+        self._shape_df_fit['Fit (\u03C3={})'.format(sig_fit_s)] = _new_array.round(5)
         self.new_params = _new_params
         self.new_shape_df = _new_shape_df
         return _new_shape_df
 
     def plot(self):
         fig, ax = plt.subplots()
-        sig1 = str(round(self.params.valuesdict()['sigma'], 2))
-        _x = self._shape_df['t_ns']
-        ax.plot(_x, self._shape_df['intensity'], 'k-', label='Raw', marker='o')
-        ax.plot(_x, self._shape_df_fit['intensity'], 'b:', label='Fit (\u03C3={})'.format(sig1))
-        if self.new_shape_df is not None:
-            sig2 = str(round(self.new_params.valuesdict()['sigma'], 2))
-            ax.plot(_x, self.new_shape_df['intensity'], 'r--', label='Fit (\u03C3={})'.format(sig2))
+        # sig1 = str(round(self.params.valuesdict()['sigma'], 2))
+        ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], label='Raw')
+        # ax.plot(_x, self._shape_df_fit['intensity'], 'b:', label='Fit (\u03C3={})'.format(sig1))
+        if self._shape_df_fit is not None:
+            # sig2 = str(round(self.new_params.valuesdict()['sigma'], 2))
+            # ax.plot(_x, self.new_shape_df['intensity'], 'r--', label='Fit (\u03C3={})'.format(sig2))
+            ax = self._shape_df_fit.set_index('t_ns').plot(ax=ax)
         ax.set_title('Proton pulse raw vs. fitting')
+        ax.set_xlabel('Time (ns)')
+        ax.set_ylabel('Intensity (a.u.)')
         ax.legend()
+        ax.grid()
         return ax
 
 
