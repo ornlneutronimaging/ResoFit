@@ -1,27 +1,29 @@
 import os
 
+import lmfit
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.interpolate import interp1d
+from ImagingReso._utilities import ev_to_s
+from cycler import cycler
 from lmfit import Model
 from lmfit.models import LinearModel
-from ImagingReso._utilities import ev_to_s
-# import ImagingReso._utilities as reso_util
+from scipy.interpolate import interp1d
 
 import ResoFit._utilities as fit_util
 from ResoFit.model import cole_windsor
 from ResoFit.model import cole_windsor_jparc
-from ResoFit.model import pseudo_voigt
 from ResoFit.model import ikeda_carpenter
 from ResoFit.model import ikeda_carpenter_jparc
 from ResoFit.model import loglog_linear
-from cycler import cycler
+from ResoFit.model import pseudo_voigt
 
-import lmfit
+# import ImagingReso._utilities as reso_util
 
-proton_path = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
-# proton_path = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/proton_pulse/waveform_20170901.txt'
+_file_path = os.path.abspath(os.path.dirname(__file__))
+_rel_path_to_proton = 'data/_data_for_tutorial/proton_pulse/waveform_20170901.txt'
+proton_path = os.path.join(_file_path, _rel_path_to_proton)
+
 t_min_us = 5e-2
 t_max_us = 183.7
 t_step_us = 0.01

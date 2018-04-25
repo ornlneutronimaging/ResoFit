@@ -1,19 +1,18 @@
+import os
 import re
-import numpy as np
-import pandas as pd
+
 import ImagingReso._utilities as reso_util
+import numpy as np
 from ImagingReso.resonance import Resonance
+
 import ResoFit._utilities as fit_util
-import pprint
-import peakutils as pku
 from ResoFit._pulse_shape import NeutronPulse
 
-path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
-path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
-
-
-# path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
-# path2 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
+_file_path = os.path.abspath(os.path.dirname(__file__))
+_rel_path_to_neutron1 = 'data/_data_for_tutorial/neutron_pulse/source_section_1.dat'
+_rel_path_to_neutron2 = 'data/_data_for_tutorial/neutron_pulse/source_section_2.dat'
+path1 = os.path.join(_file_path, _rel_path_to_neutron1)
+path2 = os.path.join(_file_path, _rel_path_to_neutron2)
 
 
 class Simulation(object):
