@@ -21,7 +21,7 @@ from ResoFit.model import pseudo_voigt
 # import ImagingReso._utilities as reso_util
 
 _file_path = os.path.abspath(os.path.dirname(__file__))
-_rel_path_to_proton = 'ResoFit/data/_data_for_tutorial/proton_pulse/waveform_20170901.txt'
+_rel_path_to_proton = 'data/_data_for_tutorial/proton_pulse/waveform_20170901.txt'
 proton_path = os.path.join(_file_path, _rel_path_to_proton)
 
 t_min_us = 5e-2

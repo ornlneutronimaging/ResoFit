@@ -8,17 +8,11 @@ from ImagingReso.resonance import Resonance
 import ResoFit._utilities as fit_util
 from ResoFit._pulse_shape import NeutronPulse
 
-_file_path = os.path.abspath(os.path.dirname(__file__))
-_rel_path_to_neutron1 = 'ResoFit/data/_data_for_tutorial/neutron_pulse/source_section_1.dat'
-_rel_path_to_neutron2 = 'ResoFit/data/_data_for_tutorial/neutron_pulse/source_section_2.dat'
-path1 = os.path.join(_file_path, _rel_path_to_neutron1)
-path2 = os.path.join(_file_path, _rel_path_to_neutron2)
-
 
 class Simulation(object):
     # Input sample name or names as str, case sensitive
 
-    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01, database='ENDF_VIII', model_index=1):
+    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01, database='ENDF_VIII'):
         """
         initialize the a Simulation() using the Resonance() in ImagingReso
 
@@ -40,7 +34,7 @@ class Simulation(object):
                                 energy_max=energy_max,
                                 energy_step=energy_step,
                                 database=database)
-        self.neutron_pulse = NeutronPulse(path1, model_index=model_index)
+        self.neutron_pulse = None
 
         self.x_simu = None  # must be in energy
         self.y_simu = None
@@ -145,7 +139,14 @@ class Simulation(object):
         _y = self.get_y(y_type=y_type)
         return _x, _y
 
-    def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}):
+    def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
+        _file_path = os.path.abspath(os.path.dirname(__file__))
+        _rel_path_to_neutron1 = 'data/_data_for_tutorial/neutron_pulse/source_section_1.dat'
+        _rel_path_to_neutron2 = 'data/_data_for_tutorial/neutron_pulse/source_section_2.dat'
+        path1 = os.path.join(_file_path, _rel_path_to_neutron1)
+        path2 = os.path.join(_file_path, _rel_path_to_neutron2)
+
+        self.neutron_pulse = NeutronPulse(path1, model_index=model_index)
         self.neutron_pulse.load_shape_each(path2)
         self.neutron_pulse.fit_shape(e_min=1, e_max=500,
                                      drop=False, norm=True,
