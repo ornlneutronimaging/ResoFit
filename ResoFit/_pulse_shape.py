@@ -1210,7 +1210,9 @@ class ProtonPulse(object):
     def make_new_shape(self, proton_params={}, print_params=False):
         _check_proton_params_dict_keys(proton_params)
         assert self.model is not None
-        _new_params = self.model.guess(data=self._shape_df['intensity'], x=self._shape_df['t_ns'])
+        _params_guess = self.model.guess(data=self._shape_df['intensity'], x=self._shape_df['t_ns'])
+        result = self.model.fit(data=self._shape_df['intensity'], x=self._shape_df['t_ns'], params=_params_guess)
+        _new_params = result.params
         for each_par in proton_params.keys():
             _new_params.add(each_par, proton_params[each_par])
         if print_params:
@@ -1228,11 +1230,12 @@ class ProtonPulse(object):
     def plot(self):
         fig, ax = plt.subplots()
         sig1 = str(round(self.params.valuesdict()['sigma'], 2))
-        ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'k-', label='Raw', marker='o')
-        ax.plot(self._shape_df_fit['t_ns'], self._shape_df_fit['intensity'], 'b:', label='Fit (\u03C3={})'.format(sig1))
+        _x = self._shape_df['t_ns']
+        ax.plot(_x, self._shape_df['intensity'], 'k-', label='Raw', marker='o')
+        ax.plot(_x, self._shape_df_fit['intensity'], 'b:', label='Fit (\u03C3={})'.format(sig1))
         if self.new_shape_df is not None:
             sig2 = str(round(self.new_params.valuesdict()['sigma'], 2))
-            ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'r--', label='Fit (\u03C3={})'.format(sig2))
+            ax.plot(_x, self.new_shape_df['intensity'], 'r--', label='Fit (\u03C3={})'.format(sig2))
         ax.set_title('Proton pulse raw vs. fitting')
         ax.legend()
         return ax
