@@ -21,7 +21,7 @@ from ResoFit.model import pseudo_voigt
 # import ImagingReso._utilities as reso_util
 
 _file_path = os.path.abspath(os.path.dirname(__file__))
-_rel_path_to_proton = 'data/_data_for_tutorial/proton_pulse/waveform_20170901.txt'
+_rel_path_to_proton = 'ResoFit/data/_data_for_tutorial/proton_pulse/waveform_20170901.txt'
 proton_path = os.path.join(_file_path, _rel_path_to_proton)
 
 t_min_us = 5e-2
@@ -58,10 +58,6 @@ class NeutronPulse(object):
         self.shape_tof_df_interp = None
         self.shape_tof_df_dir = None
 
-        self.proton_pulse = ProtonPulse(path=proton_path)
-        # self.proton_pulse._fit_shape_proton()
-        # self.proton_pulse
-
         self.result_shape_fit = None
         self.param_df_dir = None
         self.param_df = None
@@ -89,6 +85,8 @@ class NeutronPulse(object):
 
         if self.result_neutron_folder is None:
             self.result_neutron_folder = self._check_and_make_subdir('result', 'neutron_pulse', self.model_used)
+
+        self.proton_pulse = ProtonPulse(path=proton_path)
 
     def load_shape_each(self, path, save_each=False):
         """
