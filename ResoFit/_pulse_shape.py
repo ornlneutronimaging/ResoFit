@@ -99,7 +99,7 @@ class NeutronPulse(object):
         """
         self.shape_dict_mcnp = _load_neutron_each_shape(path, export=save_each)
         self.shape_df_mcnp, self.shape_df_mcnp_norm = _shape_dict_to_dfs(self.shape_dict_mcnp,
-                                                                         t_max_us=t_max_us)
+                                                                         t_max=t_max_us)
         self._energy_list = list(self.shape_df_mcnp.set_index('t_us').columns)
         self.t_us_mcnp = np.array(self.shape_df_mcnp['t_us']).round(5)
 
@@ -187,6 +187,12 @@ class NeutronPulse(object):
         :type logy:
         :param norm:
         :type norm:
+        :param marker:
+        :type marker:
+        :param ax_mpl:
+        :type ax_mpl:
+        :param plt_arrow:
+        :type plt_arrow:
         :return:
         :rtype:
         """
@@ -252,6 +258,12 @@ class NeutronPulse(object):
         :type norm:
         :param for_sum:
         :type for_sum:
+        :param marker:
+        :type marker:
+        :param ax_mpl:
+        :type ax_mpl:
+        :param plt_arrow:
+        :type plt_arrow:
         :return:
         :rtype:
         """
@@ -377,6 +389,12 @@ class NeutronPulse(object):
         :type logy:
         :param norm:
         :type norm:
+        :param marker:
+        :type marker:
+        :param ax_mpl:
+        :type ax_mpl:
+        :param plt_arrow:
+        :type plt_arrow:
         :return:
         :rtype:
         """
@@ -537,6 +555,7 @@ class NeutronPulse(object):
                 # Override==False, read the .csv file
                 self.shape_tof_df_interp = pd.read_csv(_shape_tof_df_dir)
                 print("TOF neutron beam shape file loaded.")
+                self.proton_pulse.make_new_shape(proton_params=proton_params)  # Making sure proton shape params updated
 
         # File not exists, perform fitting
         else:
@@ -572,6 +591,8 @@ class NeutronPulse(object):
         _tof_us_dict = {}
         _tof_total_us_array = []
 
+        self.proton_pulse.make_new_shape(proton_params=proton_params)  # Making sure proton shape params updated
+
         if print_tof:
             print('For {} (m)'.format(source_to_detector_m))
 
@@ -580,7 +601,7 @@ class NeutronPulse(object):
                                              t_us=t_interp,
                                              param_df=_param_df_interp,
                                              conv_proton=conv_proton,
-                                             proton_params=proton_params)
+                                             )
             # _temp_df = pd.DataFrame()
             # _temp_df['t_us'] = _t_us
             # _temp_df['f_norm'] = _array
@@ -623,7 +644,8 @@ class NeutronPulse(object):
                                                  t_us=_current_t_without_tof,
                                                  param_df=_param_df_interp,
                                                  conv_proton=conv_proton,
-                                                 proton_params=proton_params)
+                                                 # proton_params=proton_params,
+                                                 )
                 if not norm:
                     _array = _array * _param_df_interp['f_max'][_each_e]
                 _array[_array < 0] = 0
@@ -637,7 +659,7 @@ class NeutronPulse(object):
             self.shape_tof_df_interp.to_csv(save_dir, index=False)
             print("TOF neutron beam shape file has been saved at '{}'".format(save_dir))
 
-    def _make_single_shape(self, e_ev, t_us, param_df, conv_proton, proton_params={}):
+    def _make_single_shape(self, e_ev, t_us, param_df, conv_proton):
         # if not isinstance(e_ev, int) or isinstance(e_ev, float):
         #     raise ValueError("'e_ev' must be a number for single shape generation.")
         if isinstance(t_us, int) or isinstance(t_us, float):
@@ -654,7 +676,7 @@ class NeutronPulse(object):
             _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
         else:
             _array_for_conv_proton = _my_model.eval(_params, t=self.t_us_conv_proton)
-            self.proton_pulse.make_new_shape(proton_params=proton_params)
+            # self.proton_pulse.make_new_shape(proton_params=proton_params)
             _proton_x = np.array(self.proton_pulse.new_shape_df['t_ns'] / 1e3 + self.t_us_conv_proton[-1])
             _proton_y = np.array(self.proton_pulse.new_shape_df['intensity'])
             _conv_y = np.convolve(_array_for_conv_proton, _proton_y, mode='full')
@@ -864,7 +886,8 @@ class NeutronPulse(object):
                 print("File overwriting...")
                 print("New fitting starts...")
                 # Fitting starts
-                self._fit_shape_params(drop=drop, norm=norm, show_init=show_init, check_each=check_each, save_fig=save_fig)
+                self._fit_shape_params(drop=drop, norm=norm, show_init=show_init, check_each=check_each,
+                                       save_fig=save_fig)
                 print("File overwritten.")
             else:
                 # Override==False, read the .csv file
@@ -1205,11 +1228,11 @@ class ProtonPulse(object):
     def plot(self):
         fig, ax = plt.subplots()
         sig1 = str(round(self.params.valuesdict()['sigma'], 2))
-        ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'k--', label='Raw', marker='o')
-        ax.plot(self._shape_df_fit['t_ns'], self._shape_df_fit['intensity'], 'b-', label='Fit (\u03C3={})'.format(sig1))
-        # if self.new_shape_df is not None:
-        #     sig2 = str(round(self.new_params.valuesdict()['sigma'], 2))
-        #     ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'r:', label='Fit (\u03C3={})'.format(sig2))
+        ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'k-', label='Raw', marker='o')
+        ax.plot(self._shape_df_fit['t_ns'], self._shape_df_fit['intensity'], 'b:', label='Fit (\u03C3={})'.format(sig1))
+        if self.new_shape_df is not None:
+            sig2 = str(round(self.new_params.valuesdict()['sigma'], 2))
+            ax.plot(self._shape_df['t_ns'], self._shape_df['intensity'], 'r--', label='Fit (\u03C3={})'.format(sig2))
         ax.set_title('Proton pulse raw vs. fitting')
         ax.legend()
         return ax
@@ -1298,7 +1321,7 @@ def _load_neutron_each_shape(path, export=False):
     return shape_dict
 
 
-def _shape_dict_to_dfs(shape_dict, t_max_us=None):
+def _shape_dict_to_dfs(shape_dict, t_max=None):
     _first_key = list(shape_dict.keys())[0]
     _t_us = shape_dict[_first_key]['data_raw']['t_us']
     _shape_df = pd.DataFrame()
@@ -1313,9 +1336,9 @@ def _shape_dict_to_dfs(shape_dict, t_max_us=None):
     # _shape_df = _shape_df.drop(_shape_df[_shape_df.t_us < t_min_us].index)
     # _shape_df.reset_index(drop=True, inplace=True)
     # , t_min_us, t_max_us
-    if t_max_us is not None:
-        _shape_df = _shape_df[_shape_df.t_us <= t_max_us]
-        _shape_df_norm = _shape_df_norm[_shape_df_norm.t_us <= t_max_us]
+    if t_max is not None:
+        _shape_df = _shape_df[_shape_df.t_us <= t_max]
+        _shape_df_norm = _shape_df_norm[_shape_df_norm.t_us <= t_max]
     return _shape_df, _shape_df_norm
 
 
