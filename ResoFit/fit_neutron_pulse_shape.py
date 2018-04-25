@@ -44,7 +44,7 @@ simulation._convolve_beam_shapes(source_to_detector_m=source_to_detector_m,
 # neutron_pulse = NeutronPulse(path1, model_index=1)
 # neutron_pulse.load_shape_each(path2)
 #
-# neutron_pulse.fit_shape(e_min=1, e_max=500, drop=False, norm=True, check_each=False, save_fig=False,
+# neutron_pulse._fit_shape_proton(e_min=1, e_max=500, drop=False, norm=True, check_each=False, save_fig=False,
 #                         overwrite_csv=False)
 # neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
 #

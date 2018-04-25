@@ -8,11 +8,18 @@ import pprint
 import peakutils as pku
 from ResoFit._pulse_shape import NeutronPulse
 
+path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
+path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
+
+
+# path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
+# path2 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
+
 
 class Simulation(object):
     # Input sample name or names as str, case sensitive
 
-    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01, database='ENDF_VIII'):
+    def __init__(self, energy_min=1e-5, energy_max=1000, energy_step=0.01, database='ENDF_VIII', model_index=1):
         """
         initialize the a Simulation() using the Resonance() in ImagingReso
 
@@ -30,8 +37,11 @@ class Simulation(object):
         self.energy_step = energy_step
         self.database = database
 
-        self.o_reso = Resonance(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step,
+        self.o_reso = Resonance(energy_min=energy_min,
+                                energy_max=energy_max,
+                                energy_step=energy_step,
                                 database=database)
+        self.neutron_pulse = NeutronPulse(path1, model_index=model_index)
 
         self.x_simu = None  # must be in energy
         self.y_simu = None
@@ -136,28 +146,21 @@ class Simulation(object):
         _y = self.get_y(y_type=y_type)
         return _x, _y
 
-    def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, model_index=1, proton_params={}):
-        path1 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
-        path2 = '/Users/y9z/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
-        # path1 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_1.dat'
-        # path2 = '/Users/Shawn/Dropbox (ORNL)/Postdoc_Research/neutron_beam_shape/SNS/neutron_pulse/source_section_2.dat'
-        neutron_pulse = NeutronPulse(path1, model_index=model_index)
-        neutron_pulse.load_shape_each(path2)
-        neutron_pulse.fit_shape(e_min=1, e_max=500,
-                                drop=False, norm=True,
-                                check_each=False,
-                                save_fig=False,
-                                overwrite_csv=False)
-        neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
+    def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}):
+        self.neutron_pulse.load_shape_each(path2)
+        self.neutron_pulse.fit_shape(e_min=1, e_max=500,
+                                     drop=False, norm=True,
+                                     check_each=False,
+                                     save_fig=False,
+                                     overwrite_csv=False)
+        self.neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
 
-        e_list = self.x_simu  # must be in energy
-        neutron_pulse.make_shape(e_ev=e_list, t_interp=None, for_sum=True, norm=False,
-                                 source_to_detector_m=source_to_detector_m,
-                                 conv_proton=conv_proton, proton_params=proton_params,
-                                 overwrite_csv=False)
-        self.neutron_pulse = neutron_pulse
+        self.neutron_pulse.make_shape(e_ev=self.x_simu, t_interp=None, for_sum=True, norm=False,
+                                      source_to_detector_m=source_to_detector_m,
+                                      conv_proton=conv_proton, proton_params=proton_params,
+                                      overwrite_csv=False)
 
-        tof_beam_shape_df = neutron_pulse.shape_tof_df_interp.set_index('tof_us')
+        tof_beam_shape_df = self.neutron_pulse.shape_tof_df_interp.set_index('tof_us')
         tof_trans_df = tof_beam_shape_df * self.o_reso.total_signal['transmission']
 
         tof_beam_shape_df['sum'] = tof_beam_shape_df.sum(axis=1)
@@ -167,16 +170,6 @@ class Simulation(object):
 
         self.x_tof_us = np.array(tof_beam_shape_df.index)
         self.y_att = 1 - np.array(tof_trans_df['sum'] / tof_beam_shape_df['sum'])
-
-        # tof_beam_shape_df_proton = neutron_pulse.shape_tof_df_interp_proton.set_index('tof_us')
-        # tof_trans_df_proton = tof_beam_shape_df_proton * self.o_reso.total_signal['transmission']
-        #
-        # tof_beam_shape_df_proton['sum'] = tof_beam_shape_df.sum(axis=1)
-        # tof_trans_df_proton['sum'] = tof_trans_df.sum(axis=1)
-        # print(tof_beam_shape_df)
-        # print(tof_trans_df)
-        #
-        # self.y_att_proton = 1 - np.array(tof_trans_df_proton['sum'] / tof_beam_shape_df_proton['sum'])
 
     def peak_map(self, thres, min_dist, impr_reso=True, isotope=False):
         """
@@ -229,14 +222,15 @@ class Simulation(object):
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_plot = items.shaped(items_list=items_to_plot)
 
-        self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
-                         all_layers=all_layers, all_elements=all_elements,
-                         all_isotopes=all_isotopes, items_to_plot=items_to_plot,
-                         source_to_detector_m=source_to_detector_m,
-                         offset_us=offset_us,
-                         time_resolution_us=time_resolution_us,
-                         time_unit=time_unit,
-                         t_start_us=t_start_us)
+        fig = self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
+                               all_layers=all_layers, all_elements=all_elements,
+                               all_isotopes=all_isotopes, items_to_plot=items_to_plot,
+                               source_to_detector_m=source_to_detector_m,
+                               offset_us=offset_us,
+                               time_resolution_us=time_resolution_us,
+                               time_unit=time_unit,
+                               t_start_us=t_start_us)
+        return fig
 
     def _export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
                      all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
