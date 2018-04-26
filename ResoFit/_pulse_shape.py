@@ -676,13 +676,18 @@ class NeutronPulse(object):
             _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
         else:
             _array_for_conv_proton = _my_model.eval(_params, t=self.t_us_conv_proton)
-            # self.proton_pulse.make_new_shape(proton_params=proton_params)
             _proton_x = np.array(self.proton_pulse.new_shape_df['t_ns'] / 1e3 + self.t_us_conv_proton[-1])
             _proton_y = np.array(self.proton_pulse.new_shape_df['intensity'])
             _conv_y = np.convolve(_array_for_conv_proton, _proton_y, mode='full')
             _conv_x = np.append(self.t_us_conv_proton, _proton_x[1:])
             _array_function = interp1d(x=_conv_x, y=_conv_y, kind='cubic', bounds_error=False, fill_value=0)
             _array = _array_function(t_us)
+            # _array_for_conv_proton = _my_model.eval(_params, t=self.t_us_conv_proton)
+            # _proton_y = np.array(self.proton_pulse.new_shape_df['intensity'])
+            # _conv_y = np.convolve(_array_for_conv_proton, _proton_y, mode='same')
+            # _conv_x = self.t_us_conv_proton
+            # _array_function = interp1d(x=_conv_x, y=_conv_y, kind='cubic', bounds_error=False, fill_value=0)
+            # _array = _array_function(t_us)
 
         assert len(t_us) == len(_array)
         return _array
