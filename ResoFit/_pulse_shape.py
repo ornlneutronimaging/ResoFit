@@ -579,14 +579,15 @@ class NeutronPulse(object):
             t_interp = self.t_us_mcnp
         if isinstance(t_interp, int) or isinstance(t_interp, float):
             raise ValueError("'t_interp' must be a list or array.")
-        _t_shift = 0
-        if conv_proton:
-            _t_shift = self.proton_pulse._t_shift
-            # t used to shift convolution from 'full' to 'same'
+        # _t_shift = 0
+        # if conv_proton:
+        #     _t_shift = self.proton_pulse._t_shift
+        #     # t used to shift convolution from 'full' to 'same'
 
         _param_df_interp = self._interpolate_param(e_ev=e_ev).set_index('E_eV')
         _shape_df_interp = pd.DataFrame()
-        _shape_df_interp['t_us'] = t_interp - _t_shift
+        _shape_df_interp['t_us'] = t_interp
+        # _shape_df_interp['t_us'] = t_interp - _t_shift
         _shape_tof_df_interp = pd.DataFrame()
         _tof_us_dict = {}
         _tof_total_us_array = []
@@ -597,11 +598,11 @@ class NeutronPulse(object):
             print('For {} (m)'.format(source_to_detector_m))
 
         for _each_e in e_ev:
-            _array = self._make_single_shape(e_ev=_each_e,
-                                             t_us=t_interp,
-                                             param_df=_param_df_interp,
-                                             conv_proton=conv_proton,
-                                             )
+            _t_us, _array = self._make_single_shape(e_ev=_each_e,
+                                                    t_us=t_interp,
+                                                    param_df=_param_df_interp,
+                                                    conv_proton=conv_proton,
+                                                    )
             if not norm:
                 _array = _array * _param_df_interp['f_max'][_each_e]
             _array[_array < 0] = 0
@@ -616,7 +617,8 @@ class NeutronPulse(object):
             _tof_total_us_array = np.append(_tof_total_us_array, _current_tof_us)
 
             if not for_sum:
-                _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us - _t_shift
+                # _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _current_tof_us - _t_shift
+                _shape_tof_df_interp[str(_each_e) + '_tof_us'] = _t_us + _tof_diff_us
                 _shape_tof_df_interp[str(_each_e)] = _array
 
         self.shape_df_interp = _shape_df_interp
@@ -625,7 +627,7 @@ class NeutronPulse(object):
         _tof_total_us_array.sort()  # list of all time that exist in all energy
 
         if for_sum:
-            _shape_tof_df_interp['tof_us'] = _tof_total_us_array - _t_shift
+            # _shape_tof_df_interp['tof_us'] = _tof_total_us_array - _t_shift
             if print_tof is True:
                 print('Making shape for:')
             for _each_e in e_ev:
@@ -633,15 +635,16 @@ class NeutronPulse(object):
                 _current_t_without_tof = _tof_total_us_array - __tof_diff_us
                 if print_tof is True:
                     print('{} (eV) neutron ...'.format(_each_e))
-                _array = self._make_single_shape(e_ev=_each_e,
-                                                 t_us=_current_t_without_tof,
-                                                 param_df=_param_df_interp,
-                                                 conv_proton=conv_proton,
-                                                 )
+                _t_us, _array = self._make_single_shape(e_ev=_each_e,
+                                                        t_us=_current_t_without_tof,
+                                                        param_df=_param_df_interp,
+                                                        conv_proton=conv_proton,
+                                                        )
                 if not norm:
                     _array = _array * _param_df_interp['f_max'][_each_e]
                 _array[_array < 0] = 0
                 _array = _array.round(5)
+                _shape_tof_df_interp['tof_us'] = _t_us + __tof_diff_us
                 _shape_tof_df_interp[str(_each_e)] = _array
 
         self.shape_tof_df_interp = _shape_tof_df_interp
@@ -664,9 +667,12 @@ class NeutronPulse(object):
             _my_model.set_param_hint(_each_param, value=param_df[_each_param][e_ev])
         _params = _my_model.make_params()
 
+        _t_shift = 0
         if not conv_proton:
             _array = _my_model.eval(_params, t=t_us)  # lmfit.model.eval() returns np.ndarray
         else:
+            _t_shift = self.proton_pulse._t_shift
+            # t used to shift convolution from 'full' to 'same'
             _array_for_conv_proton = _my_model.eval(_params, t=self.t_us_conv_proton)
             _proton_x = np.array(self.proton_pulse.new_shape_df['t_ns'] / 1e3 + self.t_us_conv_proton[-1])
             _proton_y = np.array(self.proton_pulse.new_shape_df['intensity'])
@@ -674,9 +680,11 @@ class NeutronPulse(object):
             _conv_x = np.append(self.t_us_conv_proton, _proton_x[1:])
             _array_function = interp1d(x=_conv_x, y=_conv_y, kind='cubic', bounds_error=False, fill_value=0)
             _array = _array_function(t_us)
+            # print(t_us)
+            # print(len(t_us))
 
         assert len(t_us) == len(_array)
-        return _array
+        return t_us - _t_shift, _array
 
     def _interpolate_param(self, e_ev):
 

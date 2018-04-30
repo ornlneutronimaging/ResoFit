@@ -7,7 +7,7 @@ from ResoFit._pulse_shape import NeutronPulse
 overwrite_csv = False
 source_to_detector_m = 16.45
 
-simulation = Simulation(energy_min=7, energy_max=150, energy_step=0.1, database='ENDF_VII')
+simulation = Simulation(energy_min=78, energy_max=82, energy_step=0.01, database='ENDF_VII')
 simulation.add_layer(layer='Gd', layer_thickness_mm=0.075)
 simulation._convolve_beam_shapes(source_to_detector_m=source_to_detector_m,
                                  model_index=1,
