@@ -119,13 +119,12 @@ class Experiment(object):
 
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
-            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
+            if _baseline is True:
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw)
         else:
             assert y_type == 'transmission'
-            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
+            if _baseline is True:
                 y_exp_raw = fit_util.rm_envelope(y_exp_raw)
-                # raise ValueError("Baseline removal only works for peaks instead of dips!")
 
         return y_exp_raw
 
@@ -182,11 +181,13 @@ class Experiment(object):
         y_interp = y_interp_function(x_interp)
 
         if y_type == 'attenuation':
-            if _baseline is True:  # baseline removal only works for peaks instead of dips currently
-                y_interp = fit_util.rm_baseline(y_interp)
-        elif y_type == 'transmission':
+            y_interp = 1 - y_interp
             if _baseline is True:
-                raise ValueError("Baseline removal only works for peaks instead of dips!")
+                y_interp = fit_util.rm_baseline(y_interp)
+        else:
+            assert y_type == 'transmission'
+            if _baseline is True:
+                y_interp = fit_util.rm_envelope(y_interp)
 
         if x_type == 'lambda':
             x_interp = reso_util.ev_to_angstroms(x_interp)
