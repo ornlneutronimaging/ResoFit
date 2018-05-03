@@ -193,35 +193,35 @@ class Experiment(object):
             x_interp = reso_util.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
-    def slice(self, slice_start=None, slice_end=None, reset_index=False):
+    def slice(self, start=None, end=None, reset_index=False):
         """
         Slice the signal by image number
 
-        :param slice_start: start image
-        :param slice_end: end image
+        :param start: start image
+        :param end: end image
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
         :return: pd.Dataframe. sliced self.spectra and self.data
         """
-        if slice_start and slice_end is not None:
-            if slice_start > slice_end:
+        if start and end is not None:
+            if start > end:
                 raise ValueError(
-                    "The image number of 'start' ({}) can NOT be greater than 'end' ({}).".format(slice_start,
-                                                                                                  slice_end))
-            if slice_end == slice_start:
+                    "The image number of 'start' ({}) can NOT be greater than 'end' ({}).".format(start,
+                                                                                                  end))
+            if end == start:
                 raise ValueError(
-                    "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(slice_start,
-                                                                                                  slice_end))
-        if slice_end is not None:
-            self.data.drop(self.data.index[slice_end:], inplace=True)
-            self.spectra.drop(self.spectra.index[slice_end:], inplace=True)
+                    "The image number of 'start' ({}) and 'end' ({}) can not be the same.".format(start,
+                                                                                                  end))
+        if end is not None:
+            self.data.drop(self.data.index[end:], inplace=True)
+            self.spectra.drop(self.spectra.index[end:], inplace=True)
             # No 'index reset needed' after drop
-            self.slice_end = slice_end
+            self.slice_end = end
             # raw image number saved
             self.img_num = self.data.index.values
-        if slice_start is not None:
-            self.data.drop(self.data.index[:slice_start], inplace=True)
-            self.spectra.drop(self.spectra.index[:slice_start], inplace=True)
-            self.slice_start = slice_start
+        if start is not None:
+            self.data.drop(self.data.index[:start], inplace=True)
+            self.spectra.drop(self.spectra.index[:start], inplace=True)
+            self.slice_start = start
             # raw image number saved
             self.img_num = self.data.index.values
             if reset_index is True:
@@ -309,8 +309,8 @@ class Experiment(object):
         return self.o_peak.peak_df_scaled
 
     def plot_raw(self, energy_xmax=150, lambda_xmax=None,
-                 y_type='attenuation', baseline=None,
-                 x_type='energy', time_unit='us', ax_mpl=None,**kwargs):
+                 y_type='transmission', baseline=None,
+                 x_type='time', time_unit='us', ax_mpl=None, **kwargs):
         """
         Display the loaded signal from data and spectra files.
         :param energy_xmax: maximum x-axis energy value to display
@@ -400,7 +400,7 @@ class Experiment(object):
             ax_mpl.set_ylim(top=1.01, bottom=0.99 * min(y_exp_raw))
 
         # Plot
-        ax_mpl.plot(x_exp_raw, y_exp_raw, 'o', label=self.data_file, markersize=2)
+        ax_mpl.plot(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=2)
         ax_mpl.set_xlabel(x_axis_label)
         ax_mpl.set_ylabel(y_axis_label)
         ax_mpl.legend(loc='best')

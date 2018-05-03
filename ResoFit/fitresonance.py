@@ -30,7 +30,7 @@ class FitResonance(Experiment):
         self.calibrated_offset_us = calibrated_offset_us
         self.calibrated_source_to_detector_m = calibrated_source_to_detector_m
         self.raw_layer = None
-        self.slice(slice_start=slice_start, slice_end=slice_end)
+        self.slice(start=slice_start, end=slice_end)
         self.baseline = baseline
         if norm_to_file is not None:
             self.norm_to(norm_to_file)

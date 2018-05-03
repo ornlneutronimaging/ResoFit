@@ -79,7 +79,7 @@ class Calibration(Simulation):
             self.experiment.norm_to(file=file)
 
     def slice(self, slice_start=None, slice_end=None):
-        self.experiment.slice(slice_start=slice_start, slice_end=slice_end)
+        self.experiment.slice(start=slice_start, end=slice_end)
 
     def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
         """

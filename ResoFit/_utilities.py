@@ -71,31 +71,31 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(plt, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
-    plt.set_xlim(left=x_min, right=x_max)
-    plt.set_ylim(top=y_max)
-    plt.set_title(fig_title)
-    plt.set_xlabel('Energy (eV)')
-    plt.set_ylabel('Neutron attenuation')
-    plt.legend(loc='best')
+def set_plt(ax, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
+    ax.set_xlim(left=x_min, right=x_max)
+    ax.set_ylim(top=y_max)
+    ax.set_title(fig_title)
+    ax.set_xlabel('Energy (eV)')
+    ax.set_ylabel('Neutron attenuation')
+    ax.legend(loc='best')
     # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
     # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)
     if grid is True:
         # ax1.set_xticks(np.arange(0, 100, 10))
         # ax1.set_yticks(np.arange(0, 1., 0.1))
-        plt.grid()
+        ax.grid()
 
 
 def rm_baseline(y, deg=7, max_it=None, tol=None):
-    if y.max() < 0:
-        raise ValueError("y.max() < 0")
+    # if y.max() < 0:
+    #     raise ValueError("y.max() < 0")
     baseline = pku.baseline(y=y, deg=deg, max_it=max_it, tol=tol)
     return y - baseline
 
 
 def rm_envelope(y, deg=7, max_it=None, tol=None):
-    if y.max() < 0:
-        raise ValueError("y.max() < 0")
+    # if y.max() < 0:
+    #     raise ValueError("y.max() < 0")
     envelope = pku.envelope(y=y, deg=deg, max_it=max_it, tol=tol)
     # return y + y.max() - envelope
     return y + 1 - envelope

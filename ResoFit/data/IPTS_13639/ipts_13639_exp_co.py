@@ -40,7 +40,7 @@ experiment = Experiment(data_file=data_file,
 #                                     offset_us=offset_us,
 #                                     source_to_detector_m=source_to_detector_m)
 experiment.norm_to('Ag.csv')
-experiment.slice(slice_start=500, slice_end=1600)
+experiment.slice(start=500, end=1600)
 exp_x_sliced, exp_y_sliced = experiment.xy_scaled(energy_min=energy_min,
                                                   energy_max=energy_max,
                                                   energy_step=energy_step,
