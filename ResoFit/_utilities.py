@@ -90,6 +90,7 @@ def rm_baseline(y, deg=7, max_it=None, tol=None):
     # if y.max() < 0:
     #     raise ValueError("y.max() < 0")
     baseline = pku.baseline(y=y, deg=deg, max_it=max_it, tol=tol)
+    # return y / baseline
     return y - baseline
 
 
@@ -98,6 +99,7 @@ def rm_envelope(y, deg=7, max_it=None, tol=None):
     #     raise ValueError("y.max() < 0")
     envelope = pku.envelope(y=y, deg=deg, max_it=max_it, tol=tol)
     # return y + y.max() - envelope
+    # return y / envelope
     return y + 1 - envelope
 
 
