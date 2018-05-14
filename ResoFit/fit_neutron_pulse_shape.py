@@ -29,9 +29,9 @@ simulation._convolve_beam_shapes(source_to_detector_m=source_to_detector_m,
 #                          baseline=True)
 # # experiment1.slice(slice_start=300, reset_index=False)
 # # peak_df = experiment1.find_peak()
-# simulation.plot_simu(x_type='time', source_to_detector_m=source_to_detector_m, offset_us=2.67)
+# simulation.plot(x_type='time', source_to_detector_m=source_to_detector_m, offset_us=2.67)
 # plt.plot(simulation.x_tof_us - 2.9, simulation.y_att, label='Simulated Data')
-# experiment1.plot_raw(x_type='time', time_unit='us')
+# experiment1.plot(x_type='time', time_unit='us')
 # # plt.title(title)
 
 

@@ -31,12 +31,12 @@ experiment2 = Experiment(data_file=data_file2,
                          repeat=repeat,
                          folder=folder)
 
-experiment1.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_type=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax)
-experiment2.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_type=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax)
+experiment1.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_type=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax)
+experiment2.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_type=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax)
 # experiment1.export_raw(offset_us=offset_us)
 
 # x1, y1 = experiment1.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,

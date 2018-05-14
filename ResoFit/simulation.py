@@ -212,9 +212,12 @@ class Simulation(object):
         # pprint.pprint(peak_dict)
         return peak_dict
 
-    def plot_simu(self, y_type='attenuation', x_type='energy', mixed=True, all_layers=False, all_elements=False,
-                  all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0., time_resolution_us=0.16,
-                  source_to_detector_m=16., t_start_us=1):
+    def plot(self, y_type='attenuation', x_type='energy',
+             logx=False, logy=False,
+             mixed=True, all_layers=False, all_elements=False,
+             all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0.,
+             time_resolution_us=0.16,
+             source_to_detector_m=16., t_start_us=1, ax_mpl=None):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         if items_to_plot is not None:
@@ -222,20 +225,25 @@ class Simulation(object):
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_plot = items.shaped(items_list=items_to_plot)
 
-        fig = self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
-                               all_layers=all_layers, all_elements=all_elements,
-                               all_isotopes=all_isotopes, items_to_plot=items_to_plot,
-                               source_to_detector_m=source_to_detector_m,
-                               offset_us=offset_us,
-                               time_resolution_us=time_resolution_us,
-                               time_unit=time_unit,
-                               t_start_us=t_start_us)
-        return fig
+        ax = self.o_reso.plot(y_axis=y_type, x_axis=x_type, mixed=mixed,
+                              all_layers=all_layers, all_elements=all_elements,
+                              all_isotopes=all_isotopes, items_to_plot=items_to_plot,
+                              source_to_detector_m=source_to_detector_m,
+                              offset_us=offset_us,
+                              time_resolution_us=time_resolution_us,
+                              time_unit=time_unit,
+                              t_start_us=t_start_us,
+                              ax_mpl=ax_mpl,
+                              logx=logx,
+                              logy=logy,
+                              # plotly=plotly
+                              )
+        return ax
 
-    def _export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
-                     all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                     offset_us=0., source_to_detector_m=16.,
-                     t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+    def _export(self, filename=None, x_axis='energy', y_axis='attenuation',
+                all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+                offset_us=0., source_to_detector_m=16.,
+                t_start_us=1, time_resolution_us=0.16, time_unit='us'):
         if items_to_export is not None:
             # Shape items
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)

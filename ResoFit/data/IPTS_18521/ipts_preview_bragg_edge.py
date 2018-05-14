@@ -31,36 +31,36 @@ experiment1 = Experiment(data_file=data_file1,
                          repeat=repeat,
                          folder=folder)
 experiment1.norm_to(ob_file1)
-experiment1.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax, transmission=True)
+experiment1.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax, transmission=True)
 
 experiment2 = Experiment(data_file=data_file2,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)
 experiment2.norm_to(ob_file2)
-experiment2.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax, transmission=True)
+experiment2.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax, transmission=True)
 
 experiment3 = Experiment(data_file=data_file3,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)
 experiment3.norm_to(ob_file3)
-experiment3.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax, transmission=True)
+experiment3.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax, transmission=True)
 
 experiment4 = Experiment(data_file=data_file4,
                          spectra_file=spectra_file,
                          repeat=repeat,
                          folder=folder)
 experiment4.norm_to(ob_file4)
-experiment4.plot_raw(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
-                     x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
-                     lambda_xmax=lambda_xmax, transmission=True)
+experiment4.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
+                 x_axis=x_axis, baseline=baseline, energy_xmax=energy_xmax,
+                 lambda_xmax=lambda_xmax, transmission=True)
 
 # x1, y1 = experiment1.xy_scaled(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 #                                energy_min=7, energy_max=150, energy_step=0.01)

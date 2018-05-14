@@ -9,6 +9,9 @@ from scipy.interpolate import interp1d
 import ResoFit._utilities as fit_util
 from ResoFit._utilities import load_txt_csv
 
+x_type_list = ['energy', 'lambda', 'time']
+y_type_list = ['attenuation', 'transmission']
+
 
 class Experiment(object):
     def __init__(self, spectra_file, data_file, folder, repeat=1, baseline=False):
@@ -76,28 +79,47 @@ class Experiment(object):
         # raw image number saved
         self.img_num = self.data.index.values
 
-    def x_raw(self, x_type='energy', **kwargs):
+    # def x_raw(self, x_type='energy', **kwargs):
+    def x_raw(self, x_type='energy', offset_us=None, source_to_detector_m=None):
         """
         Get the 'x' in eV or angstrom with experimental parameters
-        :param x_type: bool to switch between eV and angstrom
-        :return: array
-        """
-        if x_type not in ['energy', 'lambda']:
-            raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
-        _kwarg_list = ['offset_us', 'source_to_detector_m']
-        for each_kwarg in list(kwargs.keys()):
-            if each_kwarg not in _kwarg_list:
-                raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
-        if 'offset_us' in kwargs.keys():
-            self.offset_us = kwargs['offset_us']
-        if 'source_to_detector_m' in kwargs.keys():
-            self.source_to_detector_m = kwargs['source_to_detector_m']
 
-        x_exp_raw = np.array(reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
-                                               offset_us=self.offset_us,
-                                               source_to_detector_m=self.source_to_detector_m))
-        if x_type == 'lambda':
-            x_exp_raw = np.array(reso_util.ev_to_angstroms(x_exp_raw))
+        :param x_type:
+        :type x_type:
+        :param offset_us:
+        :type offset_us:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :return:
+        :rtype:
+        """
+        if x_type not in x_type_list:
+            raise ValueError("'{}' is not supported. Must be one from {}.".format(x_type, x_type_list))
+        # _kwarg_list = ['offset_us', 'source_to_detector_m']
+        # for each_kwarg in list(kwargs.keys()):
+        #     if each_kwarg not in _kwarg_list:
+        #         raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
+        # if 'offset_us' in kwargs.keys():
+        #     self.offset_us = kwargs['offset_us']
+        # if 'source_to_detector_m' in kwargs.keys():
+        #     self.source_to_detector_m = kwargs['source_to_detector_m']
+        if offset_us is not None:
+            self.offset_us = offset_us
+        if source_to_detector_m is not None:
+            self.source_to_detector_m = source_to_detector_m
+        # For x_type == 'time' (x in seconds)
+        x_exp_raw = np.array(self.spectra[0])
+        if x_type == 'energy':
+            x_exp_raw = np.array(reso_util.s_to_ev(array=x_exp_raw,
+                                                   offset_us=self.offset_us,
+                                                   source_to_detector_m=self.source_to_detector_m))
+        elif x_type == 'lambda':
+            x_exp_raw = np.array(reso_util.s_to_angstroms(array=x_exp_raw,
+                                                          offset_us=self.offset_us,
+                                                          source_to_detector_m=self.source_to_detector_m))
+        # elif x_type == 'number':
+        #     x_exp_raw = np.array(range(len(x_exp_raw)))
+
         return x_exp_raw
 
     def y_raw(self, y_type='attenuation', baseline=None, deg=7):
@@ -107,90 +129,97 @@ class Experiment(object):
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
-        if y_type not in ['attenuation', 'transmission']:
-            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
+        if y_type not in y_type_list:
+            raise ValueError("'{}' is not supported. Must be one from {}.".format(y_type, y_type_list))
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
         assert type(baseline) == bool
 
-        y_exp_raw = np.array(self.data[0]) / self.repeat
+        y_exp_raw = np.array(self.data[0] / self.repeat)
 
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
             if _baseline is True:
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw, deg=deg)
-        else:
-            assert y_type == 'transmission'
+        else:  # y_type == 'transmission'
             if _baseline is True:
                 y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=deg)
 
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
-                  x_type='energy', y_type='attenuation', baseline=None, **kwargs):
+                  x_type='energy', y_type='attenuation',
+                  offset_us=None, source_to_detector_m=None, baseline=None, deg=7):
         """
         Get interpolated x & y within the scaled range same as simulation
-        :param baseline: boolean to remove baseline/background by detrend
+
         :param energy_min:
+        :type energy_min:
         :param energy_max:
+        :type energy_max:
         :param energy_step:
+        :type energy_step:
         :param x_type:
+        :type x_type:
         :param y_type:
-        :return: np.array. interpolated x_exp (in eV or angstrom) and y_exp with specified energy range and step
+        :type y_type:
+        :param baseline:
+        :type baseline:
+        :param offset_us:
+        :type offset_us:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :return:
+        :rtype:
         """
-        _kwarg_list = ['offset_us', 'source_to_detector_m']
-        for each_kwarg in list(kwargs.keys()):
-            if each_kwarg not in _kwarg_list:
-                raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
-        if 'offset_us' in kwargs.keys():
-            self.offset_us = kwargs['offset_us']
-        if 'source_to_detector_m' in kwargs.keys():
-            self.source_to_detector_m = kwargs['source_to_detector_m']
+        if offset_us is not None:
+            self.offset_us = offset_us
+        if source_to_detector_m is not None:
+            self.source_to_detector_m = source_to_detector_m
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
-        if x_type not in ['energy', 'lambda']:
-            raise ValueError("'{}' is not supported. Must be one from ['energy', 'lambda'].")
-        if y_type not in ['attenuation', 'transmission']:
-            raise ValueError("'{}' is not supported. Must be one from ['attenuation', 'transmission'].")
-        assert type(_baseline) == bool
 
-        x_exp_raw = reso_util.s_to_ev(array=self.spectra[0],  # x in seconds
-                                      offset_us=self.offset_us,
-                                      source_to_detector_m=self.source_to_detector_m)
-        _list = list(x_exp_raw)
-        _x_max = _list[0]
-        _x_min = _list[-1]
-        if energy_min < _x_min:
-            raise ValueError(
-                "'Energy min' ({} eV) used for interpolation is beyond 'data min' ({} eV) ".format(energy_min, _x_min))
-        if energy_max > _x_max:
-            raise ValueError(
-                "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max, _x_max))
+        x_exp_raw = self.x_raw(x_type=x_type,
+                               offset_us=self.offset_us,
+                               source_to_detector_m=self.source_to_detector_m)
 
-        y_exp_raw = np.array(self.data[0]) / self.repeat
-        if y_type == 'attenuation':
-            y_exp_raw = 1 - y_exp_raw
+        if x_type == 'energy':
+            _x_max_energy = x_exp_raw[0]
+            _x_min_energy = x_exp_raw[-1]
+        elif x_type == 'lambda':
+            _x_max_energy = reso_util.angstroms_to_ev(x_exp_raw[0])
+            _x_min_energy = reso_util.ev_to_angstroms(x_exp_raw[-1])
+        elif x_type == 'time':
+            _x_max_energy = reso_util.s_to_ev(array=x_exp_raw[0],
+                                              offset_us=self.offset_us,
+                                              source_to_detector_m=self.source_to_detector_m)
+            _x_min_energy = reso_util.s_to_ev(array=x_exp_raw[-1],
+                                              offset_us=self.offset_us,
+                                              source_to_detector_m=self.source_to_detector_m)
+        else:
+            raise ValueError("'{}' is not supported for scaling ".format(x_type))
+
+        if energy_min < _x_min_energy:
+            raise ValueError(
+                "'Energy min' ({} eV) used for interpolation is beyond 'data min' ({} eV) ".format(energy_min,
+                                                                                                   _x_min_energy))
+        if energy_max > _x_max_energy:
+            raise ValueError(
+                "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max,
+                                                                                                   _x_max_energy))
+
+        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline, deg=deg)
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
-        y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
+        # y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
+        y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(x_interp)
 
-        if y_type == 'attenuation':
-            y_interp = 1 - y_interp
-            if _baseline is True:
-                y_interp = fit_util.rm_baseline(y_interp)
-        else:
-            assert y_type == 'transmission'
-            if _baseline is True:
-                y_interp = fit_util.rm_envelope(y_interp)
-
-        if x_type == 'lambda':
-            x_interp = reso_util.ev_to_angstroms(x_interp)
         return x_interp, y_interp
 
     def slice(self, start=None, end=None, reset_index=False):
@@ -253,7 +282,7 @@ class Experiment(object):
         # convert transmission into attenuation
         self.data[0] = self.data[0] / df[0]
 
-    def find_peak(self, thres=0.15, min_dist=2):
+    def find_peak(self, thres=0.15, min_dist=2, deg=7):
         """
         find and return x and y of detected peak in pd.DataFrame
         x is image number from data file. type (int)
@@ -267,14 +296,13 @@ class Experiment(object):
         :return:
         :rtype:
         """
-        # convert to peaks
-        _y = 1 - self.data[0]
-        # remove baseline
-        _y = fit_util.rm_baseline(_y)
+        _y = self.data[0][:]
         _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
 
+        _y = 1 - _y  # force to peaks
+        _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
+
         self.o_peak = fit_util.Peak()
-        # self.o_peak.find(x=_y.index.values + _index_gap, y=_y,
         self.o_peak.find(_y,
                          x_name='x_num', y_name='y',
                          thres=thres, min_dist=min_dist, impr_reso=False)
@@ -308,22 +336,41 @@ class Experiment(object):
 
         return self.o_peak.peak_df_scaled
 
-    def plot_raw(self, energy_xmax=150, lambda_xmax=None,
-                 y_type='transmission', baseline=None, deg=7,
-                 x_type='time', time_unit='us', logx=False, ax_mpl=None, **kwargs):
+    def plot(self, energy_xmax=150, lambda_xmax=None,
+             y_type='transmission', baseline=None, deg=7,
+             x_type='time', time_unit='us', offset_us=None, source_to_detector_m=None,
+             logx=False, ax_mpl=None):
         """
         Display the loaded signal from data and spectra files.
-        :param energy_xmax: maximum x-axis energy value to display
-        :param lambda_xmax: maximum x-axis lambda value to display
-        :param y_type: boolean. False -> show resonance peaks
-                                      True -> show resonance dips
-        :param baseline: boolean. True -> remove baseline by detrend
-        :param x_type: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
-        :param time_unit: string. Must be either 's' or 'us' or 'ns'
-        :return: display raw data signals
+
+        :param energy_xmax:
+        :type energy_xmax:
+        :param lambda_xmax:
+        :type lambda_xmax:
+        :param y_type:
+        :type y_type:
+        :param baseline:
+        :type baseline:
+        :param deg:
+        :type deg:
+        :param x_type:
+        :type x_type:
+        :param time_unit:
+        :type time_unit:
+        :param offset_us:
+        :type offset_us:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :param logx:
+        :type logx:
+        :param ax_mpl:
+        :type ax_mpl:
+        :return:
+        :rtype:
         """
-        _x_type_list = ['energy', 'lambda', 'time', 'number']
-        _y_type_list = ['attenuation', 'transmission']
+        _x_type_list = x_type_list[:]
+        _x_type_list.append('number')
+        _y_type_list = y_type_list
         _time_unit_list = ['s', 'us', 'ns']
         if x_type not in _x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))
@@ -331,26 +378,19 @@ class Experiment(object):
             raise ValueError("Please specify the y-axis type using one from '{}'.".format(_y_type_list))
         if time_unit not in _time_unit_list:
             raise ValueError("Please specify the time unit using one from '{}'.".format(_time_unit_list))
-        x_axis_label = None
-        x_exp_raw = None
-        if len(kwargs.keys()) > 1:
-            if 'offset_us' in kwargs.keys():
-                self.offset_us = kwargs['offset_us']
-
-            elif 'source_to_detector_m' in kwargs.keys():
-                self.source_to_detector_m = kwargs['source_to_detector_m']
-
-            else:
-                raise ValueError("'{}' is not a valid kwargs.")
+        if offset_us is not None:
+            self.offset_us = offset_us
+        if source_to_detector_m is not None:
+            self.source_to_detector_m = source_to_detector_m
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
 
-        # if baseline is True:
-        #     legend_label = 'Exp_raw'
-        # else:
-        #     legend_label = 'Exp_raw_detrended'
+        x_axis_label = None
+        x_exp_raw = None
+        df = pd.DataFrame()
+
         if ax_mpl is None:
             fig, ax_mpl = plt.subplots()
         """X-axis"""
@@ -375,18 +415,20 @@ class Experiment(object):
             if x_type == 'time':
                 if time_unit == 's':
                     x_axis_label = 'Time (s)'
-                    x_exp_raw = self.spectra[0]
+                    x_exp_raw = self.spectra[0][:]
                 if time_unit == 'us':
                     x_axis_label = 'Time (us)'
-                    x_exp_raw = 1e6 * self.spectra[0]
+                    x_exp_raw = 1e6 * self.spectra[0][:]
                 if time_unit == 'ns':
                     x_axis_label = 'Time (ns)'
-                    x_exp_raw = 1e9 * self.spectra[0]
+                    x_exp_raw = 1e9 * self.spectra[0][:]
 
             if x_type == 'number':
                 x_axis_label = 'Image number (#)'
                 x_exp_raw = self.data.index.values
+
         assert x_axis_label is not None
+        df[x_axis_label] = x_exp_raw
 
         """Y-axis"""
         # Determine to plot transmission or attenuation
@@ -399,97 +441,21 @@ class Experiment(object):
             y_axis_label = 'Neutron Attenuation'
             ax_mpl.set_ylim(top=1.01, bottom=0.99 * min(y_exp_raw))
 
+        assert y_axis_label is not None
+        df[y_axis_label] = y_exp_raw
+
+        # # Export
+        # if filename is None:
+        #     df.to_clipboard(excel=True)
+        # else:
+        #     df.to_csv(filename)
+
         # Plot
         if logx:
-            ax_mpl.semilogx(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=2)
+            ax_mpl.semilogx(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=1)
         else:
-            ax_mpl.plot(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=2)
+            ax_mpl.plot(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=1)
         ax_mpl.set_xlabel(x_axis_label)
         ax_mpl.set_ylabel(y_axis_label)
         ax_mpl.legend(loc='best')
         return ax_mpl
-
-    def export_raw(self, filename=None,
-                   y_type='attenuation', baseline=False,
-                   x_type='energy', time_unit='us', **kwargs):
-        """
-        Export the calculated signal from data and spectra files.
-        :param filename: filename (with .csv suffix) you would like to save as
-                                None -> export to clipboard
-        :type filename: string.
-        :param y_type: boolean. False -> show resonance peaks
-                                      True -> show resonance dips
-        :param baseline: boolean. True -> remove baseline by detrend
-        :param x_type: string. x-axis type, must be either 'energy' or 'lambda' or 'time' or 'number'
-        :param time_unit: string. Must be either 's' or 'us' or 'ns'
-        :return: display raw data signals
-        """
-        _x_type_list = ['energy', 'lambda', 'time', 'number']
-        _y_type_list = ['attenuation', 'transmission']
-        _time_unit_list = ['s', 'us', 'ns']
-        if x_type not in _x_type_list:
-            raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))
-        if y_type not in _y_type_list:
-            raise ValueError("Please specify the y-axis type using one from '{}'.".format(_y_type_list))
-        if time_unit not in _time_unit_list:
-            raise ValueError("Please specify the time unit using one from '{}'.".format(_time_unit_list))
-
-        x_axis_label = None
-        x_exp_raw = None
-        df = pd.DataFrame()
-        if 'offset_us' in kwargs.keys():
-            self.offset_us = kwargs['offset_us']
-        if 'source_to_detector_m' in kwargs.keys():
-            self.source_to_detector_m = kwargs['source_to_detector_m']
-        if baseline is None:
-            _baseline = self.baseline
-        else:
-            _baseline = baseline
-
-        """X-axis"""
-        # determine values and labels for x-axis with options from
-        # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        if x_type in ['energy', 'lambda']:
-            if x_type == 'energy':
-                x_axis_label = 'Energy (eV)'
-            else:
-                x_axis_label = u"Wavelength (\u212B)"
-            x_exp_raw = self.x_raw(x_type=x_type, offset_us=self.offset_us,
-                                   source_to_detector_m=self.source_to_detector_m)
-
-        if x_type in ['time', 'number']:
-
-            if x_type == 'time':
-                if time_unit == 's':
-                    x_axis_label = 'Time (s)'
-                    x_exp_raw = self.spectra[0]
-                if time_unit == 'us':
-                    x_axis_label = 'Time (us)'
-                    x_exp_raw = 1e6 * self.spectra[0]
-                if time_unit == 'ns':
-                    x_axis_label = 'Time (ns)'
-                    x_exp_raw = 1e9 * self.spectra[0]
-
-            if x_type == 'number':
-                x_axis_label = 'Image number (#)'
-                x_exp_raw = np.array(range(1, len(self.data[0]) + 1))
-        if x_axis_label is None:
-            raise ValueError("x_axis_label does NOT exist, please check.")
-
-        df[x_axis_label] = x_exp_raw
-
-        """Y-axis"""
-        # Determine to plot transmission or attenuation
-        # Determine to put transmission or attenuation words for y-axis
-        if y_type == 'transmission':
-            y_axis_label = 'Neutron Transmission'
-        else:
-            y_axis_label = 'Neutron Attenuation'
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline)
-        df[y_axis_label] = y_exp_raw
-
-        # Export
-        if filename is None:
-            df.to_clipboard(excel=True)
-        else:
-            df.to_csv(filename)
