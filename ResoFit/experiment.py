@@ -95,20 +95,14 @@ class Experiment(object):
         """
         if x_type not in x_type_list:
             raise ValueError("'{}' is not supported. Must be one from {}.".format(x_type, x_type_list))
-        # _kwarg_list = ['offset_us', 'source_to_detector_m']
-        # for each_kwarg in list(kwargs.keys()):
-        #     if each_kwarg not in _kwarg_list:
-        #         raise ValueError("'{}' is not a valid **kwargs. Please refer '{}'".format(each_kwarg, _kwarg_list))
-        # if 'offset_us' in kwargs.keys():
-        #     self.offset_us = kwargs['offset_us']
-        # if 'source_to_detector_m' in kwargs.keys():
-        #     self.source_to_detector_m = kwargs['source_to_detector_m']
+
         if offset_us is not None:
             self.offset_us = offset_us
         if source_to_detector_m is not None:
             self.source_to_detector_m = source_to_detector_m
-        # For x_type == 'time' (x in seconds)
-        x_exp_raw = np.array(self.spectra[0])
+
+        x_exp_raw = np.array(self.spectra[0])  # For x_type == 'time' (x in seconds)
+
         if x_type == 'energy':
             x_exp_raw = np.array(reso_util.s_to_ev(array=x_exp_raw,
                                                    offset_us=self.offset_us,
@@ -399,11 +393,9 @@ class Experiment(object):
         if x_type in ['energy', 'lambda']:
             if x_type == 'energy':
                 x_axis_label = 'Energy (eV)'
-                # angstrom = False
                 ax_mpl.set_xlim(xmin=0, xmax=energy_xmax)
             else:
                 x_axis_label = u"Wavelength (\u212B)"
-                # angstrom = True
                 if lambda_xmax is not None:
                     ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
             x_exp_raw = self.x_raw(x_type=x_type,
