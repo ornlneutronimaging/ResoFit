@@ -333,7 +333,7 @@ class Experiment(object):
     def plot(self, energy_xmax=150, lambda_xmax=None,
              y_type='transmission', baseline=None, deg=7,
              x_type='time', time_unit='us', offset_us=None, source_to_detector_m=None,
-             logx=False, ax_mpl=None):
+             logx=False, ax_mpl=None, mt='.', ms=1.5, alpha=1):
         """
         Display the loaded signal from data and spectra files.
 
@@ -444,9 +444,11 @@ class Experiment(object):
 
         # Plot
         if logx:
-            ax_mpl.semilogx(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=1)
+            ax_mpl.semilogx(x_exp_raw, y_exp_raw, mt, label=self.data_file.split('.')[0] + '_data',
+                            markersize=ms, alpha=alpha)
         else:
-            ax_mpl.plot(x_exp_raw, y_exp_raw, '-o', label=self.data_file.split('.')[0], markersize=1)
+            ax_mpl.plot(x_exp_raw, y_exp_raw, mt, label=self.data_file.split('.')[0] + '_data',
+                        markersize=ms, alpha=alpha)
         ax_mpl.set_xlabel(x_axis_label)
         ax_mpl.set_ylabel(y_axis_label)
         ax_mpl.legend(loc='best')
