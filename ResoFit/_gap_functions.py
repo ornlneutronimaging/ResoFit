@@ -54,10 +54,11 @@ def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list,
                             energy_step=energy_step,
                             database=database)
     for each_layer in layer_list:
-        simulation.add_Layer(layer=each_layer,
-                             layer_thickness_mm=parvals['thickness_mm_' + each_layer],
-                             layer_density_gcm3=parvals['density_gcm3_' + each_layer])
-    simu_x, simu_y = simulation.xy_simu(x_type='energy', y_type='attenuation')
+        simulation.add_layer(layer=each_layer,
+                             thickness_mm=parvals['thickness_mm_' + each_layer],
+                             density_gcm3=parvals['density_gcm3_' + each_layer])
+    simu_x = simulation.get_x(x_type='energy')
+    simu_y = simulation.get_y(y_type='attenuation')
     gap = (exp_y_interp - simu_y)  # ** 2
 
     if each_step is True:
@@ -72,7 +73,7 @@ def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list,
 
 
 def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_isotope_list,
-                          fitted_simulation=Simulation(),
+                          fitted_simulation: Simulation,
                           each_step=False):
     parvals = params.valuesdict()
     isotope_ratio_list = []
@@ -80,7 +81,8 @@ def y_gap_for_iso_fitting(params, exp_x_interp, exp_y_interp, layer, formatted_i
         isotope_ratio_list.append(parvals[formatted_isotope_list[_isotope_index]])
 
     fitted_simulation.set_isotopic_ratio(layer=layer, element=layer, new_isotopic_ratio_list=isotope_ratio_list)
-    simu_x, simu_y = fitted_simulation.xy_simu(x_type='energy', y_type='attenuation')
+    simu_x = fitted_simulation.get_x(x_type='energy')
+    simu_y = fitted_simulation.get_y(y_type='attenuation')
     gap = (exp_y_interp - simu_y)  # ** 2
 
     if each_step is True:

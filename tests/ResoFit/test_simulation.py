@@ -72,7 +72,8 @@ class TestSimulation(unittest.TestCase):
     def test_xy_simu(self):
         simulation = self.simulation
         simulation.add_layer(layer='U', thickness_mm=0.15)
-        _x_returned, _y_returned = simulation.xy_simu(x_type='lambda', y_type='transmission')
+        _x_returned = simulation.get_x(x_type='lambda')
+        _y_returned = simulation.get_y(y_type='transmission')
         _x_expected = np.array([0.10809189, 0.10111071, 0.09532809, 0.09043617])
         self.assertAlmostEqual(_x_returned[0], _x_expected[0], delta=0.000001)
         self.assertAlmostEqual(_x_returned[1], _x_expected[1], delta=0.000001)
@@ -83,7 +84,8 @@ class TestSimulation(unittest.TestCase):
         self.assertAlmostEqual(_y_returned[1], _y_expected[1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[2], _y_expected[2], delta=0.000001)
         self.assertAlmostEqual(_y_returned[3], _y_expected[3], delta=0.000001)
-        _x_returned, _y_returned = simulation.xy_simu(x_type='energy', y_type='attenuation')
+        _x_returned = simulation.get_x(x_type='energy')
+        _y_returned = simulation.get_y(y_type='attenuation')
         _x_expected = np.array([7., 8., 9., 10.])
         self.assertAlmostEqual(_x_returned[0], _x_expected[0], delta=0.000001)
         self.assertAlmostEqual(_x_returned[1], _x_expected[1], delta=0.000001)

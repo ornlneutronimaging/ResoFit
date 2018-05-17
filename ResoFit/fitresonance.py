@@ -15,14 +15,14 @@ from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
 
 
-class FitResonance(Experiment):
+class FitResonance(object):
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
                  folder, repeat=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  database='ENDF_VII'):
-        super().__init__(spectra_file=spectra_file, data_file=data_file, folder=folder, repeat=repeat)
+        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, folder=folder, repeat=repeat)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -30,17 +30,17 @@ class FitResonance(Experiment):
         self.calibrated_offset_us = calibrated_offset_us
         self.calibrated_source_to_detector_m = calibrated_source_to_detector_m
         self.raw_layer = None
-        self.slice(start=slice_start, end=slice_end)
+        self.experiment.slice(start=slice_start, end=slice_end)
         self.baseline = baseline
         if norm_to_file is not None:
-            self.norm_to(norm_to_file)
-        self.exp_x_interp, self.exp_y_interp = self.xy_scaled(energy_min=self.energy_min,
-                                                              energy_max=self.energy_max,
-                                                              energy_step=self.energy_step,
-                                                              x_type='energy', y_type='attenuation',
-                                                              offset_us=self.calibrated_offset_us,
-                                                              source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                              baseline=self.baseline)
+            self.experiment.norm_to(norm_to_file)
+        self.exp_x_interp, self.exp_y_interp = self.experiment.xy_scaled(energy_min=self.energy_min,
+                                                                         energy_max=self.energy_max,
+                                                                         energy_step=self.energy_step,
+                                                                         x_type='energy', y_type='attenuation',
+                                                                         offset_us=self.calibrated_offset_us,
+                                                                         source_to_detector_m=self.calibrated_source_to_detector_m,
+                                                                         baseline=self.baseline)
 
         self.fit_result = None
         self.fitted_density_gcm3 = None
@@ -126,10 +126,10 @@ class FitResonance(Experiment):
                                             energy_step=self.energy_step,
                                             database=self.database)
         for each_layer in self.layer_list:
-            self.fitted_simulation.add_Layer(layer=each_layer,
-                                             layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
+            self.fitted_simulation.add_layer(layer=each_layer,
+                                             thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                  'value'],
-                                             layer_density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
+                                             density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
         return self.fit_result
 
     def fit_iso(self, layer, each_step=False):
@@ -220,23 +220,23 @@ class FitResonance(Experiment):
         return self.fitted_layer.info
 
     def index_peak(self, thres, min_dist, map_thres=0.01, map_min_dist=20, rel_tol=5e-3, isotope=False):
-        if self.o_peak is None:
-            self.find_peak(thres=thres, min_dist=min_dist)
-        self.scale_peak_with_ev(energy_min=self.energy_min,
-                                energy_max=self.energy_max,
-                                calibrated_offset_us=self.calibrated_offset_us,
-                                calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
-        assert self.o_peak.peak_df is not None
-        assert self.o_peak.peak_df_scaled is not None
+        if self.experiment.o_peak is None:
+            self.experiment.find_peak(thres=thres, min_dist=min_dist)
+        self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
+                                           energy_max=self.energy_max,
+                                           calibrated_offset_us=self.calibrated_offset_us,
+                                           calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+        assert self.experiment.o_peak.peak_df is not None
+        assert self.experiment.o_peak.peak_df_scaled is not None
 
         _peak_map = self.fitted_simulation.peak_map(thres=map_thres,
                                                     min_dist=map_min_dist,
                                                     impr_reso=True,
                                                     isotope=isotope)
-        self.o_peak.peak_map_full = _peak_map
-        self.o_peak.index(peak_map=_peak_map,
-                          rel_tol=rel_tol)
-        return self.o_peak.peak_map_indexed
+        self.experiment.o_peak.peak_map_full = _peak_map
+        self.experiment.o_peak.index(peak_map=_peak_map,
+                                     rel_tol=rel_tol)
+        return self.experiment.o_peak.peak_map_indexed
 
     # def analyze_peak(self):
     #     pass
@@ -280,14 +280,15 @@ class FitResonance(Experiment):
                                                 energy_max=self.energy_max,
                                                 energy_step=self.energy_step)
             for each_layer in self.layer_list:
-                self.fitted_simulation.add_Layer(layer=each_layer,
-                                                 layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
+                self.fitted_simulation.add_layer(layer=each_layer,
+                                                 thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                      'value'],
-                                                 layer_density_gcm3=self.fitted_layer.info[each_layer]['density'][
+                                                 density_gcm3=self.fitted_layer.info[each_layer]['density'][
                                                      'value'])
         if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'full'].")
-        simu_x, simu_y = self.fitted_simulation.xy_simu(x_type='energy', y_type='attenuation')
+        simu_x = self.fitted_simulation.get_x(x_type='energy')
+        simu_y = self.fitted_simulation.get_y(y_type='attenuation')
 
         # Get plot labels
         simu_label = 'Fit'
@@ -331,10 +332,11 @@ class FitResonance(Experiment):
                                     energy_max=self.energy_max,
                                     energy_step=self.energy_step)
             for each_layer in self.layer_list:
-                simulation.add_Layer(layer=each_layer,
-                                     layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
-                                     layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
-            simu_x, simu_y_before = simulation.xy_simu(x_type='energy', y_type='attenuation')
+                simulation.add_layer(layer=each_layer,
+                                     thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
+                                     density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
+            simu_x = simulation.get_x(x_type='energy')
+            simu_y_before = simulation.get_y(y_type='attenuation')
             ax1.plot(simu_x, simu_y_before,
                      'c-.', label=simu_before_label, linewidth=1)
             # Save to df
@@ -345,11 +347,12 @@ class FitResonance(Experiment):
         # 2.
         if interp is True:
             # Plot exp. data (interpolated)
-            x_interp, y_interp = self.xy_scaled(energy_max=self.energy_max, energy_min=self.energy_min,
-                                                energy_step=self.energy_step,
-                                                x_type='energy', y_type='attenuation', baseline=self.baseline,
-                                                offset_us=self.calibrated_offset_us,
-                                                source_to_detector_m=self.calibrated_source_to_detector_m)
+            x_interp, y_interp = self.experiment.xy_scaled(energy_max=self.energy_max, energy_min=self.energy_min,
+                                                           energy_step=self.energy_step,
+                                                           x_type='energy', y_type='attenuation',
+                                                           baseline=self.baseline,
+                                                           offset_us=self.calibrated_offset_us,
+                                                           source_to_detector_m=self.calibrated_source_to_detector_m)
             ax1.plot(x_interp, y_interp, 'r:', label=exp_interp_label, linewidth=1)
             # Save to df
             _live_df_x_label = exp_interp_label + '_eV'
@@ -358,9 +361,9 @@ class FitResonance(Experiment):
             self.df[_live_df_y_label] = y_interp
         else:
             # Plot exp. data (raw)
-            exp_x = self.x_raw(x_type='energy', offset_us=self.calibrated_offset_us,
-                               source_to_detector_m=self.calibrated_source_to_detector_m)
-            exp_y = self.y_raw(y_type='attenuation', baseline=self.baseline)
+            exp_x = self.experiment.x_raw(x_type='energy', offset_us=self.calibrated_offset_us,
+                                          source_to_detector_m=self.calibrated_source_to_detector_m)
+            exp_y = self.experiment.y_raw(y_type='attenuation', baseline=self.baseline)
             ax1.plot(exp_x, exp_y,
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
@@ -435,10 +438,10 @@ class FitResonance(Experiment):
                 self.df[_live_df_y_label] = _signal_dict[_each_label]
 
         # plot peaks detected and indexed
-        if self.o_peak and self.o_peak.peak_map_indexed is not None:
-            _peak_df_scaled = self.o_peak.peak_df_scaled
-            _peak_map_indexed = self.o_peak.peak_map_indexed
-            _peak_map_full = self.o_peak.peak_map_full
+        if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
+            _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+            _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
+            _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
                 ax1.plot(_peak_df_scaled['x'],
                          _peak_df_scaled['y'],

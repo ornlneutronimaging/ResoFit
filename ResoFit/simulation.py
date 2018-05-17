@@ -43,7 +43,7 @@ class Simulation(object):
         self.x_tof_us = None
         self.y_att = None
 
-    def add_layer(self, layer, thickness_mm, density_gcm3=np.NaN):
+    def add_layer(self, layer: str, thickness_mm: float, density_gcm3=np.NaN):
         """
 
         :param layer:
@@ -66,8 +66,6 @@ class Simulation(object):
         Add layer using Layer class
 
         :param layer:
-        # :return: x in eV
-        #          y in attenuation
         """
         for _each_layer in list(layer.info.keys()):
             self.add_layer(layer=_each_layer,
@@ -103,9 +101,16 @@ class Simulation(object):
 
     def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None):
         """
-        Convert x to angstrom
+        Get x by specified type
 
-        :return: x in angstrom
+        :param x_type:
+        :type x_type:
+        :param offset_us:
+        :type offset_us:
+        :param source_to_detector_m:
+        :type source_to_detector_m:
+        :return: x in specified type
+        :rtype: np.array
         """
         x_type_list = ['energy', 'lambda', 'time']
         _x = np.array(self.o_reso.total_signal['energy_eV']).round(5)
@@ -123,9 +128,12 @@ class Simulation(object):
 
     def get_y(self, y_type='transmission'):
         """
-        Convert y to transmission
+        Get x by specified type
 
-        :return: x in transmission
+        :param y_type:
+        :type y_type:
+        :return: y in specified type
+        :rtype: np.array
         """
         y_type_list = ['transmission', 'attenuation']
         _y = np.array(self.o_reso.total_signal['attenuation'])
@@ -137,21 +145,21 @@ class Simulation(object):
             raise ValueError("'{}' is not valid for 'y_type=', type accepted are: '{}'".format(y_type, y_type_list))
         return _y
 
-    def xy_simu(self, x_type='energy', y_type='attenuation'):
-        """
-        Get x and y arrays
-
-        :param y_type:
-        :type y_type:
-        :param x_type:
-        :type x_type:
-
-        :return: x and y arrays
-        :rtype: array
-        """
-        _x = self.get_x(x_type=x_type)
-        _y = self.get_y(y_type=y_type)
-        return _x, _y
+    # def xy_simu(self, x_type='energy', y_type='attenuation'):
+    #     """
+    #     Get x and y arrays
+    #
+    #     :param y_type:
+    #     :type y_type:
+    #     :param x_type:
+    #     :type x_type:
+    #
+    #     :return: x and y arrays
+    #     :rtype: array
+    #     """
+    #     _x = self.get_x(x_type=x_type)
+    #     _y = self.get_y(y_type=y_type)
+    #     return _x, _y
 
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
         _file_path = os.path.abspath(os.path.dirname(__file__))
