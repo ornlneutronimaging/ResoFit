@@ -5,7 +5,6 @@ import pytest
 import ResoFit._utilities as fit_util
 from ResoFit.simulation import Simulation
 
-
 class TestLayer(unittest.TestCase):
     def test_input_type(self):
         layer = fit_util.Layer()
@@ -13,7 +12,7 @@ class TestLayer(unittest.TestCase):
         density_1 = None
         layer_1 = 16
         pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
-        # self.assertRaises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
+        # self.assertRaises(ValueError, layer.add_Layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = []
         pytest.raises(ValueError, layer.add_layer, layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
         layer_1 = {}
@@ -74,10 +73,12 @@ class TestItems(unittest.TestCase):
     thickness_1 = 0.05
     layer_2 = 'Ag'
     thickness_2 = 0.05
+    layers = fit_util.Layer()
+    layers.add_layer(layer=layer_1, thickness_mm=thickness_1)
+    layers.add_layer(layer=layer_2, thickness_mm=thickness_2)
     database = '_data_for_unittest'
     simulation = Simulation(database=database)
-    simulation.add_layer(layer=layer_1, layer_thickness_mm=thickness_1)
-    simulation.add_layer(layer=layer_2, layer_thickness_mm=thickness_2)
+    simulation.add_Layer(layers)
     items = fit_util.Items(simulation.o_reso)
 
     def test_raises(self):
@@ -162,7 +163,7 @@ class TestPeaks(unittest.TestCase):
                             energy_max=energy_max,
                             energy_step=energy_step,
                             database='_data_for_unittest')
-    simulation.add_layer(layer='U', layer_thickness_mm=0.05)
+    simulation.add_layer(layer='U', thickness_mm=0.05)
 
     def test_indexes(self):
         x = self.simulation.o_reso.stack_sigma['U']['U']['energy_eV']

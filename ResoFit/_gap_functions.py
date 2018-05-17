@@ -54,7 +54,7 @@ def y_gap_for_fitting(params, exp_x_interp, exp_y_interp, layer_list,
                             energy_step=energy_step,
                             database=database)
     for each_layer in layer_list:
-        simulation.add_layer(layer=each_layer,
+        simulation.add_Layer(layer=each_layer,
                              layer_thickness_mm=parvals['thickness_mm_' + each_layer],
                              layer_density_gcm3=parvals['density_gcm3_' + each_layer])
     simu_x, simu_y = simulation.xy_simu(x_type='energy', y_type='attenuation')

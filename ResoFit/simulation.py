@@ -7,6 +7,7 @@ from ImagingReso.resonance import Resonance
 
 import ResoFit._utilities as fit_util
 from ResoFit._pulse_shape import NeutronPulse
+from ResoFit._utilities import Layer
 
 
 class Simulation(object):
@@ -36,29 +37,42 @@ class Simulation(object):
                                 database=database)
         self.neutron_pulse = None
 
-        self.x_simu = None  # must be in energy
-        self.y_simu = None
         self.layer_list = []
+        self.layer = fit_util.Layer()
 
         self.x_tof_us = None
         self.y_att = None
 
-    def add_layer(self, layer, layer_thickness_mm, layer_density_gcm3=np.NaN):
+    def add_layer(self, layer, thickness_mm, density_gcm3=np.NaN):
         """
-        Add layers and update x y values to pass
 
         :param layer:
-        :param layer_thickness_mm:
-        :param layer_density_gcm3: can be omitted same as Resonance() in ImagingReso
-        :return: x in eV
-                 y in attenuation
+        :type layer:
+        :param thickness_mm:
+        :type thickness_mm:
+        :param density_gcm3:
+        :type density_gcm3:
+        :return:
+        :rtype:
         """
         self.o_reso.add_layer(formula=layer,
-                              thickness=layer_thickness_mm,
-                              density=layer_density_gcm3)
+                              thickness=thickness_mm,
+                              density=density_gcm3)
         self.layer_list.append(layer)
-        self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
-        self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
+        self.layer.add_layer(layer=layer, thickness_mm=thickness_mm, density_gcm3=density_gcm3)
+
+    def add_Layer(self, layer: Layer):
+        """
+        Add layer using Layer class
+
+        :param layer:
+        # :return: x in eV
+        #          y in attenuation
+        """
+        for _each_layer in list(layer.info.keys()):
+            self.add_layer(layer=_each_layer,
+                           thickness_mm=layer.info[_each_layer]['thickness']['value'],
+                           density_gcm3=layer.info[_each_layer]['density']['value'])
 
     def set_isotopic_ratio(self, layer, element, new_isotopic_ratio_list):
         """
@@ -84,8 +98,8 @@ class Simulation(object):
         if element not in _elements:
             raise ValueError('Element {} specified does not exist in {} layer.'.format(element, layer))
         self.o_reso.set_isotopic_ratio(compound=layer, element=element, list_ratio=new_isotopic_ratio_list)
-        self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
-        self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
+        # self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
+        # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
     def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None):
         """
@@ -94,7 +108,7 @@ class Simulation(object):
         :return: x in angstrom
         """
         x_type_list = ['energy', 'lambda', 'time']
-        _x = self.x_simu
+        _x = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         if x_type == 'energy':
             _x = _x
         elif x_type == 'time':
@@ -114,7 +128,7 @@ class Simulation(object):
         :return: x in transmission
         """
         y_type_list = ['transmission', 'attenuation']
-        _y = self.y_simu
+        _y = np.array(self.o_reso.total_signal['attenuation'])
         if y_type == 'attenuation':
             _y = _y
         elif y_type == 'transmission':
@@ -155,7 +169,7 @@ class Simulation(object):
                                      overwrite_csv=False)
         self.neutron_pulse.fit_params(check_each=False, loglog_fit=True, overwrite_csv=False)
 
-        self.neutron_pulse.make_shape(e_ev=self.x_simu, t_interp=None, for_sum=True, norm=False,
+        self.neutron_pulse.make_shape(e_ev=self.get_x(x_type='energy'), t_interp=None, for_sum=True, norm=False,
                                       source_to_detector_m=source_to_detector_m,
                                       conv_proton=conv_proton, proton_params=proton_params,
                                       overwrite_csv=False)
@@ -217,7 +231,8 @@ class Simulation(object):
              mixed=True, all_layers=False, all_elements=False,
              all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0.,
              time_resolution_us=0.16,
-             source_to_detector_m=16., t_start_us=1, ax_mpl=None):
+             source_to_detector_m=16., t_start_us=1, ax_mpl=None,
+             fmt='-', ms=2, lw=1.5, alpha=1):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
         if items_to_plot is not None:
@@ -237,6 +252,10 @@ class Simulation(object):
                               logx=logx,
                               logy=logy,
                               # plotly=plotly
+                              fmt=fmt,
+                              ms=ms,
+                              lw=lw,
+                              alpha=alpha
                               )
         return ax
 

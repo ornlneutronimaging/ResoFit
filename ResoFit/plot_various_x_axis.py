@@ -19,8 +19,8 @@ simulation = Simulation(energy_min=energy_min,
                         energy_step=energy_step,
                         database='ENDF_VIII')
 
-simulation.o_reso.add_layer(formula=layer_1, thickness=thickness_1)
-# simulation.o_reso.add_layer(formula=layer_2, thickness=thickness_2)
+simulation.o_reso.add_Layer(formula=layer_1, thickness=thickness_1)
+# simulation.o_reso.add_Layer(formula=layer_2, thickness=thickness_2)
 
 # o_reso.plot(all_elements=True, transmission=False, x_axis='time')
 # o_reso.plot(all_elements=True, transmission=False, x_axis='lambda')

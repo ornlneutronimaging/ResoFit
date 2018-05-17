@@ -13,7 +13,7 @@ import pandas as pd
 from ResoFit._utilities import Peak
 
 
-class Calibration(Simulation):
+class Calibration(object):
     def __init__(self, spectra_file, data_file, layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  repeat=1, folder='data', baseline=False,
@@ -40,18 +40,24 @@ class Calibration(Simulation):
         :param baseline: True -> to remove baseline/background by detrend
         :type baseline: boolean
         """
-        super().__init__(energy_min=energy_min,
-                         energy_max=energy_max,
-                         energy_step=energy_step,
-                         database=database)
-        for _each_layer in list(layer.info.keys()):
-            self.add_layer(layer=_each_layer,
-                           layer_thickness_mm=layer.info[_each_layer]['thickness']['value'],
-                           layer_density_gcm3=layer.info[_each_layer]['density']['value'])
+        # super().__init__(energy_min=energy_min,
+        #                  energy_max=energy_max,
+        #                  energy_step=energy_step,
+        #                  database=database)
+        # for _each_layer in list(layer.info.keys()):
+        #     self.add_Layer(layer=_each_layer,
+        #                    layer_thickness_mm=layer.info[_each_layer]['thickness']['value'],
+        #                    layer_density_gcm3=layer.info[_each_layer]['density']['value'])
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
+        self.simulation = Simulation(energy_min=energy_min,
+                                     energy_max=energy_max,
+                                     energy_step=energy_step,
+                                     database=database)
+        self.simulation.add_Layer(layer=layer)
         self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, repeat=repeat, folder=folder)
+
         self.repeat = repeat
         self.data_file = data_file
         self.spectra_file = spectra_file
@@ -95,8 +101,8 @@ class Calibration(Simulation):
         self.init_offset_us = offset_us
         if vary not in ['source_to_detector', 'offset', 'all', 'none']:
             raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all' 'none']")
-        simu_x = self.x_simu
-        simu_y = self.y_simu
+        simu_x = self.simulation.get_x(x_type='energy')
+        simu_y = self.simulation.get_y(y_type='attenuation')
 
         source_to_detector_vary_tag = True
         offset_vary_tag = True
@@ -163,7 +169,8 @@ class Calibration(Simulation):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres, min_dist=min_dist)
         # find peak map using Simulation.peak_map()
-        _peak_map = self.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso, isotope=isotope)
+        _peak_map = self.simulation.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso,
+                                             isotope=isotope)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
@@ -293,7 +300,7 @@ class Calibration(Simulation):
         :rtype:
         """
         if all_elements is True:
-            if len(self.layer_list) == 1:
+            if len(self.simulation.layer_list) == 1:
                 raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
         if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'all'].")
@@ -301,7 +308,7 @@ class Calibration(Simulation):
         exp_label = 'Exp'
         exp_before_label = 'Exp_init'
         exp_interp_label = 'Exp_interp'
-        sample_name = ' & '.join(self.layer_list)
+        sample_name = ' & '.join(self.simulation.layer_list)
         fig_title = 'Calibration result of sample (' + sample_name + ')'
 
         # clear any left plt
@@ -316,7 +323,8 @@ class Calibration(Simulation):
 
         # Plot simulated total signal
         if total is True:
-            ax1.plot(self.x_simu, self.y_simu, 'b-', label=simu_label, linewidth=1)
+            ax1.plot(self.simulation.get_x(x_type='energy'),
+                     self.simulation.get_y(y_type='attenuation'), 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
 
@@ -344,33 +352,36 @@ class Calibration(Simulation):
         # 3.
         if all_elements is True:
             # show signal from each elements
-            _stack_signal = self.o_reso.stack_signal
-            _stack = self.o_reso.stack
+            _stack_signal = self.simulation.o_reso.stack_signal
+            _stack = self.simulation.o_reso.stack
             y_axis_tag = 'attenuation'
             for _layer in _stack.keys():
                 for _element in _stack[_layer]['elements']:
                     _y_axis = _stack_signal[_layer][_element][y_axis_tag]
-                    ax1.plot(self.x_simu, _y_axis, label="{}".format(_element), linewidth=1, alpha=0.85)
+                    ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_element), linewidth=1,
+                             alpha=0.85)
         # 4.
         if all_isotopes is True:
             # show signal from each isotopes
-            _stack_signal = self.o_reso.stack_signal
-            _stack = self.o_reso.stack
+            _stack_signal = self.simulation.o_reso.stack_signal
+            _stack = self.simulation.o_reso.stack
             y_axis_tag = 'attenuation'
             for _layer in _stack.keys():
                 for _element in _stack[_layer]['elements']:
                     for _isotope in _stack[_layer][_element]['isotopes']['list']:
                         _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
-                        ax1.plot(self.x_simu, _y_axis, label="{}".format(_isotope), linewidth=1, alpha=1)
+                        ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_isotope),
+                                 linewidth=1, alpha=1)
         # 5.
         if items_to_plot is not None:
             # plot specified from 'items_to_plot'
             y_axis_tag = 'attenuation'
-            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
+            items = fit_util.Items(o_reso=self.simulation.o_reso, database=self.database)
             items.shaped(items_list=items_to_plot)
             _signal_dict = items.values(y_axis_type=y_axis_tag)
             for _each_label in list(_signal_dict.keys()):
-                ax1.plot(self.x_simu, _signal_dict[_each_label], '--', label=_each_label, linewidth=1, alpha=1)
+                ax1.plot(self.simulation.get_x(x_type='energy'), _signal_dict[_each_label], '--', label=_each_label,
+                         linewidth=1, alpha=1)
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
@@ -425,30 +436,30 @@ class Calibration(Simulation):
             plt.tight_layout()
 
         if save_fig:
-            _sample_name = '_'.join(self.layer_list)
+            _sample_name = '_'.join(self.simulation.layer_list)
             _filename = 'calibration_' + _sample_name + '.png'
             plt.savefig(_filename, dpi=600, transparent=True)
             plt.close()
         # else:
         #     plt.show()
 
-    def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
-                    all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                    t_start_us=1, time_resolution_us=0.16, time_unit='us'):
-        if items_to_export is not None:
-            # Shape items
-            items = fit_util.Items(o_reso=self.o_reso, database=self.database)
-            items_to_export = items.shaped(items_list=items_to_export)
-
-        self._export(filename=filename,
-                     x_axis=x_axis,
-                     y_axis=y_axis,
-                     all_layers=all_layers,
-                     all_elements=all_elements,
-                     all_isotopes=all_isotopes,
-                     items_to_export=items_to_export,
-                     offset_us=self.calibrated_offset_us,
-                     source_to_detector_m=self.calibrated_source_to_detector_m,
-                     t_start_us=t_start_us,
-                     time_resolution_us=time_resolution_us,
-                     time_unit=time_unit)
+    # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
+    #                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+    #                 t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+    #     if items_to_export is not None:
+    #         # Shape items
+    #         items = fit_util.Items(o_reso=self.simulation.o_reso, database=self.database)
+    #         items_to_export = items.shaped(items_list=items_to_export)
+    #
+    #     self.simulation._export(filename=filename,
+    #                             x_axis=x_axis,
+    #                             y_axis=y_axis,
+    #                             all_layers=all_layers,
+    #                             all_elements=all_elements,
+    #                             all_isotopes=all_isotopes,
+    #                             items_to_export=items_to_export,
+    #                             offset_us=self.calibrated_offset_us,
+    #                             source_to_detector_m=self.calibrated_source_to_detector_m,
+    #                             t_start_us=t_start_us,
+    #                             time_resolution_us=time_resolution_us,
+    #                             time_unit=time_unit)

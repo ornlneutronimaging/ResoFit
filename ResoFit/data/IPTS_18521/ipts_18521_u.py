@@ -29,8 +29,8 @@ density_1 = None
 # density_3 = None
 layer = Layer()
 layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
-# layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
-# layer.add_layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
+# layer.add_Layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
+# layer.add_Layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
 
 folder = 'data/IPTS_18521/reso_data_18521'
 data_file = 'run_33_resonance.txt'

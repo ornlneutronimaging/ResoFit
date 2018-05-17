@@ -126,7 +126,7 @@ class FitResonance(Experiment):
                                             energy_step=self.energy_step,
                                             database=self.database)
         for each_layer in self.layer_list:
-            self.fitted_simulation.add_layer(layer=each_layer,
+            self.fitted_simulation.add_Layer(layer=each_layer,
                                              layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                  'value'],
                                              layer_density_gcm3=self.fitted_layer.info[each_layer]['density']['value'])
@@ -280,7 +280,7 @@ class FitResonance(Experiment):
                                                 energy_max=self.energy_max,
                                                 energy_step=self.energy_step)
             for each_layer in self.layer_list:
-                self.fitted_simulation.add_layer(layer=each_layer,
+                self.fitted_simulation.add_Layer(layer=each_layer,
                                                  layer_thickness_mm=self.fitted_layer.info[each_layer]['thickness'][
                                                      'value'],
                                                  layer_density_gcm3=self.fitted_layer.info[each_layer]['density'][
@@ -331,7 +331,7 @@ class FitResonance(Experiment):
                                     energy_max=self.energy_max,
                                     energy_step=self.energy_step)
             for each_layer in self.layer_list:
-                simulation.add_layer(layer=each_layer,
+                simulation.add_Layer(layer=each_layer,
                                      layer_thickness_mm=self.raw_layer.info[each_layer]['thickness']['value'],
                                      layer_density_gcm3=self.raw_layer.info[each_layer]['density']['value'])
             simu_x, simu_y_before = simulation.xy_simu(x_type='energy', y_type='attenuation')
