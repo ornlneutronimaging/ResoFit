@@ -80,7 +80,7 @@ class Experiment(object):
         self.img_num = self.data.index.values
 
     # def x_raw(self, x_type='energy', **kwargs):
-    def x_raw(self, x_type='energy', offset_us=None, source_to_detector_m=None):
+    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None):
         """
         Get the 'x' in eV or angstrom with experimental parameters
 
@@ -116,7 +116,7 @@ class Experiment(object):
 
         return x_exp_raw
 
-    def y_raw(self, y_type='attenuation', baseline=None, deg=7):
+    def get_y(self, y_type='attenuation', baseline=None, deg=7):
         """
         Get the 'y' in eV or angstrom with experimental parameters
         :param y_type: bool to switch between transmission and attenuation
@@ -177,7 +177,7 @@ class Experiment(object):
         else:
             _baseline = baseline
 
-        x_exp_raw = self.x_raw(x_type=x_type,
+        x_exp_raw = self.get_x(x_type=x_type,
                                offset_us=self.offset_us,
                                source_to_detector_m=self.source_to_detector_m)
 
@@ -206,7 +206,7 @@ class Experiment(object):
                 "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max,
                                                                                                    _x_max_energy))
 
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline, deg=deg)
+        y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         x_interp = np.linspace(energy_min, energy_max, nbr_point)
@@ -286,6 +286,8 @@ class Experiment(object):
         :type thres:
         :param min_dist:
         :type min_dist:
+        :param deg:
+        :type deg:
 
         :return:
         :rtype:
@@ -406,7 +408,7 @@ class Experiment(object):
                 x_axis_label = u"Wavelength (\u212B)"
                 if lambda_xmax is not None:
                     ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
-            x_exp_raw = self.x_raw(x_type=x_type,
+            x_exp_raw = self.get_x(x_type=x_type,
                                    offset_us=self.offset_us,
                                    source_to_detector_m=self.source_to_detector_m)
 
@@ -433,7 +435,7 @@ class Experiment(object):
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
-        y_exp_raw = self.y_raw(y_type=y_type, baseline=_baseline, deg=deg)
+        y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
         if y_type == 'transmission':
             y_axis_label = 'Neutron Transmission'
             ax_mpl.set_ylim(top=1.01 * max(y_exp_raw), bottom=-0.01)

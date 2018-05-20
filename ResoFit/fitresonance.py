@@ -361,9 +361,9 @@ class FitResonance(object):
             self.df[_live_df_y_label] = y_interp
         else:
             # Plot exp. data (raw)
-            exp_x = self.experiment.x_raw(x_type='energy', offset_us=self.calibrated_offset_us,
+            exp_x = self.experiment.get_x(x_type='energy', offset_us=self.calibrated_offset_us,
                                           source_to_detector_m=self.calibrated_source_to_detector_m)
-            exp_y = self.experiment.y_raw(y_type='attenuation', baseline=self.baseline)
+            exp_y = self.experiment.get_y(y_type='attenuation', baseline=self.baseline)
             ax1.plot(exp_x, exp_y,
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,

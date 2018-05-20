@@ -145,22 +145,6 @@ class Simulation(object):
             raise ValueError("'{}' is not valid for 'y_type=', type accepted are: '{}'".format(y_type, y_type_list))
         return _y
 
-    # def xy_simu(self, x_type='energy', y_type='attenuation'):
-    #     """
-    #     Get x and y arrays
-    #
-    #     :param y_type:
-    #     :type y_type:
-    #     :param x_type:
-    #     :type x_type:
-    #
-    #     :return: x and y arrays
-    #     :rtype: array
-    #     """
-    #     _x = self.get_x(x_type=x_type)
-    #     _y = self.get_y(y_type=y_type)
-    #     return _x, _y
-
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
         _file_path = os.path.abspath(os.path.dirname(__file__))
         _rel_path_to_neutron1 = 'data/_data_for_tutorial/neutron_pulse/source_section_1.dat'
@@ -267,7 +251,7 @@ class Simulation(object):
                               )
         return ax
 
-    def _export(self, filename=None, x_axis='energy', y_axis='attenuation',
+    def _export(self, output_type='clip', filename=None, x_axis='energy', y_axis='attenuation',
                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
                 offset_us=0., source_to_detector_m=16.,
                 t_start_us=1, time_resolution_us=0.16, time_unit='us'):
@@ -276,15 +260,17 @@ class Simulation(object):
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)
             items_to_export = items.shaped(items_list=items_to_export)
 
-        self.o_reso.export(filename=filename,
-                           x_axis=x_axis,
-                           y_axis=y_axis,
-                           all_layers=all_layers,
-                           all_elements=all_elements,
-                           all_isotopes=all_isotopes,
-                           items_to_export=items_to_export,
-                           offset_us=offset_us,
-                           source_to_detector_m=source_to_detector_m,
-                           t_start_us=t_start_us,
-                           time_resolution_us=time_resolution_us,
-                           time_unit=time_unit)
+        _df = self.o_reso.export(output_type=output_type,
+                                 filename=filename,
+                                 x_axis=x_axis,
+                                 y_axis=y_axis,
+                                 all_layers=all_layers,
+                                 all_elements=all_elements,
+                                 all_isotopes=all_isotopes,
+                                 items_to_export=items_to_export,
+                                 offset_us=offset_us,
+                                 source_to_detector_m=source_to_detector_m,
+                                 t_start_us=t_start_us,
+                                 time_resolution_us=time_resolution_us,
+                                 time_unit=time_unit)
+        return _df

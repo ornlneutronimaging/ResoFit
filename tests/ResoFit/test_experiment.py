@@ -111,7 +111,7 @@ class TestExperiment(unittest.TestCase):
 
     def test_x_raw(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
-        _x_returned = experiment.x_raw(x_type='energy', offset_us=0., source_to_detector_m=15)
+        _x_returned = experiment.get_x(x_type='energy', offset_us=0., source_to_detector_m=15)
         _x_expected = np.array([5.825324e+00,
                                 5.821177e+00,
                                 5.817034e+00,
@@ -120,7 +120,7 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(_x_returned[-2], _x_expected[-2], delta=0.000001)
         self.assertAlmostEqual(_x_returned[-3], _x_expected[-3], delta=0.000001)
         self.assertAlmostEqual(_x_returned[-4], _x_expected[-4], delta=0.000001)
-        _x_returned = experiment.x_raw(x_type='lambda', offset_us=0., source_to_detector_m=15)
+        _x_returned = experiment.get_x(x_type='lambda', offset_us=0., source_to_detector_m=15)
         _x_expected = np.array([0.118490,
                                 0.118532,
                                 0.118575,
@@ -132,13 +132,13 @@ class TestExperiment(unittest.TestCase):
 
     def test_y_raw(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
-        _y_returned = experiment.y_raw(y_type='transmission', baseline=False)
+        _y_returned = experiment.get_y(y_type='transmission', baseline=False)
         _y_expected = np.array([1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091])
         self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-3], _y_expected[-3], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-4], _y_expected[-4], delta=0.000001)
-        _y_returned = experiment.y_raw(y_type='attenuation', baseline=False)
+        _y_returned = experiment.get_y(y_type='attenuation', baseline=False)
         _y_expected = np.array([-0.003423, -0.008694, -0.008373, -0.004356, -0.008168, -0.016091])
         self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[-2], _y_expected[-2], delta=0.000001)

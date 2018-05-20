@@ -14,7 +14,7 @@ from ResoFit._utilities import Peak
 
 
 class Calibration(object):
-    def __init__(self, spectra_file, data_file, layer,
+    def __init__(self, spectra_file: str, data_file: str, layer: fit_util.Layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  repeat=1, folder='data', baseline=False,
                  database='ENDF_VII'):
@@ -40,14 +40,6 @@ class Calibration(object):
         :param baseline: True -> to remove baseline/background by detrend
         :type baseline: boolean
         """
-        # super().__init__(energy_min=energy_min,
-        #                  energy_max=energy_max,
-        #                  energy_step=energy_step,
-        #                  database=database)
-        # for _each_layer in list(layer.info.keys()):
-        #     self.add_Layer(layer=_each_layer,
-        #                    layer_thickness_mm=layer.info[_each_layer]['thickness']['value'],
-        #                    layer_density_gcm3=layer.info[_each_layer]['density']['value'])
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -138,10 +130,10 @@ class Calibration(object):
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
 
         # Save the calibrated experimental x & y in Calibration class
-        self.exp_x_raw_calibrated = self.experiment.x_raw(x_type='energy',
+        self.exp_x_raw_calibrated = self.experiment.get_x(x_type='energy',
                                                           offset_us=self.calibrated_offset_us,
                                                           source_to_detector_m=self.calibrated_source_to_detector_m)
-        self.exp_y_raw_calibrated = self.experiment.y_raw(y_type='attenuation', baseline=self.baseline)
+        self.exp_y_raw_calibrated = self.experiment.get_y(y_type='attenuation', baseline=self.baseline)
 
         self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
             energy_min=self.energy_min,
@@ -331,9 +323,9 @@ class Calibration(object):
         # 1.
         if before is True:
             # Plot the raw data before fitting
-            ax1.plot(self.experiment.x_raw(offset_us=self.init_offset_us,
+            ax1.plot(self.experiment.get_x(offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
-                     self.experiment.y_raw(baseline=self.baseline),
+                     self.experiment.get_y(baseline=self.baseline),
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='c', label=exp_before_label)
