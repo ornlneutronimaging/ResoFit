@@ -72,12 +72,12 @@ class Calibration(object):
         # self.peak_map_full = None
         # self.peak_map_indexed = None
 
-    def norm_to(self, file):
-        if file is not None:
-            self.experiment.norm_to(file=file)
-
-    def slice(self, slice_start=None, slice_end=None):
-        self.experiment.slice(start=slice_start, end=slice_end)
+    # def norm_to(self, file):
+    #     if file is not None:
+    #         self.experiment.norm_to(file=file)
+    #
+    # def slice(self, slice_start=None, slice_end=None):
+    #     self.experiment.slice(start=slice_start, end=slice_end)
 
     def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
         """
@@ -291,9 +291,9 @@ class Calibration(object):
         :return:
         :rtype:
         """
-        if all_elements is True:
-            if len(self.simulation.layer_list) == 1:
-                raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
+        # if all_elements is True:
+        #     if len(self.simulation.layer_list) == 1:
+        #         raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
         if peak_id not in ['indexed', 'all']:
             raise ValueError("'peak=' must be one of ['indexed', 'all'].")
         simu_label = 'Ideal'

@@ -53,8 +53,8 @@ calibration = Calibration(data_file=data_file,
                           folder=folder,
                           baseline=baseline)
 
-calibration.norm_to(norm_to_file)
-calibration.slice(slice_start=image_start, slice_end=image_end)
+calibration.experiment.norm_to(norm_to_file)
+calibration.experiment.slice(start=image_start, end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
@@ -66,7 +66,7 @@ pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 # peak_df = calibration.peak_df_scaled
 
 calibration.plot(before=before, table=table, peak_id='all')
-
+plt.show()
 
 # Fit the peak height
 fit = FitResonance(folder=folder,

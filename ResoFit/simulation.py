@@ -9,6 +9,9 @@ import ResoFit._utilities as fit_util
 from ResoFit._pulse_shape import NeutronPulse
 from ResoFit._utilities import Layer
 
+x_type_list = ['energy', 'lambda', 'time']
+y_type_list = ['transmission', 'attenuation']
+
 
 class Simulation(object):
     # Input sample name or names as str, case sensitive
@@ -112,7 +115,6 @@ class Simulation(object):
         :return: x in specified type
         :rtype: np.array
         """
-        x_type_list = ['energy', 'lambda', 'time']
         _x = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         if x_type == 'energy':
             _x = _x
@@ -123,7 +125,7 @@ class Simulation(object):
         elif x_type == 'lambda':
             _x = reso_util.ev_to_angstroms(_x)
         else:
-            raise ValueError("'{}' is not valid for 'x_type=', type accepted are: '{}'".format(x_type, x_type_list))
+            raise ValueError("'x_type={}' is not valid, types accepted are: '{}'".format(x_type, x_type_list))
         return _x
 
     def get_y(self, y_type='transmission'):
@@ -135,14 +137,13 @@ class Simulation(object):
         :return: y in specified type
         :rtype: np.array
         """
-        y_type_list = ['transmission', 'attenuation']
         _y = np.array(self.o_reso.total_signal['attenuation'])
         if y_type == 'attenuation':
             _y = _y
         elif y_type == 'transmission':
             _y = 1 - _y
         else:
-            raise ValueError("'{}' is not valid for 'y_type=', type accepted are: '{}'".format(y_type, y_type_list))
+            raise ValueError("'y_type={}' is not valid, types accepted are: '{}'".format(y_type, y_type_list))
         return _y
 
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
@@ -177,7 +178,8 @@ class Simulation(object):
         self.x_tof_us = np.array(tof_beam_shape_df.index)
         self.y_att = 1 - np.array(tof_trans_df['sum'] / tof_beam_shape_df['sum'])
 
-    def peak_map(self, thres, min_dist, impr_reso=True, isotope=False):
+    def peak_map(self, thres=0.15, min_dist=20, impr_reso=True, isotope=False,
+                 x_type='energy', y_type='attenuation', offset_us=None, source_to_detector_m=None):
         """
         Get peak map (eV and sigma) for each element and/or nuclide
 
@@ -194,11 +196,15 @@ class Simulation(object):
         """
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")
+        if x_type not in x_type_list:
+            raise ValueError("'x_type={}' is not valid, types accepted are: '{}'".format(x_type, x_type_list))
+        if y_type not in y_type_list:
+            raise ValueError("'y_type={}' is not valid, types accepted are: '{}'".format(y_type, y_type_list))
+
         _stack_sigma = self.o_reso.stack_sigma
         _stack_signal = self.o_reso.stack_signal
         _layer_list = self.layer_list
         _x_energy = _stack_signal[_layer_list[0]][_layer_list[0]]['energy_eV']
-        # peak_dict = {'energy_eV': _x_energy}
         peak_dict = {}
         for _ele in _layer_list:
             _ele_sigma = _stack_signal[_ele][_ele]['attenuation']
@@ -206,14 +212,53 @@ class Simulation(object):
             peak_dict[_ele] = {}
             _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_sigma,
                                           thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-            peak_dict[_ele]['peak'] = _peak_df
+            peak_dict[_ele]['iso'] = {}
+            peak_dict[_ele][_ele] = {}
+            # For X
+            _x = np.array(_peak_df['x'])
+            if x_type == 'energy':
+                peak_dict[_ele][_ele]['energy_eV'] = list(_x)
+            elif x_type == 'lambda':
+                peak_dict[_ele][_ele]['lambda_A'] = list(reso_util.ev_to_angstroms(_x))
+            else:  # x_type == 'time':
+                if offset_us or source_to_detector_m is None:
+                    raise ValueError("'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
+                peak_dict[_ele][_ele]['time_s'] = list(reso_util.ev_to_s(array=_x,
+                                                                         offset_us=offset_us,
+                                                                         source_to_detector_m=source_to_detector_m))
+            # For Y
+            _y = np.array(_peak_df['y'])
+            if y_type == 'attenuation':
+                peak_dict[_ele][_ele][y_type] = list(_y)
+            else:  # y_type == 'transmission':
+                peak_dict[_ele][_ele][y_type] = list(1 - _y)
+
             if isotope is True:
                 for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
+                    peak_dict[_ele]['iso'][_iso] = {}
                     _iso_sigma = _stack_sigma[_ele][_ele][_iso]['sigma_b']
-                    peak_dict[_ele][_iso] = {'sigma_b': _iso_sigma, }
                     _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_sigma,
-                                                  thres=0.5, min_dist=50, impr_reso=impr_reso)
-                    peak_dict[_ele][_iso]['peak'] = _peak_df
+                                                  thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+                    # For X
+                    _x = np.array(_peak_df['x'])
+                    if x_type == 'energy':
+                        peak_dict[_ele]['iso'][_iso]['energy_eV'] = list(_x)
+                    elif x_type == 'lambda':
+                        peak_dict[_ele]['iso'][_iso]['lambda_A'] = list(reso_util.ev_to_angstroms(_x))
+                    else:  # x_type == 'time':
+                        if offset_us or source_to_detector_m is None:
+                            raise ValueError(
+                                "'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
+                        peak_dict[_ele]['iso'][_iso]['time_s'] = list(reso_util.ev_to_s(array=_x,
+                                                                                        offset_us=offset_us,
+                                                                                        source_to_detector_m=source_to_detector_m))
+                    # For Y
+                    _y = np.array(_peak_df['y'])
+                    if y_type == 'attenuation':
+                        peak_dict[_ele]['iso'][_iso][y_type] = list(_y)
+                    else:  # y_type == 'transmission':
+                        peak_dict[_ele]['iso'][_iso][y_type] = list(1 - _y)
+
         # print(peak_dict)
         # pprint.pprint(peak_dict)
         return peak_dict

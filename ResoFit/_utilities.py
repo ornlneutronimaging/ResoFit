@@ -292,16 +292,21 @@ class Layer(object):
 def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
     if x is None:
         x = np.array(range(len(y)))
-    x_num_gap = 0
+    # x_num_gap = 0
     # Note: weirdly, indexes have to be reset here to get correct peak locations
     x = np.array(x)
     y = np.array(y)
     _index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
-    _peak_y = list(y[_index])
-    if impr_reso is False:
-        _peak_x = list(x[_index])
+    if len(_index) != 0:
+        _peak_y = list(y[_index])
+        if impr_reso is False:
+            _peak_x = list(x[_index])
+        else:
+            _peak_x = list(pku.interpolate(x, y, ind=_index))
     else:
-        _peak_x = list(pku.interpolate(x, y, ind=_index))
+        # No peaks detected
+        _peak_y = []
+        _peak_x = []
 
     peak_df = pd.DataFrame()
     peak_df[y_name] = _peak_y
