@@ -63,9 +63,9 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-# calibration.index_peak()
+calibration.index_peak(thres=0.05, min_dist=10)
 # calibration.analyze_peak()
-# calibration.plot(before=before)
+calibration.plot(before=True)
 #
 #
 # # Fit the peak height

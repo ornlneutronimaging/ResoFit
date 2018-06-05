@@ -357,7 +357,6 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
         _df_ideal['y'] = _y_ideal_list
         peak_map_indexed[_peak_name]['exp'] = _df
         peak_map_indexed[_peak_name]['ideal'] = _df_ideal
-    # pprint.pprint(peak_map_indexed)
     return peak_map_indexed
 
 
