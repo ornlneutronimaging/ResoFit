@@ -399,7 +399,7 @@ class Calibration(object):
                                    0,
                                    _peak_map_full[_peak_name]['peak']['y'],
                                    label='_nolegend_',
-                                   alpha=0.75)
+                                   alpha=1)
                         # ax1.scatter(_peak_map_full[_peak_name]['peak']['x'],
                         #             _peak_map_full[_peak_name]['peak']['y'],
                         #             c='k',
@@ -410,7 +410,7 @@ class Calibration(object):
                                  _peak_map_full[_peak_name]['peak']['y'],
                                  'k_',
                                  label='_nolegend_',
-                                 alpha=0.75)
+                                 alpha=1)
                 elif peak_id == 'indexed':
                     if len(_peak_map_indexed[_peak_name]['exp']) > 0:
                         ax1.plot(_peak_map_indexed[_peak_name]['exp']['x'],
@@ -421,13 +421,13 @@ class Calibration(object):
                                    0,
                                    _peak_map_indexed[_peak_name]['ideal']['y'],
                                    label='_nolegend_',
-                                   alpha=0.75)
+                                   alpha=1)
                         ax1.plot(_peak_map_indexed[_peak_name]['ideal']['x'],
                                  _peak_map_indexed[_peak_name]['ideal']['y'],
                                  'k_',
                                  ms=5,
                                  label='_nolegend_',
-                                 alpha=0.75)
+                                 alpha=1)
                 if 'peak_span' in _peak_map_indexed[_peak_name].keys():
                     _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
                     _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']

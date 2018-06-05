@@ -64,7 +64,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
-calibration.plot(before=False, index_level='iso', peak_id='all', peak_mark=False)
+calibration.plot(before=False, index_level='iso', peak_id='indexed', peak_mark=False)
 plt.show()
 #
 #
