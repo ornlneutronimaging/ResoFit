@@ -374,9 +374,15 @@ class Calibration(object):
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
-                ax1.plot(_peak_df_scaled['x'],
-                         _peak_df_scaled['y'],
-                         'kx', label='_nolegend_')
+                ax1.scatter(_peak_df_scaled['x'],
+                            _peak_df_scaled['y'],
+                            c='k',
+                            marker='x',
+                            # s=30,
+                            # marker='o',
+                            # facecolors='none',
+                            # edgecolors='k',
+                            label='_nolegend_')
             ax1.set_ylim(bottom=-0.1)
             if index_level == 'iso':
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
@@ -389,12 +395,39 @@ class Calibration(object):
                                  [-0.05] * len(_peak_map_full[_peak_name]['peak']['x']),
                                  '|', ms=10,
                                  label=_peak_name)
+                        ax1.vlines(_peak_map_full[_peak_name]['peak']['x'],
+                                   0,
+                                   _peak_map_full[_peak_name]['peak']['y'],
+                                   label='_nolegend_',
+                                   alpha=0.75)
+                        # ax1.scatter(_peak_map_full[_peak_name]['peak']['x'],
+                        #             _peak_map_full[_peak_name]['peak']['y'],
+                        #             c='k',
+                        #             marker='_',
+                        #             label='_nolegend_',
+                        #             alpha=0.75)
+                        ax1.plot(_peak_map_full[_peak_name]['peak']['x'],
+                                 _peak_map_full[_peak_name]['peak']['y'],
+                                 'k_',
+                                 label='_nolegend_',
+                                 alpha=0.75)
                 elif peak_id == 'indexed':
                     if len(_peak_map_indexed[_peak_name]['exp']) > 0:
                         ax1.plot(_peak_map_indexed[_peak_name]['exp']['x'],
                                  [-0.05] * len(_peak_map_indexed[_peak_name]['exp']['x']),
                                  '|', ms=10,
                                  label=_peak_name)
+                        ax1.vlines(_peak_map_indexed[_peak_name]['ideal']['x'],
+                                   0,
+                                   _peak_map_indexed[_peak_name]['ideal']['y'],
+                                   label='_nolegend_',
+                                   alpha=0.75)
+                        ax1.plot(_peak_map_indexed[_peak_name]['ideal']['x'],
+                                 _peak_map_indexed[_peak_name]['ideal']['y'],
+                                 'k_',
+                                 ms=5,
+                                 label='_nolegend_',
+                                 alpha=0.75)
                 if 'peak_span' in _peak_map_indexed[_peak_name].keys():
                     _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
                     _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
