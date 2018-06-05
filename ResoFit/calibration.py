@@ -72,13 +72,6 @@ class Calibration(object):
         # self.peak_map_full = None
         # self.peak_map_indexed = None
 
-    # def norm_to(self, file):
-    #     if file is not None:
-    #         self.experiment.norm_to(file=file)
-    #
-    # def slice(self, slice_start=None, slice_end=None):
-    #     self.experiment.slice(start=slice_start, end=slice_end)
-
     def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
@@ -150,6 +143,7 @@ class Calibration(object):
         if self.calibrate_result is None:
             raise ValueError("Instrument params have not been calibrated.")
         self.experiment.find_peak(thres=thres, min_dist=min_dist)
+
         self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
                                            energy_max=self.energy_max,
                                            calibrated_offset_us=self.calibrated_offset_us,
@@ -157,12 +151,11 @@ class Calibration(object):
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
-    def index_peak(self, thres, min_dist, map_thres=0.01, map_min_dist=20, rel_tol=5e-3, impr_reso=True, isotope=False):
+    def index_peak(self, thres, min_dist, map_thres=0.05, map_min_dist=20, rel_tol=5e-3, impr_reso=True):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres, min_dist=min_dist)
         # find peak map using Simulation.peak_map()
-        _peak_map = self.simulation.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso,
-                                             isotope=isotope)
+        _peak_map = self.simulation.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()

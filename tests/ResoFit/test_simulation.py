@@ -59,7 +59,7 @@ class TestSimulation(unittest.TestCase):
         self.assertAlmostEqual(_x_returned[2], _x_expected[2], delta=0.000001)
         self.assertAlmostEqual(_x_returned[3], _x_expected[3], delta=0.000001)
 
-    def test_y_tansmission(self):
+    def test_y_transmission(self):
         simulation = self.simulation
         simulation.add_layer(layer='U', thickness_mm=0.15)
         _y_returned = simulation.get_y(y_type='transmission')
@@ -96,3 +96,6 @@ class TestSimulation(unittest.TestCase):
         self.assertAlmostEqual(_y_returned[1], _y_expected[1], delta=0.000001)
         self.assertAlmostEqual(_y_returned[2], _y_expected[2], delta=0.000001)
         self.assertAlmostEqual(_y_returned[3], _y_expected[3], delta=0.000001)
+
+    def test_peak_map(self):
+        pass
