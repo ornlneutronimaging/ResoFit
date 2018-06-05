@@ -254,7 +254,8 @@ class Calibration(object):
     #     return self.calibrate_result
 
     def plot(self, table=True, grid=True, before=False, interp=False, total=False,
-             all_elements=False, all_isotopes=False, items_to_plot=None,
+             # all_elements=False, all_isotopes=False, items_to_plot=None,
+             index_level='iso',
              peak_mark=True, peak_id='indexed',
              save_fig=False):
         """
@@ -284,11 +285,12 @@ class Calibration(object):
         :return:
         :rtype:
         """
-        # if all_elements is True:
-        #     if len(self.simulation.layer_list) == 1:
-        #         raise ValueError("'all_elements=True' has not effect on the plot if only one element was involved. ")
-        if peak_id not in ['indexed', 'all']:
-            raise ValueError("'peak=' must be one of ['indexed', 'all'].")
+        peak_id_list = ['indexed', 'all']
+        peak_level_list = ['iso', 'ele']
+        if peak_id not in peak_id_list:
+            raise ValueError("'peak_id={}' is not valid, must be one of {}.".format(peak_id, peak_id_list))
+        if index_level not in peak_level_list:
+            raise ValueError("'index_level={}' is not valid, must be one of {}.".format(peak_id, peak_level_list))
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_init'
@@ -312,7 +314,6 @@ class Calibration(object):
                      self.simulation.get_y(y_type='attenuation'), 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
-
         # 1.
         if before is True:
             # Plot the raw data before fitting
@@ -333,40 +334,39 @@ class Calibration(object):
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='r', label=exp_label)
-
-        # 3.
-        if all_elements is True:
-            # show signal from each elements
-            _stack_signal = self.simulation.o_reso.stack_signal
-            _stack = self.simulation.o_reso.stack
-            y_axis_tag = 'attenuation'
-            for _layer in _stack.keys():
-                for _element in _stack[_layer]['elements']:
-                    _y_axis = _stack_signal[_layer][_element][y_axis_tag]
-                    ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_element), linewidth=1,
-                             alpha=0.85)
-        # 4.
-        if all_isotopes is True:
-            # show signal from each isotopes
-            _stack_signal = self.simulation.o_reso.stack_signal
-            _stack = self.simulation.o_reso.stack
-            y_axis_tag = 'attenuation'
-            for _layer in _stack.keys():
-                for _element in _stack[_layer]['elements']:
-                    for _isotope in _stack[_layer][_element]['isotopes']['list']:
-                        _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
-                        ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_isotope),
-                                 linewidth=1, alpha=1)
-        # 5.
-        if items_to_plot is not None:
-            # plot specified from 'items_to_plot'
-            y_axis_tag = 'attenuation'
-            items = fit_util.Items(o_reso=self.simulation.o_reso, database=self.database)
-            items.shaped(items_list=items_to_plot)
-            _signal_dict = items.values(y_axis_type=y_axis_tag)
-            for _each_label in list(_signal_dict.keys()):
-                ax1.plot(self.simulation.get_x(x_type='energy'), _signal_dict[_each_label], '--', label=_each_label,
-                         linewidth=1, alpha=1)
+        # # 3.
+        # if all_elements is True:
+        #     # show signal from each elements
+        #     _stack_signal = self.simulation.o_reso.stack_signal
+        #     _stack = self.simulation.o_reso.stack
+        #     y_axis_tag = 'attenuation'
+        #     for _layer in _stack.keys():
+        #         for _element in _stack[_layer]['elements']:
+        #             _y_axis = _stack_signal[_layer][_element][y_axis_tag]
+        #             ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_element),
+        #                      linewidth=1, alpha=0.85)
+        # # 4.
+        # if all_isotopes is True:
+        #     # show signal from each isotopes
+        #     _stack_signal = self.simulation.o_reso.stack_signal
+        #     _stack = self.simulation.o_reso.stack
+        #     y_axis_tag = 'attenuation'
+        #     for _layer in _stack.keys():
+        #         for _element in _stack[_layer]['elements']:
+        #             for _isotope in _stack[_layer][_element]['isotopes']['list']:
+        #                 _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
+        #                 ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_isotope),
+        #                          linewidth=1, alpha=0.85)
+        # # 5.
+        # if items_to_plot is not None:
+        #     # plot specified from 'items_to_plot'
+        #     y_axis_tag = 'attenuation'
+        #     items = fit_util.Items(o_reso=self.simulation.o_reso, database=self.database)
+        #     items.shaped(items_list=items_to_plot)
+        #     _signal_dict = items.values(y_axis_type=y_axis_tag)
+        #     for _each_label in list(_signal_dict.keys()):
+        #         ax1.plot(self.simulation.get_x(x_type='energy'), _signal_dict[_each_label], '--', label=_each_label,
+        #                  linewidth=1, alpha=0.85)
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
@@ -378,20 +378,26 @@ class Calibration(object):
                          _peak_df_scaled['y'],
                          'kx', label='_nolegend_')
             ax1.set_ylim(bottom=-0.1)
-            for _ele_name in _peak_map_indexed.keys():
+            if index_level == 'iso':
+                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
+            else:
+                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
+            for _peak_name in _peak_name_list:
                 if peak_id == 'all':
-                    ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
-                             [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
-                             '|', ms=10,
-                             label=_ele_name)
+                    if len(_peak_map_full[_peak_name]['peak']) > 0:
+                        ax1.plot(_peak_map_full[_peak_name]['peak']['x'],
+                                 [-0.05] * len(_peak_map_full[_peak_name]['peak']['x']),
+                                 '|', ms=10,
+                                 label=_peak_name)
                 elif peak_id == 'indexed':
-                    ax1.plot(_peak_map_indexed[_ele_name]['exp']['x'],
-                             [-0.05] * len(_peak_map_indexed[_ele_name]['exp']['x']),
-                             '|', ms=8,
-                             label=_ele_name)
-                if 'peak_span' in _peak_map_indexed[_ele_name].keys():
-                    _data_point_x = _peak_map_indexed[_ele_name]['peak_span']['energy_ev']
-                    _data_point_y = _peak_map_indexed[_ele_name]['peak_span']['y']
+                    if len(_peak_map_indexed[_peak_name]['exp']) > 0:
+                        ax1.plot(_peak_map_indexed[_peak_name]['exp']['x'],
+                                 [-0.05] * len(_peak_map_indexed[_peak_name]['exp']['x']),
+                                 '|', ms=10,
+                                 label=_peak_name)
+                if 'peak_span' in _peak_map_indexed[_peak_name].keys():
+                    _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
+                    _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
                     ax1.scatter(_data_point_x,
                                 _data_point_y,
                                 label='_nolegend_')

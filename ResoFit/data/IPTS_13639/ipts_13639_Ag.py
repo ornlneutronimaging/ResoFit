@@ -23,11 +23,10 @@ layers.add_layer(layer='Ag', thickness_mm=0.025)
 # layers.add_layer(layer='In', thickness_mm=0.05)
 # layers.add_layer(layer='Cd', thickness_mm=0.5)
 # layers.add_layer(layer='Au', thickness_mm=0.01)
-simu = Simulation(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
-simu.add_Layer(layer=layers)
-peak_dict = simu.peak_map(thres=0.015, min_dist=20)
-# peak_dict = simu.peak_map(thres=0.015, min_dist=20, x_type='energy')
-pprint.pprint(peak_dict)
+# simu = Simulation(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
+# simu.add_Layer(layer=layers)
+# peak_dict = simu.peak_map(thres=0.015, min_dist=20)
+# pprint.pprint(peak_dict)
 
 
 folder = 'data/IPTS_13639/reso_data_13639'
@@ -65,7 +64,8 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.05, min_dist=10)
 # calibration.analyze_peak()
-calibration.plot(before=True)
+calibration.plot(before=True, index_level='iso', peak_id='indexed')
+plt.show()
 #
 #
 # # Fit the peak height
