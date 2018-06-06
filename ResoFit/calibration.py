@@ -224,16 +224,14 @@ class Calibration(object):
     #     return self.calibrate_result
 
     def plot(self, x_type='energy', y_type='attenuation',
-             peak_level='iso',
-             peak_id='indexed',
-             peak_mark=True,
+             index_level='iso', peak_id='indexed', peak_mark=True,
              table=True, grid=True, before=False, interp=False, mixed=False,
              save_fig=False):
         """"""
         fit_util.check_if_in_list(x_type, fit_util.x_type_list)
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
         fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
-        fit_util.check_if_in_list(peak_level, fit_util.peak_level_list)
+        fit_util.check_if_in_list(index_level, fit_util.index_level_list)
 
         simu_label = 'Ideal'
         exp_label = 'Exp'
@@ -242,8 +240,7 @@ class Calibration(object):
         sample_name = ' & '.join(self.simulation.layer_list)
         fig_title = 'Calibration result of sample (' + sample_name + ')'
 
-        # clear any left plt
-        plt.close()
+        fig = plt.Figure()
 
         # plot table + graph
         if table is True:
@@ -309,7 +306,7 @@ class Calibration(object):
                             # edgecolors='k',
                             label='_nolegend_')
             ax1.set_ylim(bottom=-0.1)
-            if peak_level == 'iso':
+            if index_level == 'iso':
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
             else:
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
@@ -355,7 +352,8 @@ class Calibration(object):
                                 label='_nolegend_')
 
         # Set plot limit and captions
-        fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)
+        ax1 = fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid,
+                               x_type=x_type, y_type=y_type)
 
         # Plot table
         if table is True:
@@ -384,7 +382,13 @@ class Calibration(object):
             plt.savefig(_filename, dpi=600, transparent=True)
             plt.close()
 
-    def export(self):
+    def export(self, x_type='energy', y_type='attenuation',
+               peak_map=True, peak_mark=True, index_level='iso',
+               before=False, interp=False, mixed=False,
+               ):
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
+        fit_util.check_if_in_list(index_level, fit_util.index_level_list)
         pass
     # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
     #                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,

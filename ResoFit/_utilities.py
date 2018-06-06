@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 x_type_list = ['energy', 'lambda', 'time']
 y_type_list = ['transmission', 'attenuation']
 peak_id_list = ['indexed', 'all']
-peak_level_list = ['iso', 'ele']
+index_level_list = ['iso', 'ele']
 
 
 def check_if_in_list(name, name_list):
@@ -101,12 +101,23 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(ax, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
+def set_plt(ax, fig_title, x_max, x_min=0, y_max=1.01, grid=False, x_type='energy', y_type='attenuation'):
+    check_if_in_list(x_type, x_type_list)
+    check_if_in_list(y_type, y_type_list)
     ax.set_xlim(left=x_min, right=x_max)
     ax.set_ylim(top=y_max)
     ax.set_title(fig_title)
-    ax.set_xlabel('Energy (eV)')
-    ax.set_ylabel('Neutron attenuation')
+    if x_type == 'energy':
+        ax.set_xlabel('Energy (eV)')
+    elif x_type == 'lambda':
+        ax.set_xlabel('Wavelength (\u212B)')
+    else:
+        ax.set_xlabel('Time of flight (\u03BCs)')
+
+    if y_type == 'attenuation':
+        ax.set_ylabel('Neutron attenuation')
+    else:
+        ax.set_ylabel('Neutron transmission')
     ax.legend(loc='best')
     # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
     # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)
@@ -114,6 +125,7 @@ def set_plt(ax, fig_title, x_max, x_min=0, y_max=1.01, grid=False):
         # ax1.set_xticks(np.arange(0, 100, 10))
         # ax1.set_yticks(np.arange(0, 1., 0.1))
         ax.grid()
+    return ax
 
 
 def rm_baseline(y, deg=7, max_it=None, tol=None):
