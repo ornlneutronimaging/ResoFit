@@ -15,8 +15,10 @@ import matplotlib.pyplot as plt
 
 x_type_list = ['energy', 'lambda', 'time']
 y_type_list = ['transmission', 'attenuation']
+t_unit_list = ['s', 'ms', 'us', 'ns']
 peak_id_list = ['indexed', 'all']
 index_level_list = ['iso', 'ele']
+peak_model_list = ['Gaussian', 'Lorentzian']
 
 
 def check_if_in_list(name, name_list):
@@ -24,16 +26,27 @@ def check_if_in_list(name, name_list):
         raise ValueError("'{}' is not valid, only support: '{}'".format(name, name_list))
 
 
-def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None):
+def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us'):
     check_if_in_list(x_type, x_type_list)
+    check_if_in_list(t_unit, t_unit_list)
     if x_type == 'lambda':
         x = reso_util.ev_to_angstroms(x)
     if x_type == 'time':
-        if offset_us or source_to_detector_m is None:
-            raise ValueError("'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
+        if offset_us is None:
+            raise ValueError("'offset_us=' are needed when x_type='time'")
+        if source_to_detector_m is None:
+            raise ValueError("'source_to_detector_m=' are needed when x_type='time'")
         x = reso_util.ev_to_s(offset_us=offset_us,
                               source_to_detector_m=source_to_detector_m,
                               array=x)
+        if t_unit == 'ns':
+            x = x * 1e9
+        elif t_unit == 'us':
+            x = x * 1e6
+        elif t_unit == 'ms':
+            x = x * 1e3
+        else:
+            x = x
     return x
 
 
@@ -101,18 +114,20 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(ax, fig_title, x_max, x_min=0, y_max=1.01, grid=False, x_type='energy', y_type='attenuation'):
+def set_plt(ax, fig_title, grid=False, x_type='energy', y_type='attenuation', t_unit='us'):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(y_type, y_type_list)
-    ax.set_xlim(left=x_min, right=x_max)
-    ax.set_ylim(top=y_max)
     ax.set_title(fig_title)
     if x_type == 'energy':
         ax.set_xlabel('Energy (eV)')
     elif x_type == 'lambda':
         ax.set_xlabel('Wavelength (\u212B)')
     else:
-        ax.set_xlabel('Time of flight (\u03BCs)')
+        check_if_in_list(t_unit, t_unit_list)
+        if t_unit == 'us':
+            ax.set_xlabel('Time of flight (\u03BCs)')
+        else:
+            ax.set_xlabel('Time of flight ({})'.format(t_unit))
 
     if y_type == 'attenuation':
         ax.set_ylabel('Neutron attenuation')
@@ -150,6 +165,7 @@ class Items(object):
     A easier way to specify layers/elements/isotopes for in plot()/export()
 
     """
+
     def __init__(self, o_reso, database='ENDF_VIII'):
         self.o_reso = o_reso
         self.shaped_list = None
@@ -331,7 +347,7 @@ class Layer(object):
         pprint.pprint(self.info)
 
 
-def find_peak(y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
     if x is None:
         x = np.array(range(len(y)))
     # x_num_gap = 0
@@ -418,24 +434,20 @@ class Peak(object):
         self.peak_map_indexed = None
         self.y = None
         self.x = None
-        self.x_s = None
+        # self.x_s = None
 
         self.shape_report = None
         self.prefix_list = None
 
         self.x_num_gap = 0
-        # self.offset_us = None
-        # self.source_to_detector_m = None
 
-    def find(self, y, x=None, x_name='x', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+    def find(self, x, y, y_name='y', thres=0.015, min_dist=1, impr_reso=False):
         """
         find peaks in 1d data and return peaks detected using pd.DataFrame
         :param y: 1d data
         :type y: array
         :param x:
         :type x: array (optional)
-        :param x_name:
-        :type x_name:
         :param y_name:
         :type y_name:
         :param thres:
@@ -451,39 +463,43 @@ class Peak(object):
             x = np.array(range(len(y)))
         self.x = x
         self.y = y
-        # self.y = np.array(y)
-        self.thres = thres
-        self.min_dist = min_dist
-        self.impr_reso = impr_reso
-        self.peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
-                                 thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        peak_df = find_peak(y=y, x=None, x_name='x_num', y_name=y_name,
+                            thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+        _peak_df = find_peak(y=y, x=x, x_name='x_s', y_name=y_name,
+                             thres=thres, min_dist=min_dist, impr_reso=impr_reso)
         if type(y) == pd.core.series.Series:
             if y.index[0] != 1:
                 self.x_num_gap = y.index[0]
-                self.peak_df['x_num_o'] = self.peak_df[x_name] + self.x_num_gap
+                peak_df['x_num_o'] = peak_df['x_num'] + self.x_num_gap
+        peak_df['x_s'] = _peak_df['x_s']
+        self.peak_df = peak_df
         return self.peak_df
 
-    def add_x_col(self, y, x=None, x_name='x', y_name='y', thres=0.15, min_dist=1, impr_reso=False):
-        if x_name == 'x_s':
-            self.x_s = x
+    # def add_x_s(self, y, x=None, x_name='x', y_name='y', thres=0.15, min_dist=1, impr_reso=False):
+    #     if x_name == 'x_s':
+    #         self.x_s = x
+    #
+    #     _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
+    #                          thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+    #     _x_name = x_name
+    #     if _x_name in self.peak_df.columns:
+    #         _x_name += '0'
+    #     _len_before = len(self.peak_df.columns)
+    #     self.peak_df[_x_name] = _peak_df[x_name]
+    #     _len_after = len(self.peak_df.columns)
+    #     assert _len_after > _len_before
 
-        _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
-                             thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-        _x_name = x_name
-        if _x_name in self.peak_df.columns:
-            _x_name += '0'
-        _len_before = len(self.peak_df.columns)
-        self.peak_df[_x_name] = _peak_df[x_name]
-        _len_after = len(self.peak_df.columns)
-        assert _len_after > _len_before
+    def _extend_x_cols(self, offset_us, source_to_detector_m):
+        assert 'x_s' in self.peak_df.keys()
+        _peak_df = self.peak_df.copy()
+        _peak_df['x'] = reso_util.s_to_ev(array=_peak_df['x_s'],
+                                          offset_us=offset_us,
+                                          source_to_detector_m=source_to_detector_m)
+        _peak_df['x_A'] = reso_util.ev_to_angstroms(_peak_df['x'])
+        self.peak_df = _peak_df
 
-    def add_ev_and_scale(self, calibrated_source_to_detector_m, calibrated_offset_us,
-                         energy_min, energy_max,
-                         _from='x_s', _to='x'):
-        _peak_df_scaled = self.peak_df
-        _peak_df_scaled[_to] = reso_util.s_to_ev(array=_peak_df_scaled[_from],
-                                                 source_to_detector_m=calibrated_source_to_detector_m,
-                                                 offset_us=calibrated_offset_us)
+    def _scale_peak_df(self, energy_min, energy_max):
+        _peak_df_scaled = self.peak_df.copy()
         _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
         _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
         _peak_df_scaled.reset_index(drop=True, inplace=True)
@@ -496,8 +512,7 @@ class Peak(object):
         self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
     def analyze(self, report=False, fit_model='Lorentzian'):
-        if fit_model not in ['Gaussian', 'Lorentzian']:
-            raise ValueError("Model must be one from '['Gaussian', 'Lorentzian']'")
+        check_if_in_list(fit_model, peak_model_list)
         _y = self.y
         _x = self.x
         _peak_map_indexed = self.peak_map_indexed
@@ -509,7 +524,7 @@ class Peak(object):
                 _prefix = _ele + '_' + str(_ind) + '_'
                 if fit_model == 'Gaussian':
                     _model = lmfit.models.GaussianModel(prefix=_prefix)
-                elif fit_model == 'Lorentzian':
+                else:  # fit_model == 'Lorentzian':
                     _model = lmfit.models.LorentzianModel(prefix=_prefix)
                 _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
                 pars.update(_model.make_params())

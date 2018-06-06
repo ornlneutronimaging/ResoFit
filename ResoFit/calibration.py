@@ -117,9 +117,7 @@ class Calibration(object):
         self.experiment.find_peak(thres=thres, min_dist=min_dist)
 
         self.experiment.scale_peak_with_ev(energy_min=self.energy_min,
-                                           energy_max=self.energy_max,
-                                           calibrated_offset_us=self.calibrated_offset_us,
-                                           calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+                                           energy_max=self.energy_max)
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
@@ -223,7 +221,7 @@ class Calibration(object):
     #
     #     return self.calibrate_result
 
-    def plot(self, x_type='energy', y_type='attenuation',
+    def plot(self, x_type='energy', y_type='attenuation', t_unit='us',
              index_level='iso', peak_id='indexed', peak_mark=True,
              table=True, grid=True, before=False, interp=False, mixed=False,
              save_fig=False):
@@ -251,7 +249,11 @@ class Calibration(object):
 
         # Plot simulated total signal
         if mixed is True:
-            ax1.plot(self.simulation.get_x(x_type=x_type),
+            ax1.plot(self.simulation.get_x(x_type=x_type,
+                                           t_unit=t_unit,
+                                           offset_us=self.calibrated_offset_us,
+                                           source_to_detector_m=self.calibrated_source_to_detector_m
+                                           ),
                      self.simulation.get_y(y_type=y_type), 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
@@ -259,6 +261,7 @@ class Calibration(object):
         if before is True:
             # Plot the raw data before fitting
             ax1.plot(self.experiment.get_x(x_type=x_type,
+                                           t_unit=t_unit,
                                            offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.get_y(y_type=y_type,
@@ -273,6 +276,7 @@ class Calibration(object):
                 energy_min=self.energy_min,
                 energy_max=self.energy_max,
                 energy_step=self.energy_step,
+                t_unit=t_unit,
                 offset_us=self.calibrated_offset_us,
                 source_to_detector_m=self.calibrated_source_to_detector_m,
                 baseline=self.experiment.baseline)
@@ -283,6 +287,7 @@ class Calibration(object):
         else:
             # plot the calibrated raw data
             ax1.plot(self.experiment.get_x(x_type=x_type,
+                                           t_unit=t_unit,
                                            offset_us=self.calibrated_offset_us,
                                            source_to_detector_m=self.calibrated_source_to_detector_m),
                      self.experiment.get_y(y_type=y_type, baseline=self.experiment.baseline),
@@ -292,11 +297,21 @@ class Calibration(object):
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
+            if y_type == 'transmission':
+                _start_point = 1
+                ax1.set_ylim(top=1.1, bottom=-0.01)
+                _pos = 1.05
+            else:
+                _start_point = 0
+                ax1.set_ylim(top=1.01, bottom=-0.1)
+                _pos = -0.05
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
-                ax1.scatter(fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x']),
+                ax1.scatter(fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x'], t_unit=t_unit,
+                                                       offset_us=self.calibrated_offset_us,
+                                                       source_to_detector_m=self.calibrated_source_to_detector_m),
                             fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
                             c='k',
                             marker='x',
@@ -305,7 +320,6 @@ class Calibration(object):
                             # facecolors='none',
                             # edgecolors='k',
                             label='_nolegend_')
-            ax1.set_ylim(bottom=-0.1)
             if index_level == 'iso':
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
             else:
@@ -313,47 +327,64 @@ class Calibration(object):
             for _peak_name in _peak_name_list:
                 if peak_id == 'all':
                     if len(_peak_map_full[_peak_name]['peak']) > 0:
-                        ax1.plot(_peak_map_full[_peak_name]['peak']['x'],
-                                 [-0.05] * len(_peak_map_full[_peak_name]['peak']['x']),
+                        _peak_x_full = _peak_map_full[_peak_name]['peak']['x']
+                        _peak_y_full = _peak_map_full[_peak_name]['peak']['y']
+                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
+                                                            offset_us=self.calibrated_offset_us,
+                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
+                                 [_pos] * len(_peak_x_full),
                                  '|', ms=10,
                                  label=_peak_name)
-                        ax1.vlines(_peak_map_full[_peak_name]['peak']['x'],
-                                   0,
-                                   _peak_map_full[_peak_name]['peak']['y'],
+                        ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
+                                                              offset_us=self.calibrated_offset_us,
+                                                              source_to_detector_m=self.calibrated_source_to_detector_m),
+                                   _start_point,
+                                   fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_full),
                                    label='_nolegend_',
                                    alpha=1)
-                        ax1.plot(_peak_map_full[_peak_name]['peak']['x'],
-                                 _peak_map_full[_peak_name]['peak']['y'],
+                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
+                                                            offset_us=self.calibrated_offset_us,
+                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
+                                 fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_full),
                                  'k_',
                                  label='_nolegend_',
                                  alpha=1)
                 elif peak_id == 'indexed':
                     if len(_peak_map_indexed[_peak_name]['exp']) > 0:
-                        ax1.plot(_peak_map_indexed[_peak_name]['exp']['x'],
-                                 [-0.05] * len(_peak_map_indexed[_peak_name]['exp']['x']),
+                        _peak_x_indexed = _peak_map_indexed[_peak_name]['ideal']['x']
+                        _peak_y_indexed = _peak_map_indexed[_peak_name]['ideal']['y']
+                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
+                                                            offset_us=self.calibrated_offset_us,
+                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
+                                 [_pos] * len(_peak_x_indexed),
                                  '|', ms=10,
                                  label=_peak_name)
-                        ax1.vlines(_peak_map_indexed[_peak_name]['ideal']['x'],
-                                   0,
-                                   _peak_map_indexed[_peak_name]['ideal']['y'],
+                        ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
+                                                              offset_us=self.calibrated_offset_us,
+                                                              source_to_detector_m=self.calibrated_source_to_detector_m),
+                                   _start_point,
+                                   fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_indexed),
                                    label='_nolegend_',
                                    alpha=1)
-                        ax1.plot(_peak_map_indexed[_peak_name]['ideal']['x'],
-                                 _peak_map_indexed[_peak_name]['ideal']['y'],
+                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
+                                                            offset_us=self.calibrated_offset_us,
+                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
+                                 fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_indexed),
                                  'k_',
                                  ms=5,
                                  label='_nolegend_',
                                  alpha=1)
                 if 'peak_span' in _peak_map_indexed[_peak_name].keys():
-                    _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
-                    _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
-                    ax1.scatter(_data_point_x,
-                                _data_point_y,
-                                label='_nolegend_')
+                    if len(_peak_map_indexed[_peak_name]['exp']) > 0:
+                        _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
+                        _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
+                        ax1.scatter(_data_point_x,
+                                    _data_point_y,
+                                    label='_nolegend_')
 
         # Set plot limit and captions
-        ax1 = fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid,
-                               x_type=x_type, y_type=y_type)
+        ax1 = fit_util.set_plt(ax1, fig_title=fig_title, grid=grid,
+                               x_type=x_type, y_type=y_type, t_unit=t_unit)
 
         # Plot table
         if table is True:

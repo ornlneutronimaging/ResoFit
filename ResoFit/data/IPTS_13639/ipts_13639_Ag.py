@@ -64,13 +64,13 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
-calibration.plot(x_type='time',
-                 # y_type='attenuation',
-                 y_type='transmission',
+calibration.plot(x_type='lambda',
+                 y_type='attenuation',
+                 # y_type='transmission',
+                 t_unit='ms',
                  before=False, index_level='iso', peak_id='indexed', peak_mark=False)
 plt.show()
-#
-#
+
 # # Fit the peak height
 # fit = FitResonance(folder=folder,
 #                    spectra_file=spectra_file,

@@ -1,7 +1,6 @@
 import os
 import re
 
-import ImagingReso._utilities as reso_util
 import numpy as np
 from ImagingReso.resonance import Resonance
 
@@ -99,7 +98,7 @@ class Simulation(object):
         # self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
-    def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None):
+    def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None, t_unit='us'):
         """
         Get x by specified type
 
@@ -114,10 +113,11 @@ class Simulation(object):
         """
         fit_util.check_if_in_list(x_type, fit_util.x_type_list)
         _x = np.array(self.o_reso.total_signal['energy_eV']).round(5)
-        x = fit_util.convert_energy_to(x_type=x_type,
-                                       x=_x,
+        x = fit_util.convert_energy_to(x=_x,
+                                       x_type=x_type,
                                        offset_us=offset_us,
-                                       source_to_detector_m=source_to_detector_m)
+                                       source_to_detector_m=source_to_detector_m,
+                                       t_unit=t_unit)
         return x
 
     def get_y(self, y_type='transmission'):
@@ -130,10 +130,9 @@ class Simulation(object):
         :rtype: np.array
         """
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        _y = np.array(self.o_reso.total_signal['attenuation'])
-        if y_type == 'transmission':
-            _y = 1 - _y
-        return _y
+        _y = self.o_reso.total_signal['attenuation']
+        y = fit_util.convert_attenuation_to(y_type=y_type, y=_y)
+        return y
 
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
         _file_path = os.path.abspath(os.path.dirname(__file__))
@@ -177,14 +176,6 @@ class Simulation(object):
         :type min_dist:
         :param impr_reso:
         :type impr_reso:
-        :param x_type:
-        :type x_type:
-        :param y_type:
-        :type y_type:
-        :param offset_us:
-        :type offset_us:
-        :param source_to_detector_m:
-        :type source_to_detector_m:
         :return:
         :rtype:
         """
@@ -200,13 +191,13 @@ class Simulation(object):
             for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                 peak_dict[_iso] = {}
                 _iso_y = _stack_signal[_ele][_ele][_iso]['attenuation']
-                _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y,
+                _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y, x_name='x',
                                               thres=thres, min_dist=min_dist, impr_reso=impr_reso)
                 peak_dict[_iso]['peak'] = _peak_df
             # Element
             peak_dict[_ele] = {}
             _ele_y = _stack_signal[_ele][_ele]['attenuation']
-            _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_y,
+            _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_y, x_name='x',
                                           thres=thres, min_dist=min_dist,
                                           impr_reso=impr_reso)
             peak_dict[_ele]['peak'] = _peak_df
@@ -241,14 +232,13 @@ class Simulation(object):
                               fmt=fmt,
                               ms=ms,
                               lw=lw,
-                              alpha=alpha
-                              )
+                              alpha=alpha)
         return ax
 
-    def _export(self, output_type='clip', filename=None, x_axis='energy', y_axis='attenuation',
-                all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
-                offset_us=0., source_to_detector_m=16.,
-                t_start_us=1, time_resolution_us=0.16, time_unit='us'):
+    def export(self, output_type='clip', filename=None, x_axis='energy', y_axis='attenuation',
+               all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
+               offset_us=0., source_to_detector_m=16.,
+               t_start_us=1, time_resolution_us=0.16, time_unit='us'):
         if items_to_export is not None:
             # Shape items
             items = fit_util.Items(o_reso=self.o_reso, database=self.database)

@@ -76,10 +76,12 @@ class Experiment(object):
         # raw image number saved
         self.img_num = self.data.index.values
 
-    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None):
+    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None, t_unit='us'):
         """
         Get the 'x' in eV or angstrom with experimental parameters
 
+        :param t_unit:
+        :type t_unit:
         :param x_type:
         :type x_type:
         :param offset_us:
@@ -95,24 +97,20 @@ class Experiment(object):
         if source_to_detector_m is not None:
             self.source_to_detector_m = source_to_detector_m
 
-        x_exp_raw = np.array(self.spectra[0])  # For x_type == 'time' (x in seconds)
-
-        if x_type == 'energy':
-            x_exp_raw = np.array(reso_util.s_to_ev(array=x_exp_raw,
-                                                   offset_us=self.offset_us,
-                                                   source_to_detector_m=self.source_to_detector_m))
-        elif x_type == 'lambda':
-            x_exp_raw = np.array(reso_util.s_to_angstroms(array=x_exp_raw,
-                                                          offset_us=self.offset_us,
-                                                          source_to_detector_m=self.source_to_detector_m))
-        # elif x_type == 'number':
-        #     x_exp_raw = np.array(range(len(x_exp_raw)))
+        _x_exp_raw = np.array(self.spectra[0])  # For x_type == 'time' (x in seconds)
+        x_e = np.array(reso_util.s_to_ev(array=_x_exp_raw,
+                                         offset_us=self.offset_us,
+                                         source_to_detector_m=self.source_to_detector_m))
+        x_exp_raw = fit_util.convert_energy_to(x=x_e, x_type=x_type, offset_us=self.offset_us,
+                                               source_to_detector_m=self.source_to_detector_m, t_unit=t_unit)
 
         return x_exp_raw
 
     def get_y(self, y_type='attenuation', baseline=None, deg=7):
         """
         Get the 'y' in eV or angstrom with experimental parameters
+        :param deg:
+        :type deg:
         :param y_type: bool to switch between transmission and attenuation
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
@@ -137,7 +135,7 @@ class Experiment(object):
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
-                  x_type='energy', y_type='attenuation',
+                  x_type='energy', y_type='attenuation', t_unit='us',
                   offset_us=None, source_to_detector_m=None, baseline=None, deg=7):
         """
         Get interpolated x & y within the scaled range same as simulation
@@ -152,12 +150,16 @@ class Experiment(object):
         :type x_type:
         :param y_type:
         :type y_type:
-        :param baseline:
-        :type baseline:
+        :param t_unit:
+        :type t_unit:
         :param offset_us:
         :type offset_us:
         :param source_to_detector_m:
         :type source_to_detector_m:
+        :param baseline:
+        :type baseline:
+        :param deg:
+        :type deg:
         :return:
         :rtype:
         """
@@ -170,25 +172,12 @@ class Experiment(object):
         else:
             _baseline = baseline
 
-        x_exp_raw = self.get_x(x_type=x_type,
+        x_exp_raw = self.get_x(x_type='energy',
                                offset_us=self.offset_us,
                                source_to_detector_m=self.source_to_detector_m)
 
-        if x_type == 'energy':
-            _x_max_energy = x_exp_raw[0]
-            _x_min_energy = x_exp_raw[-1]
-        elif x_type == 'lambda':
-            _x_max_energy = reso_util.angstroms_to_ev(x_exp_raw[0])
-            _x_min_energy = reso_util.ev_to_angstroms(x_exp_raw[-1])
-        elif x_type == 'time':
-            _x_max_energy = reso_util.s_to_ev(array=x_exp_raw[0],
-                                              offset_us=self.offset_us,
-                                              source_to_detector_m=self.source_to_detector_m)
-            _x_min_energy = reso_util.s_to_ev(array=x_exp_raw[-1],
-                                              offset_us=self.offset_us,
-                                              source_to_detector_m=self.source_to_detector_m)
-        else:
-            raise ValueError("'{}' is not supported for scaling ".format(x_type))
+        _x_max_energy = x_exp_raw[0]
+        _x_min_energy = x_exp_raw[-1]
 
         if energy_min < _x_min_energy:
             raise ValueError(
@@ -202,11 +191,12 @@ class Experiment(object):
         y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
-        x_interp = np.linspace(energy_min, energy_max, nbr_point)
+        _x_interp = np.linspace(energy_min, energy_max, nbr_point)
         # y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
-        y_interp = y_interp_function(x_interp)
-
+        y_interp = y_interp_function(_x_interp)
+        x_interp = fit_util.convert_energy_to(x_type=x_type, x=_x_interp, t_unit=t_unit,
+                                              offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
         return x_interp, y_interp
 
     def slice(self, start=None, end=None, reset_index=False):
@@ -292,19 +282,15 @@ class Experiment(object):
         _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
 
         self.o_peak = fit_util.Peak()
-        self.o_peak.find(_y,
-                         x_name='x_num', y_name='y',
+        self.o_peak.find(x=_x, y=_y, y_name='y',
                          thres=thres, min_dist=min_dist, impr_reso=False)
-        self.o_peak.add_x_col(x=_x, y=_y,
-                              x_name='x_s', y_name='y',
-                              thres=thres, min_dist=min_dist, impr_reso=False)
-
+        self.o_peak._extend_x_cols(offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
         if len(self.o_peak.peak_df) < 1:
             raise ValueError("No peak has been detected.")
         return self.o_peak.peak_df
 
-    def scale_peak_with_ev(self, energy_min, energy_max,
-                           calibrated_source_to_detector_m, calibrated_offset_us):
+    def scale_peak_with_ev(self, energy_min, energy_max):
         """
 
         :param energy_min:
@@ -318,11 +304,8 @@ class Experiment(object):
         :return:
         :rtype:
         """
-        self.o_peak.add_ev_and_scale(energy_min=energy_min, energy_max=energy_max,
-                                     calibrated_source_to_detector_m=calibrated_source_to_detector_m,
-                                     calibrated_offset_us=calibrated_offset_us)
+        self.o_peak._scale_peak_df(energy_min=energy_min, energy_max=energy_max, )
         assert self.o_peak.peak_df_scaled is not None
-
         return self.o_peak.peak_df_scaled
 
     def plot(self, energy_xmax=150, lambda_xmax=None,
