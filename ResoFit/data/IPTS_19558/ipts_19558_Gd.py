@@ -65,7 +65,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.13, min_dist=25)
 
-calibration.plot(before=True, all_elements=False, peak_id='all', save_fig=False, total=True)
+calibration.plot(before=True, all_elements=False, peak_id='all', save_fig=False, mixed=True)
 
 # Fit the peak height
 fit = FitResonance(spectra_file=spectra_file,

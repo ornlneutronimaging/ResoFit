@@ -13,6 +13,36 @@ import ImagingReso._utilities as reso_util
 from cerberus import Validator
 import matplotlib.pyplot as plt
 
+x_type_list = ['energy', 'lambda', 'time']
+y_type_list = ['transmission', 'attenuation']
+peak_id_list = ['indexed', 'all']
+peak_level_list = ['iso', 'ele']
+
+
+def check_if_in_list(name, name_list):
+    if name not in name_list:
+        raise ValueError("'{}' is not valid, only support: '{}'".format(name, name_list))
+
+
+def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None):
+    check_if_in_list(x_type, x_type_list)
+    if x_type == 'lambda':
+        x = reso_util.ev_to_angstroms(x)
+    if x_type == 'time':
+        if offset_us or source_to_detector_m is None:
+            raise ValueError("'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
+        x = reso_util.ev_to_s(offset_us=offset_us,
+                              source_to_detector_m=source_to_detector_m,
+                              array=x)
+    return x
+
+
+def convert_attenuation_to(y_type, y):
+    check_if_in_list(y_type, y_type_list)
+    if y_type == 'transmission':
+        y = 1 - y
+    return y
+
 
 def check_and_make_dir(current_path, name):
     _dir_path = os.path.join(current_path, name)

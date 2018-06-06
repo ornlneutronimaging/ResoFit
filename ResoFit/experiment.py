@@ -9,9 +9,6 @@ from scipy.interpolate import interp1d
 import ResoFit._utilities as fit_util
 from ResoFit._utilities import load_txt_csv
 
-x_type_list = ['energy', 'lambda', 'time']
-y_type_list = ['attenuation', 'transmission']
-
 
 class Experiment(object):
     def __init__(self, spectra_file, data_file, folder, repeat=1, baseline=False):
@@ -79,7 +76,6 @@ class Experiment(object):
         # raw image number saved
         self.img_num = self.data.index.values
 
-    # def x_raw(self, x_type='energy', **kwargs):
     def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None):
         """
         Get the 'x' in eV or angstrom with experimental parameters
@@ -93,9 +89,7 @@ class Experiment(object):
         :return:
         :rtype:
         """
-        if x_type not in x_type_list:
-            raise ValueError("'{}' is not supported. Must be one from {}.".format(x_type, x_type_list))
-
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
         if offset_us is not None:
             self.offset_us = offset_us
         if source_to_detector_m is not None:
@@ -123,8 +117,7 @@ class Experiment(object):
         :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
-        if y_type not in y_type_list:
-            raise ValueError("'{}' is not supported. Must be one from {}.".format(y_type, y_type_list))
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
         if baseline is None:
             _baseline = self.baseline
         else:
@@ -137,7 +130,7 @@ class Experiment(object):
             y_exp_raw = 1 - y_exp_raw
             if _baseline is True:
                 y_exp_raw = fit_util.rm_baseline(y_exp_raw, deg=deg)
-        else:  # y_type == 'transmission'
+        if y_type == 'transmission':
             if _baseline is True:
                 y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=deg)
 
@@ -372,9 +365,9 @@ class Experiment(object):
         :return:
         :rtype:
         """
-        _x_type_list = x_type_list[:]
+        _x_type_list = fit_util.x_type_list[:]
         _x_type_list.append('number')
-        _y_type_list = y_type_list
+        _y_type_list = fit_util.y_type_list
         _time_unit_list = ['s', 'us', 'ns']
         if x_type not in _x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))

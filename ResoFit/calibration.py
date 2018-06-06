@@ -8,9 +8,6 @@ from ResoFit._gap_functions import y_gap_for_calibration
 # from ResoFit._gap_functions import y_gap_for_adv_calibration
 from ResoFit.experiment import Experiment
 from ResoFit.simulation import Simulation
-from math import isclose
-import pandas as pd
-from ResoFit._utilities import Peak
 
 
 class Calibration(object):
@@ -253,44 +250,18 @@ class Calibration(object):
     #
     #     return self.calibrate_result
 
-    def plot(self, table=True, grid=True, before=False, interp=False, total=False,
-             # all_elements=False, all_isotopes=False, items_to_plot=None,
-             index_level='iso',
-             peak_mark=True, peak_id='indexed',
+    def plot(self, x_type='energy', y_type='attenuation',
+             peak_level='iso',
+             peak_id='indexed',
+             peak_mark=True,
+             table=True, grid=True, before=False, interp=False, mixed=False,
              save_fig=False):
-        """
+        """"""
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
+        fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
+        fit_util.check_if_in_list(peak_level, fit_util.peak_level_list)
 
-        :param peak_mark:
-        :type peak_mark:
-        :param peak_id:
-        :type peak_id:
-        :param total:
-        :type total:
-        :param table:
-        :type table:
-        :param grid:
-        :type grid:
-        :param before:
-        :type before:
-        :param interp:
-        :type interp:
-        :param all_elements:
-        :type all_elements:
-        :param all_isotopes:
-        :type all_isotopes:
-        :param items_to_plot:
-        :type items_to_plot:
-        :param save_fig:
-        :type save_fig:
-        :return:
-        :rtype:
-        """
-        peak_id_list = ['indexed', 'all']
-        peak_level_list = ['iso', 'ele']
-        if peak_id not in peak_id_list:
-            raise ValueError("'peak_id={}' is not valid, must be one of {}.".format(peak_id, peak_id_list))
-        if index_level not in peak_level_list:
-            raise ValueError("'index_level={}' is not valid, must be one of {}.".format(peak_id, peak_level_list))
         simu_label = 'Ideal'
         exp_label = 'Exp'
         exp_before_label = 'Exp_init'
@@ -309,64 +280,37 @@ class Calibration(object):
             ax1 = plt.subplot(111)
 
         # Plot simulated total signal
-        if total is True:
-            ax1.plot(self.simulation.get_x(x_type='energy'),
-                     self.simulation.get_y(y_type='attenuation'), 'b-', label=simu_label, linewidth=1)
+        if mixed is True:
+            # ax1.plot(self.simulation.get_x(x_type='energy'),
+            #          self.simulation.get_y(y_type='attenuation'), 'b-', label=simu_label, linewidth=1)
+            ax1.plot(self.simulation.get_x(x_type=x_type),
+                     self.simulation.get_y(y_type=y_type), 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
         # 1.
         if before is True:
             # Plot the raw data before fitting
-            ax1.plot(self.experiment.get_x(offset_us=self.init_offset_us,
+            ax1.plot(self.experiment.get_x(x_type=x_type,
+                                           offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
-                     self.experiment.get_y(baseline=self.baseline),
+                     self.experiment.get_y(y_type=y_type,
+                                           baseline=self.baseline),
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='c', label=exp_before_label)
         # 2.
         if interp is True:
             # plot the interpolated raw data
-            ax1.plot(self.exp_x_interp_calibrated, self.exp_y_interp_calibrated,
+            ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=self.exp_x_interp_calibrated),
+                     fit_util.convert_attenuation_to(y_type=y_type, y=self.exp_y_interp_calibrated),
                      'y:', label=exp_interp_label, linewidth=1)
         else:
             # plot the calibrated raw data
-            ax1.plot(self.exp_x_raw_calibrated, self.exp_y_raw_calibrated,
+            ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=self.exp_x_raw_calibrated),
+                     fit_util.convert_attenuation_to(y_type=y_type, y=self.exp_y_raw_calibrated),
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='r', label=exp_label)
-        # # 3.
-        # if all_elements is True:
-        #     # show signal from each elements
-        #     _stack_signal = self.simulation.o_reso.stack_signal
-        #     _stack = self.simulation.o_reso.stack
-        #     y_axis_tag = 'attenuation'
-        #     for _layer in _stack.keys():
-        #         for _element in _stack[_layer]['elements']:
-        #             _y_axis = _stack_signal[_layer][_element][y_axis_tag]
-        #             ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_element),
-        #                      linewidth=1, alpha=0.85)
-        # # 4.
-        # if all_isotopes is True:
-        #     # show signal from each isotopes
-        #     _stack_signal = self.simulation.o_reso.stack_signal
-        #     _stack = self.simulation.o_reso.stack
-        #     y_axis_tag = 'attenuation'
-        #     for _layer in _stack.keys():
-        #         for _element in _stack[_layer]['elements']:
-        #             for _isotope in _stack[_layer][_element]['isotopes']['list']:
-        #                 _y_axis = _stack_signal[_layer][_element][_isotope][y_axis_tag]
-        #                 ax1.plot(self.simulation.get_x(x_type='energy'), _y_axis, label="{}".format(_isotope),
-        #                          linewidth=1, alpha=0.85)
-        # # 5.
-        # if items_to_plot is not None:
-        #     # plot specified from 'items_to_plot'
-        #     y_axis_tag = 'attenuation'
-        #     items = fit_util.Items(o_reso=self.simulation.o_reso, database=self.database)
-        #     items.shaped(items_list=items_to_plot)
-        #     _signal_dict = items.values(y_axis_type=y_axis_tag)
-        #     for _each_label in list(_signal_dict.keys()):
-        #         ax1.plot(self.simulation.get_x(x_type='energy'), _signal_dict[_each_label], '--', label=_each_label,
-        #                  linewidth=1, alpha=0.85)
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
@@ -374,8 +318,8 @@ class Calibration(object):
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
-                ax1.scatter(_peak_df_scaled['x'],
-                            _peak_df_scaled['y'],
+                ax1.scatter(fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x']),
+                            fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
                             c='k',
                             marker='x',
                             # s=30,
@@ -384,7 +328,7 @@ class Calibration(object):
                             # edgecolors='k',
                             label='_nolegend_')
             ax1.set_ylim(bottom=-0.1)
-            if index_level == 'iso':
+            if peak_level == 'iso':
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
             else:
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
@@ -400,12 +344,6 @@ class Calibration(object):
                                    _peak_map_full[_peak_name]['peak']['y'],
                                    label='_nolegend_',
                                    alpha=1)
-                        # ax1.scatter(_peak_map_full[_peak_name]['peak']['x'],
-                        #             _peak_map_full[_peak_name]['peak']['y'],
-                        #             c='k',
-                        #             marker='_',
-                        #             label='_nolegend_',
-                        #             alpha=0.75)
                         ax1.plot(_peak_map_full[_peak_name]['peak']['x'],
                                  _peak_map_full[_peak_name]['peak']['y'],
                                  'k_',
@@ -464,9 +402,9 @@ class Calibration(object):
             _filename = 'calibration_' + _sample_name + '.png'
             plt.savefig(_filename, dpi=600, transparent=True)
             plt.close()
-        # else:
-        #     plt.show()
 
+    def export(self):
+        pass
     # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
     #                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
     #                 t_start_us=1, time_resolution_us=0.16, time_unit='us'):

@@ -72,7 +72,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 calibration.index_peak(thres=0.13, min_dist=21, rel_tol=0.0028, impr_reso=False)
 calibration.analyze_peak(report=False, show_fit=True)
 
-calibration.plot(before=False, total=False, table=table,
+calibration.plot(before=False, mixed=False, table=table,
                  peak_id=peak_label, peak_mark=False,
                  grid=True, items_to_plot=items_to_plot, interp=False)
 

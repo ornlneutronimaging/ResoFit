@@ -9,9 +9,6 @@ import ResoFit._utilities as fit_util
 from ResoFit._pulse_shape import NeutronPulse
 from ResoFit._utilities import Layer
 
-x_type_list = ['energy', 'lambda', 'time']
-y_type_list = ['transmission', 'attenuation']
-
 
 class Simulation(object):
     # Input sample name or names as str, case sensitive
@@ -115,18 +112,13 @@ class Simulation(object):
         :return: x in specified type
         :rtype: np.array
         """
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
         _x = np.array(self.o_reso.total_signal['energy_eV']).round(5)
-        if x_type == 'energy':
-            _x = _x
-        elif x_type == 'time':
-            if offset_us or source_to_detector_m is None:
-                raise ValueError("'offset_us=' and 'source_to_detector_m=' are both needed when x_type='time'")
-            _x = reso_util.ev_to_s(array=_x, offset_us=offset_us, source_to_detector_m=source_to_detector_m)
-        elif x_type == 'lambda':
-            _x = reso_util.ev_to_angstroms(_x)
-        else:
-            raise ValueError("'x_type={}' is not valid, types accepted are: '{}'".format(x_type, x_type_list))
-        return _x
+        x = fit_util.convert_energy_to(x_type=x_type,
+                                       x=_x,
+                                       offset_us=offset_us,
+                                       source_to_detector_m=source_to_detector_m)
+        return x
 
     def get_y(self, y_type='transmission'):
         """
@@ -137,13 +129,10 @@ class Simulation(object):
         :return: y in specified type
         :rtype: np.array
         """
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
         _y = np.array(self.o_reso.total_signal['attenuation'])
-        if y_type == 'attenuation':
-            _y = _y
-        elif y_type == 'transmission':
+        if y_type == 'transmission':
             _y = 1 - _y
-        else:
-            raise ValueError("'y_type={}' is not valid, types accepted are: '{}'".format(y_type, y_type_list))
         return _y
 
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):
