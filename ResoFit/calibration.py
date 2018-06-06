@@ -222,9 +222,9 @@ class Calibration(object):
     #     return self.calibrate_result
 
     def plot(self, x_type='energy', y_type='attenuation', t_unit='us',
-             index_level='iso', peak_id='indexed', peak_mark=True,
-             table=True, grid=True, before=False, interp=False, mixed=False,
-             save_fig=False):
+             index_level='iso', peak_id='indexed', peak_mark=False,
+             before=False, interp=False, mixed=False,
+             table=True, grid=True, save_fig=False):
         """"""
         fit_util.check_if_in_list(x_type, fit_util.x_type_list)
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
@@ -273,6 +273,8 @@ class Calibration(object):
         # 2.
         if interp is True:
             _exp_x_interp_calibrated, _exp_y_interp_calibrated = self.experiment.xy_scaled(
+                x_type=x_type,
+                y_type=y_type,
                 energy_min=self.energy_min,
                 energy_max=self.energy_max,
                 energy_step=self.energy_step,
@@ -283,7 +285,7 @@ class Calibration(object):
             # plot the interpolated raw data
             ax1.plot(_exp_x_interp_calibrated,
                      _exp_y_interp_calibrated,
-                     'y:', label=exp_interp_label, linewidth=1)
+                     'r:', label=exp_interp_label, linewidth=1)
         else:
             # plot the calibrated raw data
             ax1.plot(self.experiment.get_x(x_type=x_type,
