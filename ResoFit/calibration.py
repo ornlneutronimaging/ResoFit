@@ -45,29 +45,19 @@ class Calibration(object):
                                      energy_step=energy_step,
                                      database=database)
         self.simulation.add_Layer(layer=layer)
-        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, repeat=repeat, folder=folder)
-
-        self.repeat = repeat
-        self.data_file = data_file
-        self.spectra_file = spectra_file
+        self.experiment = Experiment(spectra_file=spectra_file,
+                                     data_file=data_file,
+                                     folder=folder,
+                                     repeat=repeat,
+                                     baseline=baseline)
         self.init_source_to_detector_m = None
         self.init_offset_us = None
         self.calibrated_offset_us = None
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None
-        self.exp_x_raw_calibrated = None
-        self.exp_y_raw_calibrated = None
-        self.exp_x_interp_calibrated = None
-        self.exp_y_interp_calibrated = None
-        self.baseline = baseline
-        # self.calibrated_residual = None
         self.params_to_calibrate = None
         self.raw_layer = layer
         self.database = database
-
-        # self.peak_df_scaled = None
-        # self.peak_map_full = None
-        # self.peak_map_indexed = None
 
     def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
         """
@@ -108,7 +98,7 @@ class Calibration(object):
                                          method='leastsq',
                                          args=(simu_x, simu_y,
                                                self.energy_min, self.energy_max, self.energy_step,
-                                               self.experiment, self.baseline, each_step))
+                                               self.experiment, self.experiment.baseline, each_step))
         # Print after
         print("\nParams after:")
         self.calibrate_result.__dict__['params'].pretty_print()
@@ -118,21 +108,6 @@ class Calibration(object):
         self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
         self.calibrated_source_to_detector_m = \
             self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
-
-        # Save the calibrated experimental x & y in Calibration class
-        self.exp_x_raw_calibrated = self.experiment.get_x(x_type='energy',
-                                                          offset_us=self.calibrated_offset_us,
-                                                          source_to_detector_m=self.calibrated_source_to_detector_m)
-        self.exp_y_raw_calibrated = self.experiment.get_y(y_type='attenuation', baseline=self.baseline)
-
-        self.exp_x_interp_calibrated, self.exp_y_interp_calibrated = self.experiment.xy_scaled(
-            energy_min=self.energy_min,
-            energy_max=self.energy_max,
-            energy_step=self.energy_step,
-            offset_us=self.calibrated_offset_us,
-            source_to_detector_m=self.calibrated_source_to_detector_m,
-            baseline=self.baseline)
-
         return self.calibrate_result
 
     def __find_peak(self, thres=0.15, min_dist=2):
@@ -157,7 +132,6 @@ class Calibration(object):
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
         self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
-
         return self.experiment.o_peak.peak_map_indexed
 
     def analyze_peak(self, report=False, show_fit=False):
@@ -168,7 +142,6 @@ class Calibration(object):
                                               source_to_detector_m=self.calibrated_source_to_detector_m)
         if show_fit:
             self.experiment.o_peak.plot_fit()
-
         return self.experiment.o_peak.peak_map_indexed
 
     # def calibrate_peak_pos(self, thres=0.15, min_dist=2, vary='all', each_step=False):
@@ -281,8 +254,6 @@ class Calibration(object):
 
         # Plot simulated total signal
         if mixed is True:
-            # ax1.plot(self.simulation.get_x(x_type='energy'),
-            #          self.simulation.get_y(y_type='attenuation'), 'b-', label=simu_label, linewidth=1)
             ax1.plot(self.simulation.get_x(x_type=x_type),
                      self.simulation.get_y(y_type=y_type), 'b-', label=simu_label, linewidth=1)
 
@@ -294,20 +265,30 @@ class Calibration(object):
                                            offset_us=self.init_offset_us,
                                            source_to_detector_m=self.init_source_to_detector_m),
                      self.experiment.get_y(y_type=y_type,
-                                           baseline=self.baseline),
+                                           baseline=self.experiment.baseline),
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='c', label=exp_before_label)
+
         # 2.
         if interp is True:
+            _exp_x_interp_calibrated, _exp_y_interp_calibrated = self.experiment.xy_scaled(
+                energy_min=self.energy_min,
+                energy_max=self.energy_max,
+                energy_step=self.energy_step,
+                offset_us=self.calibrated_offset_us,
+                source_to_detector_m=self.calibrated_source_to_detector_m,
+                baseline=self.experiment.baseline)
             # plot the interpolated raw data
-            ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=self.exp_x_interp_calibrated),
-                     fit_util.convert_attenuation_to(y_type=y_type, y=self.exp_y_interp_calibrated),
+            ax1.plot(_exp_x_interp_calibrated,
+                     _exp_y_interp_calibrated,
                      'y:', label=exp_interp_label, linewidth=1)
         else:
             # plot the calibrated raw data
-            ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=self.exp_x_raw_calibrated),
-                     fit_util.convert_attenuation_to(y_type=y_type, y=self.exp_y_raw_calibrated),
+            ax1.plot(self.experiment.get_x(x_type=x_type,
+                                           offset_us=self.calibrated_offset_us,
+                                           source_to_detector_m=self.calibrated_source_to_detector_m),
+                     self.experiment.get_y(y_type=y_type, baseline=self.experiment.baseline),
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='r', label=exp_label)
