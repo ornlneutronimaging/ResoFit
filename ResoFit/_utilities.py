@@ -13,7 +13,7 @@ import ImagingReso._utilities as reso_util
 from cerberus import Validator
 import matplotlib.pyplot as plt
 
-x_type_list = ['energy', 'lambda', 'time']
+x_type_list = ['energy', 'lambda', 'time', 'number']
 y_type_list = ['transmission', 'attenuation']
 t_unit_list = ['s', 'ms', 'us', 'ns']
 peak_id_list = ['indexed', 'all']
@@ -47,6 +47,8 @@ def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_un
             x = x * 1e3
         else:
             x = x
+    if x_type == 'number':
+        x = np.array(range(len(x)))
     return x
 
 
@@ -114,7 +116,7 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(ax, fig_title, grid=False, x_type='energy', y_type='attenuation', t_unit='us'):
+def set_plt(ax, fig_title, grid, x_type, y_type, t_unit):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(y_type, y_type_list)
     ax.set_title(fig_title)
@@ -122,6 +124,8 @@ def set_plt(ax, fig_title, grid=False, x_type='energy', y_type='attenuation', t_
         ax.set_xlabel('Energy (eV)')
     elif x_type == 'lambda':
         ax.set_xlabel('Wavelength (\u212B)')
+    elif x_type == 'number':
+        ax.set_xlabel('Image number (#)')
     else:
         check_if_in_list(t_unit, t_unit_list)
         if t_unit == 'us':
@@ -424,17 +428,12 @@ class Peak(object):
         Initialization
 
         """
-        self.thres = None
-        self.min_dist = None
-        self.impr_reso = None
-
         self.peak_df = None
         self.peak_df_scaled = None
         self.peak_map_full = None
         self.peak_map_indexed = None
         self.y = None
         self.x = None
-        # self.x_s = None
 
         self.shape_report = None
         self.prefix_list = None
@@ -505,7 +504,7 @@ class Peak(object):
         _peak_df_scaled.reset_index(drop=True, inplace=True)
         self.peak_df_scaled = _peak_df_scaled
 
-    def index(self, peak_map, rel_tol=5e-3):
+    def index_peak(self, peak_map, rel_tol=5e-3):
         if self.peak_df is None:
             raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
         assert self.peak_df_scaled is not None

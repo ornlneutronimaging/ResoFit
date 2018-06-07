@@ -308,56 +308,17 @@ class Experiment(object):
         assert self.o_peak.peak_df_scaled is not None
         return self.o_peak.peak_df_scaled
 
-    def plot(self, energy_xmax=150, lambda_xmax=None,
+    def plot(self, xmax=None,
+             # energy_xmax=150, lambda_xmax=None,
              y_type='transmission', baseline=None, deg=7,
-             x_type='time', time_unit='us', offset_us=None, source_to_detector_m=None,
-             logx=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1):
+             x_type='time', t_unit='us', offset_us=None, source_to_detector_m=None,
+             logx=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1, grid=False):
         """
         Display the loaded signal from data and spectra files.
-
-        :param energy_xmax:
-        :type energy_xmax:
-        :param lambda_xmax:
-        :type lambda_xmax:
-        :param y_type:
-        :type y_type:
-        :param baseline:
-        :type baseline:
-        :param deg:
-        :type deg:
-        :param x_type:
-        :type x_type:
-        :param time_unit:
-        :type time_unit:
-        :param offset_us:
-        :type offset_us:
-        :param source_to_detector_m:
-        :type source_to_detector_m:
-        :param logx:
-        :type logx:
-        :param ax_mpl:
-        :type ax_mpl:
-        :param fmt:
-        :type fmt:
-        :param ms:
-        :type ms:
-        :param lw:
-        :type lw:
-        :param alpha:
-        :type alpha:
-        :return:
-        :rtype:
         """
-        _x_type_list = fit_util.x_type_list[:]
-        _x_type_list.append('number')
-        _y_type_list = fit_util.y_type_list
-        _time_unit_list = ['s', 'us', 'ns']
-        if x_type not in _x_type_list:
-            raise ValueError("Please specify the x-axis type using one from '{}'.".format(_x_type_list))
-        if y_type not in _y_type_list:
-            raise ValueError("Please specify the y-axis type using one from '{}'.".format(_y_type_list))
-        if time_unit not in _time_unit_list:
-            raise ValueError("Please specify the time unit using one from '{}'.".format(_time_unit_list))
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
+        fit_util.check_if_in_list(t_unit, fit_util.t_unit_list)
         if offset_us is not None:
             self.offset_us = offset_us
         if source_to_detector_m is not None:
@@ -366,61 +327,53 @@ class Experiment(object):
             _baseline = self.baseline
         else:
             _baseline = baseline
-
-        x_axis_label = None
-        x_exp_raw = None
-        df = pd.DataFrame()
+        fig_title = 'Experimental data'
 
         if ax_mpl is None:
             fig, ax_mpl = plt.subplots()
         """X-axis"""
         # determine values and labels for x-axis with options from
         # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        if x_type in ['energy', 'lambda']:
-            if x_type == 'energy':
-                x_axis_label = 'Energy (eV)'
-                ax_mpl.set_xlim(xmin=0, xmax=energy_xmax)
-            else:
-                x_axis_label = u"Wavelength (\u212B)"
-                if lambda_xmax is not None:
-                    ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
-            x_exp_raw = self.get_x(x_type=x_type,
-                                   offset_us=self.offset_us,
-                                   source_to_detector_m=self.source_to_detector_m)
+        # if x_type in ['energy', 'lambda']:
+        #     if x_type == 'energy':
+        #         x_axis_label = 'Energy (eV)'
+        #         ax_mpl.set_xlim(xmin=0, xmax=energy_xmax)
+        #     else:
+        #         x_axis_label = u"Wavelength (\u212B)"
+        #         if lambda_xmax is not None:
+        #             ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
+        x_exp_raw = self.get_x(x_type=x_type,
+                               t_unit=t_unit,
+                               offset_us=self.offset_us,
+                               source_to_detector_m=self.source_to_detector_m)
 
-        if x_type in ['time', 'number']:
-
-            if x_type == 'time':
-                if time_unit == 's':
-                    x_axis_label = 'Time (s)'
-                    x_exp_raw = self.spectra[0][:]
-                if time_unit == 'us':
-                    x_axis_label = 'Time (us)'
-                    x_exp_raw = 1e6 * self.spectra[0][:]
-                if time_unit == 'ns':
-                    x_axis_label = 'Time (ns)'
-                    x_exp_raw = 1e9 * self.spectra[0][:]
-
-            if x_type == 'number':
-                x_axis_label = 'Image number (#)'
-                x_exp_raw = self.data.index.values
-
-        assert x_axis_label is not None
-        df[x_axis_label] = x_exp_raw
+        # if x_type in ['time', 'number']:
+        #
+        #     if x_type == 'time':
+        #         if t_unit == 's':
+        #             x_axis_label = 'Time (s)'
+        #             x_exp_raw = self.spectra[0][:]
+        #         if t_unit == 'us':
+        #             x_axis_label = 'Time (us)'
+        #             x_exp_raw = 1e6 * self.spectra[0][:]
+        #         if t_unit == 'ns':
+        #             x_axis_label = 'Time (ns)'
+        #             x_exp_raw = 1e9 * self.spectra[0][:]
+        #
+        #     if x_type == 'number':
+        #         # x_axis_label = 'Image number (#)'
+        #         x_exp_raw = self.data.index.values
 
         """Y-axis"""
         # Determine to plot transmission or attenuation
         # Determine to put transmission or attenuation words for y-axis
         y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
-        if y_type == 'transmission':
-            y_axis_label = 'Neutron Transmission'
-            ax_mpl.set_ylim(top=1.01 * max(y_exp_raw), bottom=-0.01)
-        else:
-            y_axis_label = 'Neutron Attenuation'
-            ax_mpl.set_ylim(top=1.01, bottom=0.99 * min(y_exp_raw))
-
-        assert y_axis_label is not None
-        df[y_axis_label] = y_exp_raw
+        # if y_type == 'transmission':
+        #     y_axis_label = 'Neutron Transmission'
+        #     ax_mpl.set_ylim(top=1.01 * max(y_exp_raw), bottom=-0.01)
+        # else:
+        #     y_axis_label = 'Neutron Attenuation'
+        #     ax_mpl.set_ylim(top=1.01, bottom=0.99 * min(y_exp_raw))
 
         # # Export
         # if filename is None:
@@ -435,7 +388,8 @@ class Experiment(object):
         else:
             ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
                         ms=ms, lw=lw, alpha=alpha)
-        ax_mpl.set_xlabel(x_axis_label)
-        ax_mpl.set_ylabel(y_axis_label)
-        ax_mpl.legend(loc='best')
+
+        ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid, x_type=x_type, y_type=y_type, t_unit=t_unit)
+        if xmax is not None:
+            ax_mpl.set_xlim(right=xmax)
         return ax_mpl

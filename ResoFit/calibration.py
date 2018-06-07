@@ -56,8 +56,6 @@ class Calibration(object):
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None
         self.params_to_calibrate = None
-        self.raw_layer = layer
-        self.database = database
 
     def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
         """
@@ -71,8 +69,9 @@ class Calibration(object):
         """
         self.init_source_to_detector_m = source_to_detector_m
         self.init_offset_us = offset_us
-        if vary not in ['source_to_detector', 'offset', 'all', 'none']:
-            raise ValueError("'vary=' can only be one of ['source_to_detector', 'offset', 'all' 'none']")
+        vary_type_list = ['source_to_detector', 'offset', 'all', 'none']
+        if vary not in vary_type_list:
+            raise ValueError("'vary=' can only be one of '{}'".format(vary_type_list))
         simu_x = self.simulation.get_x(x_type='energy')
         simu_y = self.simulation.get_y(y_type='attenuation')
 
@@ -129,7 +128,7 @@ class Calibration(object):
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
-        self.experiment.o_peak.index(_peak_map, rel_tol=rel_tol)
+        self.experiment.o_peak.index_peak(_peak_map, rel_tol=rel_tol)
         return self.experiment.o_peak.peak_map_indexed
 
     def analyze_peak(self, report=False, show_fit=False):
@@ -236,7 +235,7 @@ class Calibration(object):
         exp_before_label = 'Exp_init'
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.simulation.layer_list)
-        fig_title = 'Calibration result of sample (' + sample_name + ')'
+        fig_title = "Calibration result of sample ('{}')".format(sample_name)
 
         fig = plt.Figure()
 
@@ -326,56 +325,39 @@ class Calibration(object):
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
             else:
                 _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
+
+            if peak_id == 'all':
+                _current_peak_map = _peak_map_full
+                _tag = 'peak'
+            else:  # peak_id == 'indexed'
+                _current_peak_map = _peak_map_indexed
+                _tag = 'ideal'
+
             for _peak_name in _peak_name_list:
-                if peak_id == 'all':
-                    if len(_peak_map_full[_peak_name]['peak']) > 0:
-                        _peak_x_full = _peak_map_full[_peak_name]['peak']['x']
-                        _peak_y_full = _peak_map_full[_peak_name]['peak']['y']
-                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
-                                                            offset_us=self.calibrated_offset_us,
-                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
-                                 [_pos] * len(_peak_x_full),
-                                 '|', ms=10,
-                                 label=_peak_name)
-                        ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
-                                                              offset_us=self.calibrated_offset_us,
-                                                              source_to_detector_m=self.calibrated_source_to_detector_m),
-                                   _start_point,
-                                   fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_full),
-                                   label='_nolegend_',
-                                   alpha=1)
-                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_full, t_unit=t_unit,
-                                                            offset_us=self.calibrated_offset_us,
-                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
-                                 fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_full),
-                                 'k_',
-                                 label='_nolegend_',
-                                 alpha=1)
-                elif peak_id == 'indexed':
-                    if len(_peak_map_indexed[_peak_name]['exp']) > 0:
-                        _peak_x_indexed = _peak_map_indexed[_peak_name]['ideal']['x']
-                        _peak_y_indexed = _peak_map_indexed[_peak_name]['ideal']['y']
-                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
-                                                            offset_us=self.calibrated_offset_us,
-                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
-                                 [_pos] * len(_peak_x_indexed),
-                                 '|', ms=10,
-                                 label=_peak_name)
-                        ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
-                                                              offset_us=self.calibrated_offset_us,
-                                                              source_to_detector_m=self.calibrated_source_to_detector_m),
-                                   _start_point,
-                                   fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_indexed),
-                                   label='_nolegend_',
-                                   alpha=1)
-                        ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x_indexed, t_unit=t_unit,
-                                                            offset_us=self.calibrated_offset_us,
-                                                            source_to_detector_m=self.calibrated_source_to_detector_m),
-                                 fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y_indexed),
-                                 'k_',
-                                 ms=5,
-                                 label='_nolegend_',
-                                 alpha=1)
+                if len(_current_peak_map[_peak_name][_tag]) > 0:
+                    _peak_x = _current_peak_map[_peak_name][_tag]['x']
+                    _peak_y = _current_peak_map[_peak_name][_tag]['y']
+                    ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
+                                                        offset_us=self.calibrated_offset_us,
+                                                        source_to_detector_m=self.calibrated_source_to_detector_m),
+                             [_pos] * len(_peak_x),
+                             '|', ms=10,
+                             label=_peak_name)
+                    ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
+                                                          offset_us=self.calibrated_offset_us,
+                                                          source_to_detector_m=self.calibrated_source_to_detector_m),
+                               _start_point,
+                               fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
+                               label='_nolegend_',
+                               alpha=1)
+                    ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
+                                                        offset_us=self.calibrated_offset_us,
+                                                        source_to_detector_m=self.calibrated_source_to_detector_m),
+                             fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
+                             'k_',
+                             ms=5,
+                             label='_nolegend_',
+                             alpha=1)
                 if 'peak_span' in _peak_map_indexed[_peak_name].keys():
                     if len(_peak_map_indexed[_peak_name]['exp']) > 0:
                         _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']

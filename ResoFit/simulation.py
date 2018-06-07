@@ -98,7 +98,7 @@ class Simulation(object):
         # self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
-    def get_x(self, x_type='lambda', offset_us=None, source_to_detector_m=None, t_unit='us'):
+    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None, t_unit='us'):
         """
         Get x by specified type
 
@@ -120,7 +120,7 @@ class Simulation(object):
                                        t_unit=t_unit)
         return x
 
-    def get_y(self, y_type='transmission'):
+    def get_y(self, y_type='attenuation'):
         """
         Get x by specified type
 

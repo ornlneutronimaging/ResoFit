@@ -64,16 +64,15 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
 calibration.plot(# x_type='lambda',
-
-                 # y_type='attenuation',
-                 y_type='transmission',
-                 t_unit='ms',
+                 y_type='attenuation',
+                 # y_type='transmission',
+                 # t_unit='ms',
                  # before=True,
                  # interp=True,
                  # mixed=True,
                  # peak_mark=True,
                  index_level='iso',
-                 peak_id='all')
+                 peak_id='indexed')
 plt.show()
 
 # # Fit the peak height
