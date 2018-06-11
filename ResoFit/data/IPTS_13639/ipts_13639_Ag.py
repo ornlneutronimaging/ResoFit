@@ -63,14 +63,14 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
-calibration.plot(# x_type='lambda',
-                 y_type='attenuation',
+calibration.plot(y_type='attenuation',
                  # y_type='transmission',
+                 x_type='number',
                  # t_unit='ms',
                  # before=True,
                  # interp=True,
                  # mixed=True,
-                 # peak_mark=True,
+                 peak_mark=True,
                  index_level='iso',
                  peak_id='indexed')
 plt.show()

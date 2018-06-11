@@ -39,14 +39,7 @@ def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_un
         x = reso_util.ev_to_s(offset_us=offset_us,
                               source_to_detector_m=source_to_detector_m,
                               array=x)
-        if t_unit == 'ns':
-            x = x * 1e9
-        elif t_unit == 'us':
-            x = x * 1e6
-        elif t_unit == 'ms':
-            x = x * 1e3
-        else:
-            x = x
+        x = convert_s(x=x, t_unit=t_unit)
     if x_type == 'number':
         x = np.array(range(len(x)))
     return x
@@ -57,6 +50,37 @@ def convert_attenuation_to(y_type, y):
     if y_type == 'transmission':
         y = 1 - y
     return y
+
+
+def convert_s(x, t_unit):
+    if t_unit == 'ns':
+        _x = x * 1e9
+    elif t_unit == 'us':
+        _x = x * 1e6
+    elif t_unit == 'ms':
+        _x = x * 1e3
+    else:
+        _x = x
+    return _x
+
+
+def convert_exp_peak_df(peak_df, x_type, t_unit):
+    check_if_in_list(x_type, x_type_list)
+    check_if_in_list(t_unit, t_unit_list)
+    if x_type == 'energy':
+        assert 'x' in peak_df.columns
+        _x = peak_df['x']
+    elif x_type == 'lambda':
+        assert 'x_A' in peak_df.columns
+        _x = peak_df['x_A']
+    elif x_type == 'time':
+        assert 'x_s' in peak_df.columns
+        _x = peak_df['x_s']
+        _x = convert_s(x=_x, t_unit=t_unit)
+    else:
+        assert 'x_num_o' in peak_df.columns
+        _x = peak_df['x_num_o']
+    return _x
 
 
 def check_and_make_dir(current_path, name):
@@ -392,6 +416,7 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
         _x_indexed_list = []
         _x_num_indexed_list = []
         _x_s_indexed_list = []
+        _x_A_indexed_list = []
         _y_indexed_list = []
         _x_ideal_list = []
         _y_ideal_list = []
@@ -406,6 +431,8 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
                         _x_num_indexed_list.append(peak_df['x_num'][_i])
                     if 'x_s' in peak_df.columns:
                         _x_s_indexed_list.append(peak_df['x_s'][_i])
+                    if 'x_A' in peak_df.columns:
+                        _x_A_indexed_list.append(peak_df['x_A'][_i])
                         # _peak_name_list.append(_peak_name)
         num_peak_indexed += len(_x_indexed_list)
         _df[x_name] = _x_indexed_list
@@ -414,6 +441,8 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
             _df['x_num'] = _x_num_indexed_list
         if 'x_s' in peak_df.columns:
             _df['x_s'] = _x_s_indexed_list
+        if 'x_A' in peak_df.columns:
+            _df['x_A'] = _x_A_indexed_list
 
         _df_ideal['x'] = _x_ideal_list
         _df_ideal['y'] = _y_ideal_list

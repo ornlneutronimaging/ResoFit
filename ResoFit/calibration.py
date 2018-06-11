@@ -310,9 +310,10 @@ class Calibration(object):
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
-                ax1.scatter(fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x'], t_unit=t_unit,
-                                                       offset_us=self.calibrated_offset_us,
-                                                       source_to_detector_m=self.calibrated_source_to_detector_m),
+                ax1.scatter(fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
+                            # fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x'], t_unit=t_unit,
+                            #                            offset_us=self.calibrated_offset_us,
+                            #                            source_to_detector_m=self.calibrated_source_to_detector_m),
                             fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
                             c='k',
                             marker='x',
