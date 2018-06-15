@@ -1,10 +1,7 @@
 from ResoFit.calibration import Calibration
 from ResoFit.fitresonance import FitResonance
-from ResoFit.experiment import Experiment
-from ResoFit.simulation import Simulation
 import matplotlib.pyplot as plt
 import numpy as np
-import pprint
 from ResoFit._utilities import get_foil_density_gcm3
 from ResoFit._utilities import Layer
 import pprint
@@ -70,7 +67,7 @@ calibration.plot(y_type='attenuation',
                  # before=True,
                  # interp=True,
                  # mixed=True,
-                 peak_mark=True,
+                 peak_mark=False,
                  index_level='ele',
                  peak_id='indexed')
 plt.show()

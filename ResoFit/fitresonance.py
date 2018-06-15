@@ -34,13 +34,15 @@ class FitResonance(object):
         self.baseline = baseline
         if norm_to_file is not None:
             self.experiment.norm_to(norm_to_file)
-        self.exp_x_interp, self.exp_y_interp = self.experiment.xy_scaled(energy_min=self.energy_min,
-                                                                         energy_max=self.energy_max,
-                                                                         energy_step=self.energy_step,
-                                                                         x_type='energy', y_type='attenuation',
-                                                                         offset_us=self.calibrated_offset_us,
-                                                                         source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                                         baseline=self.baseline)
+        self.exp_x_interp, self.exp_y_interp = self.experiment.xy_scaled(
+            energy_min=self.energy_min,
+            energy_max=self.energy_max,
+            energy_step=self.energy_step,
+            x_type='energy', y_type='attenuation',
+            offset_us=self.calibrated_offset_us,
+            source_to_detector_m=self.calibrated_source_to_detector_m,
+            baseline=self.baseline
+        )
 
         self.fit_result = None
         self.fitted_density_gcm3 = None
