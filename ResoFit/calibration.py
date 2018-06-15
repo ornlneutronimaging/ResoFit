@@ -225,10 +225,10 @@ class Calibration(object):
              before=False, interp=False, mixed=False,
              table=True, grid=True, save_fig=False):
         """"""
-        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
-        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
-        fit_util.check_if_in_list(index_level, fit_util.index_level_list)
+        # fit_util.check_if_in_list(x_type, fit_util.x_type_list)
+        # fit_util.check_if_in_list(y_type, fit_util.y_type_list)
+        # fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
+        # fit_util.check_if_in_list(index_level, fit_util.index_level_list)
 
         simu_label = 'Ideal'
         exp_label = 'Exp'
@@ -333,27 +333,21 @@ class Calibration(object):
             else:  # peak_id == 'indexed'
                 _current_peak_map = _peak_map_indexed
                 _tag = 'ideal'
-
+            x_tag = fit_util.get_peak_tag(x_type=x_type)
             for _peak_name in _peak_name_list:
                 if len(_current_peak_map[_peak_name][_tag]) > 0:
-                    _peak_x = _current_peak_map[_peak_name][_tag]['x']
+                    _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
                     _peak_y = _current_peak_map[_peak_name][_tag]['y']
-                    ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
-                                                        offset_us=self.calibrated_offset_us,
-                                                        source_to_detector_m=self.calibrated_source_to_detector_m),
+                    ax1.plot(_peak_x,
                              [_pos] * len(_peak_x),
                              '|', ms=10,
                              label=_peak_name)
-                    ax1.vlines(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
-                                                          offset_us=self.calibrated_offset_us,
-                                                          source_to_detector_m=self.calibrated_source_to_detector_m),
+                    ax1.vlines(_peak_x,
                                _start_point,
                                fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
                                label='_nolegend_',
                                alpha=1)
-                    ax1.plot(fit_util.convert_energy_to(x_type=x_type, x=_peak_x, t_unit=t_unit,
-                                                        offset_us=self.calibrated_offset_us,
-                                                        source_to_detector_m=self.calibrated_source_to_detector_m),
+                    ax1.plot(_peak_x,
                              fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
                              'k_',
                              ms=5,

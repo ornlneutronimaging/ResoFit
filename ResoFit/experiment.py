@@ -39,6 +39,7 @@ class Experiment(object):
         self.spectra = load_txt_csv(self.spectra_path)
         self.data = load_txt_csv(self.data_path)
         self.repeat = repeat
+        self.img_start = 0
         assert type(self.repeat) is int
 
         # detector position (m) for the actual measurement
@@ -102,7 +103,8 @@ class Experiment(object):
                                          offset_us=self.offset_us,
                                          source_to_detector_m=self.source_to_detector_m))
         x_exp_raw = fit_util.convert_energy_to(x=x_e, x_type=x_type, offset_us=self.offset_us,
-                                               source_to_detector_m=self.source_to_detector_m, t_unit=t_unit)
+                                               source_to_detector_m=self.source_to_detector_m, t_unit=t_unit,
+                                               num_offset=self.img_start)
 
         return x_exp_raw
 
@@ -225,6 +227,7 @@ class Experiment(object):
             # raw image number saved
             self.img_num = self.data.index.values
         if start is not None:
+            self.img_start = start
             self.data.drop(self.data.index[:start], inplace=True)
             self.spectra.drop(self.spectra.index[:start], inplace=True)
             self.slice_start = start

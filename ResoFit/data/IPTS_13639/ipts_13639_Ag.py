@@ -71,7 +71,7 @@ calibration.plot(y_type='attenuation',
                  # interp=True,
                  # mixed=True,
                  peak_mark=True,
-                 index_level='iso',
+                 index_level='ele',
                  peak_id='indexed')
 plt.show()
 

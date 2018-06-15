@@ -26,7 +26,7 @@ def check_if_in_list(name, name_list):
         raise ValueError("'{}' is not valid, only support: '{}'".format(name, name_list))
 
 
-def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us'):
+def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us', num_offset=0):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(t_unit, t_unit_list)
     if x_type == 'lambda':
@@ -41,8 +41,19 @@ def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_un
                               array=x)
         x = convert_s(x=x, t_unit=t_unit)
     if x_type == 'number':
-        x = np.array(range(len(x)))
+        x = np.array(range(len(x))) + num_offset
     return x
+
+
+def get_peak_tag(x_type):
+    tag = 'x'
+    if x_type == 'lambda':
+        tag = 'x_A'
+    if x_type == 'time':
+        tag = 'x_s'
+    if x_type == 'number':
+        tag = 'x_num_o'
+    return tag
 
 
 def convert_attenuation_to(y_type, y):
@@ -415,6 +426,7 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
         _peak_y = peak_map[_peak_name]['peak']['y']
         _x_indexed_list = []
         _x_num_indexed_list = []
+        _x_num_o_indexed_list = []
         _x_s_indexed_list = []
         _x_A_indexed_list = []
         _y_indexed_list = []
@@ -429,6 +441,8 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
                     _y_ideal_list.append(_peak_y[_j])
                     if 'x_num' in peak_df.columns:
                         _x_num_indexed_list.append(peak_df['x_num'][_i])
+                    if 'x_num_o' in peak_df.columns:
+                        _x_num_o_indexed_list.append(peak_df['x_num_o'][_i])
                     if 'x_s' in peak_df.columns:
                         _x_s_indexed_list.append(peak_df['x_s'][_i])
                     if 'x_A' in peak_df.columns:
@@ -437,15 +451,21 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
         num_peak_indexed += len(_x_indexed_list)
         _df[x_name] = _x_indexed_list
         _df['y'] = _y_indexed_list
-        if 'x_num' in peak_df.columns:
-            _df['x_num'] = _x_num_indexed_list
-        if 'x_s' in peak_df.columns:
-            _df['x_s'] = _x_s_indexed_list
-        if 'x_A' in peak_df.columns:
-            _df['x_A'] = _x_A_indexed_list
-
         _df_ideal['x'] = _x_ideal_list
         _df_ideal['y'] = _y_ideal_list
+        if 'x_num' in peak_df.columns:
+            _df['x_num'] = _x_num_indexed_list
+            _df_ideal['x_num'] = _x_num_indexed_list
+        if 'x_num_o' in peak_df.columns:
+            _df['x_num_o'] = _x_num_o_indexed_list
+            _df_ideal['x_num_o'] = _x_num_o_indexed_list
+        if 'x_s' in peak_df.columns:
+            _df['x_s'] = _x_s_indexed_list
+            _df_ideal['x_s'] = _x_s_indexed_list
+        if 'x_A' in peak_df.columns:
+            _df['x_A'] = _x_A_indexed_list
+            _df_ideal['x_A'] = reso_util.ev_to_angstroms(np.array(_x_ideal_list))
+
         peak_map_indexed[_peak_name]['exp'] = _df
         peak_map_indexed[_peak_name]['ideal'] = _df_ideal
     return peak_map_indexed
