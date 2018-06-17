@@ -62,14 +62,15 @@ calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
 calibration.plot(y_type='attenuation',
                  # y_type='transmission',
-                 x_type='number',
+                 x_type='energy',
                  # t_unit='ms',
                  # before=True,
                  # interp=True,
                  # mixed=True,
                  peak_mark=False,
-                 index_level='ele',
-                 peak_id='indexed')
+                 peak_height=False,
+                 index_level='iso',
+                 peak_id='all')
 plt.show()
 
 # # Fit the peak height

@@ -2,6 +2,7 @@ import ImagingReso._utilities as reso_util
 import matplotlib.pyplot as plt
 from lmfit import Parameters
 from lmfit import minimize
+import pandas as pd
 
 import ResoFit._utilities as fit_util
 from ResoFit._gap_functions import y_gap_for_calibration
@@ -221,14 +222,13 @@ class Calibration(object):
     #     return self.calibrate_result
 
     def plot(self, x_type='energy', y_type='attenuation', t_unit='us',
-             index_level='iso', peak_id='indexed', peak_mark=False,
+             index_level='iso', peak_id='indexed',
+             peak_mark=False, peak_height=False,
              before=False, interp=False, mixed=False,
              table=True, grid=True, save_fig=False):
         """"""
-        # fit_util.check_if_in_list(x_type, fit_util.x_type_list)
-        # fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        # fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
-        # fit_util.check_if_in_list(index_level, fit_util.index_level_list)
+        fit_util.check_if_in_list(peak_id, fit_util.peak_id_list)
+        fit_util.check_if_in_list(index_level, fit_util.index_level_list)
 
         simu_label = 'Ideal'
         exp_label = 'Exp'
@@ -236,41 +236,43 @@ class Calibration(object):
         exp_interp_label = 'Exp_interp'
         sample_name = ' & '.join(self.simulation.layer_list)
         fig_title = "Calibration result of sample ('{}')".format(sample_name)
-
         fig = plt.Figure()
 
         # plot table + graph
-        if table is True:
+        if table:
             ax1 = plt.subplot2grid(shape=(10, 10), loc=(0, 1), rowspan=8, colspan=8)
         # plot graph only
         else:
             ax1 = plt.subplot(111)
 
         # Plot simulated total signal
-        if mixed is True:
-            ax1.plot(self.simulation.get_x(x_type=x_type,
-                                           t_unit=t_unit,
-                                           offset_us=self.calibrated_offset_us,
-                                           source_to_detector_m=self.calibrated_source_to_detector_m
-                                           ),
-                     self.simulation.get_y(y_type=y_type), 'b-', label=simu_label, linewidth=1)
+        if mixed:
+            _x = self.simulation.get_x(x_type=x_type,
+                                       t_unit=t_unit,
+                                       offset_us=self.calibrated_offset_us,
+                                       source_to_detector_m=self.calibrated_source_to_detector_m
+                                       )
+            _y = self.simulation.get_y(y_type=y_type)
+            ax1.plot(_x, _y, 'b-', label=simu_label, linewidth=1)
 
         """Plot options"""
         # 1.
-        if before is True:
+        if before:
             # Plot the raw data before fitting
-            ax1.plot(self.experiment.get_x(x_type=x_type,
-                                           t_unit=t_unit,
-                                           offset_us=self.init_offset_us,
-                                           source_to_detector_m=self.init_source_to_detector_m),
-                     self.experiment.get_y(y_type=y_type,
-                                           baseline=self.experiment.baseline),
+            _x_init = self.experiment.get_x(x_type=x_type,
+                                            t_unit=t_unit,
+                                            offset_us=self.init_offset_us,
+                                            source_to_detector_m=self.init_source_to_detector_m)
+            _y_init = self.experiment.get_y(y_type=y_type,
+                                            baseline=self.experiment.baseline)
+            ax1.plot(_x_init,
+                     _y_init,
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='c', label=exp_before_label)
 
         # 2.
-        if interp is True:
+        if interp:
             _exp_x_interp_calibrated, _exp_y_interp_calibrated = self.experiment.xy_scaled(
                 x_type=x_type,
                 y_type=y_type,
@@ -287,11 +289,14 @@ class Calibration(object):
                      'r:', label=exp_interp_label, linewidth=1)
         else:
             # plot the calibrated raw data
-            ax1.plot(self.experiment.get_x(x_type=x_type,
-                                           t_unit=t_unit,
-                                           offset_us=self.calibrated_offset_us,
-                                           source_to_detector_m=self.calibrated_source_to_detector_m),
-                     self.experiment.get_y(y_type=y_type, baseline=self.experiment.baseline),
+            _x_cali = self.experiment.get_x(x_type=x_type,
+                                            t_unit=t_unit,
+                                            offset_us=self.calibrated_offset_us,
+                                            source_to_detector_m=self.calibrated_source_to_detector_m)
+            _y_cali = self.experiment.get_y(y_type=y_type,
+                                            baseline=self.experiment.baseline)
+            ax1.plot(_x_cali,
+                     _y_cali,
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='r', label=exp_label)
@@ -311,9 +316,6 @@ class Calibration(object):
             _peak_map_full = self.experiment.o_peak.peak_map_full
             if peak_mark is True:
                 ax1.scatter(fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
-                            # fit_util.convert_energy_to(x_type=x_type, x=_peak_df_scaled['x'], t_unit=t_unit,
-                            #                            offset_us=self.calibrated_offset_us,
-                            #                            source_to_detector_m=self.calibrated_source_to_detector_m),
                             fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
                             c='k',
                             marker='x',
@@ -342,17 +344,18 @@ class Calibration(object):
                              [_pos] * len(_peak_x),
                              '|', ms=10,
                              label=_peak_name)
-                    ax1.vlines(_peak_x,
-                               _start_point,
-                               fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
-                               label='_nolegend_',
-                               alpha=1)
-                    ax1.plot(_peak_x,
-                             fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
-                             'k_',
-                             ms=5,
-                             label='_nolegend_',
-                             alpha=1)
+                    if peak_height:
+                        ax1.vlines(_peak_x,
+                                   _start_point,
+                                   fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
+                                   label='_nolegend_',
+                                   alpha=1)
+                        ax1.plot(_peak_x,
+                                 fit_util.convert_attenuation_to(y_type=y_type, y=_peak_y),
+                                 'k_',
+                                 ms=5,
+                                 label='_nolegend_',
+                                 alpha=1)
                 if 'peak_span' in _peak_map_indexed[_peak_name].keys():
                     if len(_peak_map_indexed[_peak_name]['exp']) > 0:
                         _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
@@ -366,7 +369,7 @@ class Calibration(object):
                                x_type=x_type, y_type=y_type, t_unit=t_unit)
 
         # Plot table
-        if table is True:
+        if table:
             # ax2 = plt.subplot2grid(shape=(10, 7), loc=(0, 1), rowspan=4, colspan=5)
             # ax2.axis('off')
             columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
@@ -391,15 +394,91 @@ class Calibration(object):
             _filename = 'calibration_' + _sample_name + '.png'
             plt.savefig(_filename, dpi=600, transparent=True)
             plt.close()
+        return ax1
 
-    def export(self, x_type='energy', y_type='attenuation',
-               peak_map=True, peak_mark=True, index_level='iso',
-               before=False, interp=False, mixed=False,
-               ):
-        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
-        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        fit_util.check_if_in_list(index_level, fit_util.index_level_list)
-        pass
+    def export(self, x_type='energy', y_type='attenuation', t_unit='us',
+               index_level='iso', peak_id='indexed',
+               before=False, interp=False, mixed=False):
+
+        simu_label = 'Ideal'
+        exp_label = 'Exp'
+        exp_before_label = 'Exp_init'
+        exp_interp_label = 'Exp_interp'
+        _df = pd.DataFrame()
+
+        # Simulated total signal
+        if mixed:
+            _x = self.simulation.get_x(x_type=x_type,
+                                       t_unit=t_unit,
+                                       offset_us=self.calibrated_offset_us,
+                                       source_to_detector_m=self.calibrated_source_to_detector_m,
+                                       )
+            _y = self.simulation.get_y(y_type=y_type)
+            _df['x_' + simu_label] = _x
+            _df['y_' + simu_label] = _y
+
+        """Plot options"""
+        # Raw data before fitting
+        if before:
+            _x_init = self.experiment.get_x(x_type=x_type,
+                                            t_unit=t_unit,
+                                            offset_us=self.init_offset_us,
+                                            source_to_detector_m=self.init_source_to_detector_m)
+            _y_init = self.experiment.get_y(y_type=y_type,
+                                            baseline=self.experiment.baseline)
+            _df['x_' + exp_before_label] = _x_init
+            _df['y_' + exp_before_label] = _y_init
+
+        # 2.
+        if interp:
+            _exp_x_interp_calibrated, _exp_y_interp_calibrated = self.experiment.xy_scaled(
+                x_type=x_type,
+                y_type=y_type,
+                energy_min=self.energy_min,
+                energy_max=self.energy_max,
+                energy_step=self.energy_step,
+                t_unit=t_unit,
+                offset_us=self.calibrated_offset_us,
+                source_to_detector_m=self.calibrated_source_to_detector_m,
+                baseline=self.experiment.baseline)
+            # Interpolated raw data
+            _df['x_' + exp_interp_label] = _exp_x_interp_calibrated
+            _df['y_' + exp_interp_label] = _exp_y_interp_calibrated
+        else:
+            # plot the calibrated raw data
+            _x_cali = self.experiment.get_x(x_type=x_type,
+                                            t_unit=t_unit,
+                                            offset_us=self.calibrated_offset_us,
+                                            source_to_detector_m=self.calibrated_source_to_detector_m)
+            _y_cali = self.experiment.get_y(y_type=y_type,
+                                            baseline=self.experiment.baseline)
+            _df['x_' + exp_label] = _x_cali
+            _df['y_' + exp_label] = _y_cali
+
+        # plot peaks detected and indexed
+        if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
+            _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
+            _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
+            _peak_map_full = self.experiment.o_peak.peak_map_full
+            _x_peak_exp = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
+            _y_peak_exp = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
+            if index_level == 'iso':
+                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
+            else:
+                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
+
+            if peak_id == 'all':
+                _current_peak_map = _peak_map_full
+                _tag = 'peak'
+            else:  # peak_id == 'indexed'
+                _current_peak_map = _peak_map_indexed
+                _tag = 'ideal'
+            x_tag = fit_util.get_peak_tag(x_type=x_type)
+            for _peak_name in _peak_name_list:
+                if len(_current_peak_map[_peak_name][_tag]) > 0:
+                    _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
+                    _peak_y = _current_peak_map[_peak_name][_tag]['y']
+        return _df
     # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
     #                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
     #                 t_start_us=1, time_resolution_us=0.16, time_unit='us'):
