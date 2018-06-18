@@ -60,7 +60,7 @@ def convert_attenuation_to(y_type, y):
     check_if_in_list(y_type, y_type_list)
     if y_type == 'transmission':
         y = 1 - y
-    return y
+    return np.array(y)
 
 
 def convert_s(x, t_unit):
@@ -91,7 +91,7 @@ def convert_exp_peak_df(peak_df, x_type, t_unit):
     else:
         assert 'x_num_o' in peak_df.columns
         _x = peak_df['x_num_o']
-    return _x
+    return list(_x)
 
 
 def check_and_make_dir(current_path, name):

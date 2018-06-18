@@ -398,12 +398,12 @@ class Calibration(object):
 
     def export(self, x_type='energy', y_type='attenuation', t_unit='us',
                index_level='iso', peak_id='indexed',
-               before=False, interp=False, mixed=False):
+               before=False, interp=False, mixed=True):
 
-        simu_label = 'Ideal'
-        exp_label = 'Exp'
-        exp_before_label = 'Exp_init'
-        exp_interp_label = 'Exp_interp'
+        simu_label = 'ideal'
+        exp_label = 'exp'
+        exp_before_label = 'exp_init'
+        exp_interp_label = 'exp_interp'
         _df = pd.DataFrame()
 
         # Simulated total signal
@@ -452,6 +452,9 @@ class Calibration(object):
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
             _y_cali = self.experiment.get_y(y_type=y_type,
                                             baseline=self.experiment.baseline)
+            _df.insert(-1, 'x_' + exp_label, _x_cali)
+            print(_df)
+            print(len(_x_cali))
             _df['x_' + exp_label] = _x_cali
             _df['y_' + exp_label] = _y_cali
 
@@ -460,24 +463,33 @@ class Calibration(object):
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
-            _x_peak_exp = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
-            _y_peak_exp = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
-            if index_level == 'iso':
-                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
-            else:
-                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
+            _x_peak_exp_all = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
+            _y_peak_exp_all = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
+            # _df = pd.concat([_df, _peak_df_scaled], axis=1)
+            print(_x_peak_exp_all)
+            print(_x_peak_exp_all[0])
+            print(_x_peak_exp_all[0].index)
 
-            if peak_id == 'all':
-                _current_peak_map = _peak_map_full
-                _tag = 'peak'
-            else:  # peak_id == 'indexed'
-                _current_peak_map = _peak_map_indexed
-                _tag = 'ideal'
+            _df['x_peak_exp_all'] = pd.Series(_x_peak_exp_all[0])
+            _df['y_peak_exp_all'] = pd.Series(_y_peak_exp_all[0])
+
             x_tag = fit_util.get_peak_tag(x_type=x_type)
-            for _peak_name in _peak_name_list:
-                if len(_current_peak_map[_peak_name][_tag]) > 0:
-                    _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
-                    _peak_y = _current_peak_map[_peak_name][_tag]['y']
+            for _peak_name in _peak_map_indexed.keys():
+                if len(_peak_map_full[_peak_name]['peak']) > 0:
+                    _x_peak_ideal_all = _peak_map_full[_peak_name]['peak'][x_tag]
+                    _y_peak_ideal_all = _peak_map_full[_peak_name]['peak']['y']
+                    _df['x_peak_ideal_all('+_peak_name+')'] = _x_peak_ideal_all
+                    _df['y_peak_ideal_all('+_peak_name+')'] = _y_peak_ideal_all
+                if len(_peak_map_indexed[_peak_name]['ideal']) > 0:
+                    _x_peak_ideal_indexed = _peak_map_indexed[_peak_name]['ideal'][x_tag]
+                    _y_peak_ideal_indexed = _peak_map_indexed[_peak_name]['ideal']['y']
+                    _x_peak_exp_indexed = _peak_map_indexed[_peak_name]['exp'][x_tag]
+                    _y_peak_exp_indexed = _peak_map_indexed[_peak_name]['exp']['y']
+                    _df['x_peak_exp('+_peak_name+')'] = _x_peak_exp_indexed
+                    _df['y_peak_exp('+_peak_name+')'] = _y_peak_exp_indexed
+                    _df['x_peak_ideal('+_peak_name+')'] = _x_peak_ideal_indexed
+                    _df['y_peak_ideal('+_peak_name+')'] = _y_peak_ideal_indexed
+
         return _df
     # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
     #                 all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
