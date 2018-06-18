@@ -74,14 +74,15 @@ calibration.index_peak(thres=0.1, min_dist=10)
 # plt.show()
 
 df = calibration.export(y_type='attenuation',
-                   # y_type='transmission',
-                   x_type='energy',
-                   # t_unit='ms',
-                   # before=True,
-                   interp=True,
-                   # mixed=True,
-                   index_level='iso',
-                   peak_id='all')
+                        # y_type='transmission',
+                        x_type='energy',
+                        # t_unit='ms',
+                        # before=True,
+                        # interp=True,
+                        # mixed=True,
+                        index_level='iso',
+                        peak_id='all')
+print(df)
 
 # # Fit the peak height
 # fit = FitResonance(folder=folder,

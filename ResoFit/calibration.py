@@ -401,7 +401,7 @@ class Calibration(object):
                before=False, interp=False, mixed=True):
 
         simu_label = 'ideal'
-        exp_label = 'exp'
+        exp_label = 'exp_raw'
         exp_before_label = 'exp_init'
         exp_interp_label = 'exp_interp'
         _df = pd.DataFrame()
@@ -452,26 +452,20 @@ class Calibration(object):
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
             _y_cali = self.experiment.get_y(y_type=y_type,
                                             baseline=self.experiment.baseline)
-            _df.insert(-1, 'x_' + exp_label, _x_cali)
-            print(_df)
-            print(len(_x_cali))
-            _df['x_' + exp_label] = _x_cali
-            _df['y_' + exp_label] = _y_cali
+            _df['x_' + exp_label] = pd.Series(_x_cali)
+            _df['y_' + exp_label] = pd.Series(_y_cali)
 
         # plot peaks detected and indexed
         if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
             _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
             _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
             _peak_map_full = self.experiment.o_peak.peak_map_full
-            _x_peak_exp_all = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit),
-            _y_peak_exp_all = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y']),
+            _x_peak_exp_all = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit)
+            _y_peak_exp_all = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y'])
             # _df = pd.concat([_df, _peak_df_scaled], axis=1)
-            print(_x_peak_exp_all)
-            print(_x_peak_exp_all[0])
-            print(_x_peak_exp_all[0].index)
 
-            _df['x_peak_exp_all'] = pd.Series(_x_peak_exp_all[0])
-            _df['y_peak_exp_all'] = pd.Series(_y_peak_exp_all[0])
+            _df['x_peak_exp_all'] = pd.Series(_x_peak_exp_all)
+            _df['y_peak_exp_all'] = pd.Series(_y_peak_exp_all)
 
             x_tag = fit_util.get_peak_tag(x_type=x_type)
             for _peak_name in _peak_map_indexed.keys():

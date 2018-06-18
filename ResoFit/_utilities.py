@@ -75,7 +75,7 @@ def convert_s(x, t_unit):
     return _x
 
 
-def convert_exp_peak_df(peak_df, x_type, t_unit):
+def convert_exp_peak_df(peak_df: pd.DataFrame, x_type, t_unit):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(t_unit, t_unit_list)
     if x_type == 'energy':
@@ -91,7 +91,7 @@ def convert_exp_peak_df(peak_df, x_type, t_unit):
     else:
         assert 'x_num_o' in peak_df.columns
         _x = peak_df['x_num_o']
-    return list(_x)
+    return _x.values  # np.array
 
 
 def check_and_make_dir(current_path, name):
