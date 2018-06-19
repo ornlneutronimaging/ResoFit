@@ -60,28 +60,32 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          each_step=each_step)
 calibration.index_peak(thres=0.1, min_dist=10)
 # calibration.analyze_peak()
-# calibration.plot(y_type='attenuation',
-#                  # y_type='transmission',
-#                  x_type='energy',
-#                  # t_unit='ms',
-#                  # before=True,
-#                  # interp=True,
-#                  # mixed=True,
-#                  peak_mark=False,
-#                  peak_height=False,
-#                  index_level='iso',
-#                  peak_id='all')
-# plt.show()
+calibration.plot(y_type='attenuation',
+                 # y_type='transmission',
+                 x_type='energy',
+                 # t_unit='ms',
+                 # before=True,
+                 # interp=True,
+                 # mixed=True,
+                 # peak_exp='all',
+                 table=False,
+                 peak_exp='indexed',
+                 peak_height=True,
+                 index_level='iso',
+                 peak_id='all',
+                 logx=True,
+                 )
+plt.show()
 
-df = calibration.export(y_type='attenuation',
-                        # y_type='transmission',
-                        x_type='energy',
-                        # t_unit='ms',
-                        # before=True,
-                        # interp=True,
-                        # mixed=True,
-                        index_level='iso',
-                        peak_id='all')
+# df = calibration.export(y_type='attenuation',
+#                         # y_type='transmission',
+#                         x_type='energy',
+#                         # t_unit='ms',
+#                         # before=True,
+#                         # interp=True,
+#                         # mixed=True,
+#                         index_level='iso',
+#                         peak_id='all')
 
 # # Fit the peak height
 # fit = FitResonance(folder=folder,

@@ -73,7 +73,7 @@ calibration.index_peak(thres=0.13, min_dist=21, rel_tol=0.0028, impr_reso=False)
 calibration.analyze_peak(report=False, show_fit=True)
 
 calibration.plot(before=False, mixed=False, table=table,
-                 peak_id=peak_label, peak_mark=False,
+                 peak_id=peak_label, peak_exp=False,
                  grid=True, items_to_plot=items_to_plot, interp=False)
 
 # # Fit sample density or thickness

@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 x_type_list = ['energy', 'lambda', 'time', 'number']
 y_type_list = ['transmission', 'attenuation']
 t_unit_list = ['s', 'ms', 'us', 'ns']
-peak_id_list = ['indexed', 'all']
+peak_type_list = ['indexed', 'all', 'none']
 index_level_list = ['iso', 'ele']
 peak_model_list = ['Gaussian', 'Lorentzian']
 
@@ -162,7 +162,7 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(ax, fig_title, grid, x_type, y_type, t_unit):
+def set_plt(ax, fig_title, grid, x_type, y_type, t_unit, logx):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(y_type, y_type_list)
     ax.set_title(fig_title)
@@ -186,10 +186,12 @@ def set_plt(ax, fig_title, grid, x_type, y_type, t_unit):
     ax.legend(loc='best')
     # ax1.legend(bbox_to_anchor=(1., 1), loc=2, borderaxespad=0.)
     # ax1.legend(bbox_to_anchor=(0, 0.93, 1., .102), loc=3, borderaxespad=0.)
-    if grid is True:
+    if grid:
         # ax1.set_xticks(np.arange(0, 100, 10))
         # ax1.set_yticks(np.arange(0, 1., 0.1))
         ax.grid()
+    if logx:
+        ax.set_xscale('log')
     return ax
 
 
