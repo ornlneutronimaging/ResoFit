@@ -56,6 +56,17 @@ def get_peak_tag(x_type):
     return tag
 
 
+def get_df_col_name(x_type):
+    tag = '_E'
+    if x_type == 'lambda':
+        tag = '_A'
+    if x_type == 'time':
+        tag = '_t'
+    if x_type == 'number':
+        tag = '_#'
+    return tag
+
+
 def convert_attenuation_to(y_type, y):
     check_if_in_list(y_type, y_type_list)
     if y_type == 'transmission':

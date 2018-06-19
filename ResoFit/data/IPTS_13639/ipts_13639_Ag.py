@@ -82,7 +82,6 @@ df = calibration.export(y_type='attenuation',
                         # mixed=True,
                         index_level='iso',
                         peak_id='all')
-print(df)
 
 # # Fit the peak height
 # fit = FitResonance(folder=folder,

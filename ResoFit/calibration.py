@@ -302,7 +302,7 @@ class Calibration(object):
                      color='r', label=exp_label)
 
         # plot peaks detected and indexed
-        if self.experiment.o_peak and self.experiment.o_peak.peak_map_indexed is not None:
+        if self.experiment.o_peak.peak_map_indexed is not None:
             if y_type == 'transmission':
                 _start_point = 1
                 ax1.set_ylim(top=1.1, bottom=-0.01)
@@ -406,6 +406,7 @@ class Calibration(object):
         exp_interp_label = 'exp_interp'
         _df = pd.DataFrame()
 
+        _col_suffix = fit_util.get_df_col_name(x_type=x_type)
         # Simulated total signal
         if mixed:
             _x = self.simulation.get_x(x_type=x_type,
@@ -442,7 +443,7 @@ class Calibration(object):
                 source_to_detector_m=self.calibrated_source_to_detector_m,
                 baseline=self.experiment.baseline)
             # Interpolated raw data
-            _df['x_' + exp_interp_label] = _exp_x_interp_calibrated
+            _df['x_' + exp_interp_label + _col_suffix] = _exp_x_interp_calibrated
             _df['y_' + exp_interp_label] = _exp_y_interp_calibrated
         else:
             # plot the calibrated raw data
@@ -452,7 +453,7 @@ class Calibration(object):
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
             _y_cali = self.experiment.get_y(y_type=y_type,
                                             baseline=self.experiment.baseline)
-            _df['x_' + exp_label] = pd.Series(_x_cali)
+            _df['x_' + exp_label + _col_suffix] = pd.Series(_x_cali)
             _df['y_' + exp_label] = pd.Series(_y_cali)
 
         # plot peaks detected and indexed
@@ -483,6 +484,8 @@ class Calibration(object):
                     _df['y_peak_exp('+_peak_name+')'] = _y_peak_exp_indexed
                     _df['x_peak_ideal('+_peak_name+')'] = _x_peak_ideal_indexed
                     _df['y_peak_ideal('+_peak_name+')'] = _y_peak_ideal_indexed
+
+        _df.to_clipboard(index=False)
 
         return _df
     # def export_simu(self, filename=None, x_axis='energy', y_axis='attenuation',
