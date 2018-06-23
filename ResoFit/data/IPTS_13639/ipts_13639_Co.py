@@ -67,10 +67,10 @@ calibration.plot(y_type='attenuation',
                  # before=True,
                  # interp=True,
                  # mixed=True,
-                 peak_exp=False,
-                 peak_height=True,
+                 peak_exp='indexed',
+                 peak_height=False,
                  index_level='iso',
-                 peak_id='all')
+                 peak_id='indexed')
 plt.show()
 
 df = calibration.export(y_type='attenuation',

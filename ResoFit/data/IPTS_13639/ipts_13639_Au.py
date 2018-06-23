@@ -15,10 +15,10 @@ layers = Layer()
 # layers.add_layer(layer='Ag', thickness_mm=0.025)
 # layers.add_layer(layer='Co', thickness_mm=0.025)
 # layers.add_layer(layer='Hf', thickness_mm=0.025)
-layers.add_layer(layer='W', thickness_mm=0.05)
+# layers.add_layer(layer='W', thickness_mm=0.05)
 # layers.add_layer(layer='In', thickness_mm=0.05)
 # layers.add_layer(layer='Cd', thickness_mm=0.5)
-# layers.add_layer(layer='Au', thickness_mm=0.01)
+layers.add_layer(layer='Au', thickness_mm=0.01)
 # simu = Simulation(energy_min=energy_min, energy_max=energy_max, energy_step=energy_step)
 # simu.add_Layer(layer=layers)
 # peak_dict = simu.peak_map(thres=0.015, min_dist=20)
@@ -26,13 +26,13 @@ layers.add_layer(layer='W', thickness_mm=0.05)
 
 
 folder = 'data/IPTS_13639/reso_data_13639'
-data_file = 'W.csv'
+data_file = 'Au.csv'
 spectra_file = 'spectra.csv'
 image_start = 500  # Can be omitted or =None
 image_end = 1600  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
-norm_to_file = 'Hf.csv'
+norm_to_file = 'ob_all.csv'
 baseline = True
 each_step = False
 

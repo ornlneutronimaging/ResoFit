@@ -392,7 +392,8 @@ class Experiment(object):
             ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
                         ms=ms, lw=lw, alpha=alpha)
 
-        ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid, x_type=x_type, y_type=y_type, t_unit=t_unit)
+        ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid,
+                                  x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx)
         if xmax is not None:
             ax_mpl.set_xlim(right=xmax)
         return ax_mpl
