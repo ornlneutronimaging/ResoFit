@@ -50,7 +50,6 @@ class Calibration(object):
         self.experiment = Experiment(spectra_file=spectra_file,
                                      data_file=data_file,
                                      folder=folder,
-                                     norm_factor=norm_factor,
                                      baseline=baseline)
         self.init_source_to_detector_m = None
         self.init_offset_us = None

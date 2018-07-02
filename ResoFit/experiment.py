@@ -11,12 +11,11 @@ from ResoFit._utilities import load_txt_csv
 
 
 class Experiment(object):
-    def __init__(self, spectra_file, data_file, folder, norm_factor=1, baseline=False):
+    def __init__(self, spectra_file, data_file, folder, baseline=False):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
         :param data_file: data file of neutron transmission
-        :param norm_factor: input is needed only if the exp data is a summed result of multiple runs, default: 1, type: int
         :param folder: folder name in str under /ResoFit directory
         """
         _file_path = os.path.abspath(os.path.dirname(__file__))
@@ -39,7 +38,7 @@ class Experiment(object):
         self.spectra = load_txt_csv(self.spectra_path)
         self.data = load_txt_csv(self.data_path)
         # self.norm_factor = norm_factor
-        self.data[0] = self.data[0] / norm_factor
+        # self.data[0] = self.data[0] / norm_factor
         self.img_start = 0
         # assert type(self.norm_factor) is int
 
@@ -124,6 +123,10 @@ class Experiment(object):
         else:
             _baseline = baseline
         assert type(baseline) == bool
+        # if norm_factor is None:
+        #     _norm_factor = 1
+        # else:
+        #     _norm_factor = norm_factor
 
         y_exp_raw = np.array(self.data[0])
 
@@ -240,13 +243,13 @@ class Experiment(object):
 
                 # return self.spectra[0], self.data[0]
 
-    def norm_to(self, file, reset_index=False):
+    def norm_to(self, file, reset_index=False, norm_factor=1):
         """
         Use specified file for normalization and save normalized data signal in self.data
 
         :param file: string. filename with suffix. ex: 'your_data.csv' inside the folder specified in __init__
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
-        :return: pd.Dataframe in place. normalized data signal in self.data
+        :return: pd.DataFrame in place. normalized data signal in self.data
         """
         _full_path = os.path.join(self.folder_path, file)
         df = load_txt_csv(_full_path)
@@ -261,7 +264,7 @@ class Experiment(object):
                     if reset_index is True:
                         df.reset_index(drop=True, inplace=True)
         # convert transmission into attenuation
-        self.data[0] = self.data[0] / df[0]
+        self.data[0] = (self.data[0] / df[0]) / norm_factor
 
     def find_peak(self, thres=0.15, min_dist=2, deg=7):
         """
@@ -283,7 +286,8 @@ class Experiment(object):
         _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
 
         _y = 1 - _y  # force to peaks
-        _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
+        if self.baseline:
+            _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
 
         self.o_peak = fit_util.Peak()
         self.o_peak.find(x=_x, y=_y, y_name='y',

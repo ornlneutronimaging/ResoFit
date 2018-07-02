@@ -47,11 +47,10 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=norm_factor,
                           folder=folder,
                           baseline=baseline)
 
-calibration.experiment.norm_to(norm_to_file)
+calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,

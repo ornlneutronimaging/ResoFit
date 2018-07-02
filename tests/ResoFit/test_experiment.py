@@ -50,16 +50,16 @@ class TestExperiment(unittest.TestCase):
         spectra_file = self.spectra_file
         self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
 
-    def test_repeat(self):
-        folder = self.folder
-        data_file = self.data_file
-        spectra_file = self.spectra_file
-        repeat = -1
-        self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file,
-                          folder=folder)
-        repeat = 3.6
-        self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file,
-                          folder=folder)
+    # def test_repeat(self):
+    #     folder = self.folder
+    #     data_file = self.data_file
+    #     spectra_file = self.spectra_file
+    #     repeat = -1
+    #     self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file,
+    #                       folder=folder)
+    #     repeat = 3.6
+    #     self.assertRaises(ValueError, Experiment, repeat=repeat, data_file=data_file, spectra_file=spectra_file,
+    #                       folder=folder)
 
     def test_load_txt_csv(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
