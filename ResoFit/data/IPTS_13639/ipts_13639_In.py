@@ -52,6 +52,13 @@ calibration = Calibration(data_file=data_file,
 
 calibration.experiment.norm_to(norm_to_file)
 calibration.experiment.slice(start=image_start, end=image_end)
+# calibration.experiment.plot(
+#     x_type='energy',
+#     source_to_detector_m=source_to_detector_m,
+#     offset_us=offset_us,
+#     logx=True,
+#     fmt='-'
+# )
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
@@ -77,15 +84,15 @@ calibration.plot(y_type='attenuation',
 plt.xlim(left=0, right=1000)
 plt.show()
 
-df = calibration.export(y_type='attenuation',
-                        # y_type='transmission',
-                        x_type='energy',
-                        # t_unit='ms',
-                        # before=True,
-                        # interp=True,
-                        # mixed=True,
-                        index_level='iso',
-                        peak_id='all')
+# df = calibration.export(y_type='attenuation',
+#                         # y_type='transmission',
+#                         x_type='energy',
+#                         # t_unit='ms',
+#                         # before=True,
+#                         # interp=True,
+#                         # mixed=True,
+#                         index_level='iso',
+#                         peak_id='all')
 
 # # Fit the peak height
 # fit = FitResonance(folder=folder,

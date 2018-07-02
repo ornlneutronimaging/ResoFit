@@ -36,7 +36,7 @@ norm_to_file = 'ob_all.csv'
 baseline = False
 each_step = False
 
-repeat = 0.9
+repeat = 0.95
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
@@ -52,34 +52,34 @@ calibration = Calibration(data_file=data_file,
 
 calibration.experiment.norm_to(norm_to_file, norm_factor=repeat)
 calibration.experiment.slice(start=image_start, end=image_end)
-calibration.experiment.plot(
-    x_type='energy',
-    source_to_detector_m=source_to_detector_m,
-    offset_us=offset_us,
-    logx=True,
-    fmt='-'
-)
-# calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
-#                                          offset_us=offset_us,
-#                                          vary='none',
-#                                          each_step=each_step)
-# calibration.index_peak(thres=0.1, min_dist=10)
-# # calibration.analyze_peak()
-# calibration.plot(y_type='attenuation',
-#                  # y_type='transmission',
-#                  x_type='energy',
-#                  # t_unit='ms',
-#                  # before=True,
-#                  # interp=True,
-#                  mixed=True,
-#                  # peak_exp='all',
-#                  table=False,
-#                  peak_exp='indexed',
-#                  peak_height=True,
-#                  index_level='iso',
-#                  peak_id='all',
-#                  logx=True,
-#                  )
+# calibration.experiment.plot(
+#     x_type='energy',
+#     source_to_detector_m=source_to_detector_m,
+#     offset_us=offset_us,
+#     logx=True,
+#     fmt='-'
+# )
+calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
+                                         offset_us=offset_us,
+                                         vary='none',
+                                         each_step=each_step)
+calibration.index_peak(thres=0.1, min_dist=10)
+# calibration.analyze_peak()
+calibration.plot(y_type='attenuation',
+                 # y_type='transmission',
+                 x_type='energy',
+                 # t_unit='ms',
+                 # before=True,
+                 # interp=True,
+                 mixed=True,
+                 # peak_exp='all',
+                 table=False,
+                 peak_exp='indexed',
+                 peak_height=True,
+                 index_level='iso',
+                 peak_id='all',
+                 logx=True,
+                 )
 plt.xlim(left=0, right=1000)
 plt.show()
 

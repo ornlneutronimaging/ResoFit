@@ -52,35 +52,35 @@ calibration = Calibration(data_file=data_file,
 
 calibration.experiment.norm_to(norm_to_file, norm_factor=repeat)
 calibration.experiment.slice(start=image_start, end=image_end)
-calibration.experiment.plot(
-    x_type='energy',
-    source_to_detector_m=source_to_detector_m,
-    offset_us=offset_us,
-    logx=True,
-    fmt='-'
-)
-# calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
-#                                          offset_us=offset_us,
-#                                          vary='all',
-#                                          each_step=each_step)
-# calibration.index_peak(thres=0.1, min_dist=10)
-# # calibration.analyze_peak()
-# calibration.plot(
-#     # y_type='attenuation',
-#     y_type='transmission',
+# calibration.experiment.plot(
 #     x_type='energy',
-#     # t_unit='ms',
-#     # before=True,
-#     # interp=True,
-#     mixed=True,
-#     # peak_exp='all',
-#     table=False,
-#     peak_exp='indexed',
-#     peak_height=True,
-#     index_level='iso',
-#     peak_id='all',
+#     source_to_detector_m=source_to_detector_m,
+#     offset_us=offset_us,
 #     logx=True,
+#     fmt='-'
 # )
+calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
+                                         offset_us=offset_us,
+                                         vary='all',
+                                         each_step=each_step)
+calibration.index_peak(thres=0.1, min_dist=10)
+# calibration.analyze_peak()
+calibration.plot(
+    y_type='attenuation',
+    # y_type='transmission',
+    x_type='energy',
+    # t_unit='ms',
+    # before=True,
+    # interp=True,
+    mixed=True,
+    # peak_exp='all',
+    table=False,
+    peak_exp='indexed',
+    peak_height=True,
+    index_level='iso',
+    peak_id='all',
+    logx=True,
+)
 plt.xlim(left=0, right=1000)
 plt.show()
 
