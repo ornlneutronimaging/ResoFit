@@ -33,10 +33,10 @@ image_end = 2730  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'In.csv'
-baseline = True
+baseline = False
 each_step = False
 
-repeat = 1
+norm_factor = 0.85
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
@@ -47,34 +47,39 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
-calibration.experiment.norm_to(norm_to_file)
+calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
-
-calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
-                                         offset_us=offset_us,
-                                         vary='all',
-                                         each_step=each_step)
-calibration.index_peak(thres=0.1, min_dist=10)
-# calibration.analyze_peak()
-calibration.plot(y_type='attenuation',
-                 # y_type='transmission',
-                 x_type='energy',
-                 # t_unit='ms',
-                 # before=True,
-                 # interp=True,
-                 mixed=True,
-                 # peak_exp='all',
-                 table=False,
-                 peak_exp='indexed',
-                 peak_height=True,
-                 index_level='iso',
-                 peak_id='all',
-                 logx=True,
-                 )
+calibration.experiment.plot(
+    x_type='energy',
+    source_to_detector_m=source_to_detector_m,
+    offset_us=offset_us,
+    logx=True,
+    fmt='-'
+)
+# calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
+#                                          offset_us=offset_us,
+#                                          vary='all',
+#                                          each_step=each_step)
+# calibration.index_peak(thres=0.1, min_dist=10)
+# # calibration.analyze_peak()
+# calibration.plot(y_type='attenuation',
+#                  # y_type='transmission',
+#                  x_type='energy',
+#                  # t_unit='ms',
+#                  # before=True,
+#                  # interp=True,
+#                  mixed=True,
+#                  # peak_exp='all',
+#                  table=False,
+#                  peak_exp='indexed',
+#                  peak_height=True,
+#                  index_level='iso',
+#                  peak_id='all',
+#                  logx=True,
+#                  )
 plt.xlim(left=0, right=1000)
 plt.show()
 

@@ -15,7 +15,7 @@ from ResoFit.simulation import Simulation
 class Calibration(object):
     def __init__(self, spectra_file: str, data_file: str, layer: fit_util.Layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
-                 norm_factor=1, folder='data', baseline=False,
+                 folder='data', baseline=False,
                  database='ENDF_VII'):
         """
         Initialization with passed file location and sample info

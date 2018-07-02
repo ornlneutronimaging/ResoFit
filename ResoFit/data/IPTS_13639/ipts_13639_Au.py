@@ -33,10 +33,10 @@ image_end = 2700  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'ob_all.csv'
-baseline = True
+baseline = False
 each_step = False
 
-repeat = 1
+norm_factor = 0.85
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
@@ -47,12 +47,18 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
-calibration.experiment.norm_to(norm_to_file)
+calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
+
+# calibration.experiment.plot(
+#     x_type='energy',
+#     source_to_detector_m=source_to_detector_m,
+#     offset_us=offset_us,
+#     logx=True,
+# )
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,

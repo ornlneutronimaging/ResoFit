@@ -33,7 +33,7 @@ image_end = 2730  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'ob_all.csv'
-baseline = True
+baseline = False
 each_step = False
 
 repeat = 1
@@ -47,7 +47,6 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
