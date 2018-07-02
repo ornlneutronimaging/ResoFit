@@ -36,7 +36,7 @@ norm_to_file = 'ob_all.csv'
 baseline = False
 each_step = True
 
-repeat = 1.2
+norm_factor = 1.2
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
@@ -47,7 +47,7 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=repeat,
+                          norm_factor=norm_factor,
                           folder=folder,
                           baseline=baseline)
 
