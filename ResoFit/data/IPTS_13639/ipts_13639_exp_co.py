@@ -32,7 +32,7 @@ offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
 # # Calibrate the peak positions
 experiment = Experiment(data_file=data_file,
                         spectra_file=spectra_file,
-                        repeat=repeat,
+                        norm_factor=repeat,
                         folder=folder)
 # exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
 #                                     energy_max=energy_max,

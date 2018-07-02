@@ -7,8 +7,8 @@ from ResoFit._utilities import Layer
 import pprint
 
 # Global parameters
-energy_min = 14
-energy_max = 500
+energy_min = 1
+energy_max = 1000
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layers = Layer()
@@ -28,8 +28,8 @@ layers.add_layer(layer='In', thickness_mm=0.05)
 folder = 'data/IPTS_13639/reso_data_13639'
 data_file = 'In.csv'
 spectra_file = 'spectra.csv'
-image_start = 500  # Can be omitted or =None
-image_end = 1600  # Can be omitted or =None
+image_start = 300  # Can be omitted or =None
+image_end = 2730  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'ob_all.csv'
@@ -37,8 +37,8 @@ baseline = True
 each_step = False
 
 repeat = 1
-source_to_detector_m = 16.123278721983177  # 16#16.445359069030175#16.447496101100739
-offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
+offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -47,7 +47,7 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=repeat,
+                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
@@ -67,10 +67,15 @@ calibration.plot(y_type='attenuation',
                  # before=True,
                  # interp=True,
                  mixed=True,
+                 # peak_exp='all',
+                 table=False,
                  peak_exp='indexed',
-                 peak_height=False,
+                 peak_height=True,
                  index_level='iso',
-                 peak_id='indexed')
+                 peak_id='all',
+                 logx=True,
+                 )
+plt.xlim(left=0, right=1000)
 plt.show()
 
 df = calibration.export(y_type='attenuation',

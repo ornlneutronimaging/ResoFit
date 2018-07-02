@@ -24,11 +24,11 @@ x_axis = 'number'
 # # Calibrate the peak positions
 experiment1 = Experiment(data_file=data_file1,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 experiment2 = Experiment(data_file=data_file2,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 
 experiment1.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,

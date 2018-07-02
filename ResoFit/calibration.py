@@ -15,7 +15,7 @@ from ResoFit.simulation import Simulation
 class Calibration(object):
     def __init__(self, spectra_file: str, data_file: str, layer: fit_util.Layer,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
-                 repeat=1, folder='data', baseline=False,
+                 norm_factor=1, folder='data', baseline=False,
                  database='ENDF_VII'):
         """
         Initialization with passed file location and sample info
@@ -32,8 +32,8 @@ class Calibration(object):
         :type energy_max:
         :param energy_step:
         :type energy_step:
-        :param repeat:
-        :type repeat:
+        :param norm_factor:
+        :type norm_factor:
         :param folder:
         :type folder:
         :param baseline: True -> to remove baseline/background by detrend
@@ -50,7 +50,7 @@ class Calibration(object):
         self.experiment = Experiment(spectra_file=spectra_file,
                                      data_file=data_file,
                                      folder=folder,
-                                     repeat=repeat,
+                                     norm_factor=norm_factor,
                                      baseline=baseline)
         self.init_source_to_detector_m = None
         self.init_offset_us = None
@@ -76,16 +76,21 @@ class Calibration(object):
             raise ValueError("'vary=' can only be one of '{}'".format(vary_type_list))
         simu_x = self.simulation.get_x(x_type='energy')
         simu_y = self.simulation.get_y(y_type='attenuation')
+        _run = True
+        if vary == 'all':
+            source_to_detector_vary_tag = True
+            offset_vary_tag = True
+        elif vary == 'source_to_detector':
+            source_to_detector_vary_tag = True
+            offset_vary_tag = False
+        elif vary == 'offset':
+            source_to_detector_vary_tag = False
+            offset_vary_tag = True
+        else:  # vary == 'none':
+            source_to_detector_vary_tag = False
+            offset_vary_tag = False
+            _run = False
 
-        source_to_detector_vary_tag = True
-        offset_vary_tag = True
-        if vary == 'source_to_detector':
-            offset_vary_tag = False
-        if vary == 'offset':
-            source_to_detector_vary_tag = False
-        if vary == 'none':
-            source_to_detector_vary_tag = False
-            offset_vary_tag = False
         self.params_to_calibrate = Parameters()
         self.params_to_calibrate.add('source_to_detector_m', value=source_to_detector_m,
                                      vary=source_to_detector_vary_tag)
@@ -94,26 +99,34 @@ class Calibration(object):
         print("+----------------- Calibration -----------------+\nParams before:")
         self.params_to_calibrate.pretty_print()
         # Use lmfit to obtain 'source_to_detector_m' & 'offset_us' to minimize 'y_gap_for_calibration'
-        self.calibrate_result = minimize(y_gap_for_calibration,
-                                         self.params_to_calibrate,
-                                         method='leastsq',
-                                         args=(simu_x, simu_y,
-                                               self.energy_min, self.energy_max, self.energy_step,
-                                               self.experiment, self.experiment.baseline, each_step))
-        # Print after
-        print("\nParams after:")
-        self.calibrate_result.__dict__['params'].pretty_print()
-        # Print chi^2
-        # self.calibrated_residual = self.calibrate_result.__dict__['residual']
-        print("Calibration chi^2 : {}\n".format(self.calibrate_result.__dict__['chisqr']))
-        self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
-        self.calibrated_source_to_detector_m = \
-            self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
-        return self.calibrate_result
+        if _run:
+            self.calibrate_result = minimize(y_gap_for_calibration,
+                                             self.params_to_calibrate,
+                                             method='leastsq',
+                                             args=(simu_x, simu_y,
+                                                   self.energy_min, self.energy_max, self.energy_step,
+                                                   self.experiment, self.experiment.baseline, each_step))
+            # Print after
+            print("\nParams after:")
+            self.calibrate_result.__dict__['params'].pretty_print()
+            # Print chi^2
+            # self.calibrated_residual = self.calibrate_result.__dict__['residual']
+            print("Calibration chi^2 : {}\n".format(self.calibrate_result.__dict__['chisqr']))
+            self.calibrated_offset_us = self.calibrate_result.__dict__['params'].valuesdict()['offset_us']
+            self.calibrated_source_to_detector_m = \
+                self.calibrate_result.__dict__['params'].valuesdict()['source_to_detector_m']
+            return self.calibrate_result
+        else:
+            self.calibrated_offset_us = offset_us
+            self.calibrated_source_to_detector_m = source_to_detector_m
+            print("\ncalibrate() was not run as requested, input values used:\n"
+                  "calibrated_offset_us = {}\ncalibrated_source_to_detector_m = {}".format(offset_us,
+                                                                                           source_to_detector_m))
 
     def __find_peak(self, thres=0.15, min_dist=2):
         # load detected peak with x in image number
-        if self.calibrate_result is None:
+        # if self.calibrate_result is None:
+        if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
         self.experiment.find_peak(thres=thres, min_dist=min_dist)
 

@@ -11,12 +11,12 @@ from ResoFit._utilities import load_txt_csv
 
 
 class Experiment(object):
-    def __init__(self, spectra_file, data_file, folder, repeat=1, baseline=False):
+    def __init__(self, spectra_file, data_file, folder, norm_factor=1, baseline=False):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
         :param data_file: data file of neutron transmission
-        :param repeat: input is needed only if the exp data is a summed result of multiple runs, default: 1, type: int
+        :param norm_factor: input is needed only if the exp data is a summed result of multiple runs, default: 1, type: int
         :param folder: folder name in str under /ResoFit directory
         """
         _file_path = os.path.abspath(os.path.dirname(__file__))
@@ -31,16 +31,17 @@ class Experiment(object):
         self.spectra_file = spectra_file
         self.data_file = data_file
         # Error for 'repeat' int & >=1
-        if isinstance(repeat, int) is False:
-            raise ValueError("Repeat value must be an integer!")
-        elif repeat < 1:
-            raise ValueError("Repeat value must be an integer >= 1 !")
+        # if isinstance(norm_factor, int) is False:
+        #     raise ValueError("Repeat value must be an integer!")
+        # elif norm_factor < 1:
+        #     raise ValueError("Repeat value must be an integer >= 1 !")
 
         self.spectra = load_txt_csv(self.spectra_path)
         self.data = load_txt_csv(self.data_path)
-        self.repeat = repeat
+        # self.norm_factor = norm_factor
+        self.data[0] = self.data[0] / norm_factor
         self.img_start = 0
-        assert type(self.repeat) is int
+        # assert type(self.norm_factor) is int
 
         # detector position (m) for the actual measurement
         self.source_to_detector_m = 16.
@@ -124,7 +125,7 @@ class Experiment(object):
             _baseline = baseline
         assert type(baseline) == bool
 
-        y_exp_raw = np.array(self.data[0] / self.repeat)
+        y_exp_raw = np.array(self.data[0])
 
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw

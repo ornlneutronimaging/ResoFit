@@ -58,7 +58,7 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=repeat,
+                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 

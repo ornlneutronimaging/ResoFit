@@ -28,7 +28,7 @@ x_axis = 'lambda'
 # # Calibrate the peak positions
 experiment1 = Experiment(data_file=data_file1,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 experiment1.norm_to(ob_file1)
 experiment1.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
@@ -37,7 +37,7 @@ experiment1.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 
 experiment2 = Experiment(data_file=data_file2,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 experiment2.norm_to(ob_file2)
 experiment2.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
@@ -46,7 +46,7 @@ experiment2.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 
 experiment3 = Experiment(data_file=data_file3,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 experiment3.norm_to(ob_file3)
 experiment3.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
@@ -55,7 +55,7 @@ experiment3.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,
 
 experiment4 = Experiment(data_file=data_file4,
                          spectra_file=spectra_file,
-                         repeat=repeat,
+                         norm_factor=repeat,
                          folder=folder)
 experiment4.norm_to(ob_file4)
 experiment4.plot(offset_us=offset_us, source_to_detector_m=source_to_detector_m,

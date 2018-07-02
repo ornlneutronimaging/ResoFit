@@ -22,7 +22,7 @@ class FitResonance(object):
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  database='ENDF_VII'):
-        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, folder=folder, repeat=repeat)
+        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, folder=folder, norm_factor=repeat)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step

@@ -7,8 +7,8 @@ from ResoFit._utilities import Layer
 import pprint
 
 # Global parameters
-energy_min = 14
-energy_max = 500
+energy_min = 4.09
+energy_max = 1000
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layers = Layer()
@@ -28,17 +28,17 @@ layers.add_layer(layer='Ag', thickness_mm=0.025)
 folder = 'data/IPTS_13639/reso_data_13639'
 data_file = 'Ag.csv'
 spectra_file = 'spectra.csv'
-image_start = 500  # Can be omitted or =None
-image_end = 1600  # Can be omitted or =None
+image_start = 300  # Can be omitted or =None
+image_end = 2700  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'ob_all.csv'
-baseline = True
-each_step = False
+baseline = False
+each_step = True
 
-repeat = 1
-source_to_detector_m = 16.123278721983177  # 16#16.445359069030175#16.447496101100739
-offset_us = -12112.494119089204  # 0#2.7120797253959119#2.7355447625559037
+repeat = 1.2
+source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
+offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -47,7 +47,7 @@ calibration = Calibration(data_file=data_file,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          repeat=repeat,
+                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
@@ -58,23 +58,25 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres=0.1, min_dist=10)
+calibration.index_peak(thres=0.05, min_dist=10, map_min_dist=10, map_thres=0.05)
 # calibration.analyze_peak()
-calibration.plot(y_type='attenuation',
-                 # y_type='transmission',
-                 x_type='energy',
-                 # t_unit='ms',
-                 # before=True,
-                 # interp=True,
-                 # mixed=True,
-                 # peak_exp='all',
-                 table=False,
-                 peak_exp='indexed',
-                 peak_height=True,
-                 index_level='iso',
-                 peak_id='all',
-                 logx=True,
-                 )
+calibration.plot(
+    y_type='attenuation',
+    # y_type='transmission',
+    x_type='energy',
+    # t_unit='ms',
+    # before=True,
+    # interp=True,
+    mixed=True,
+    # peak_exp='all',
+    table=False,
+    peak_exp='indexed',
+    peak_height=True,
+    index_level='iso',
+    peak_id='all',
+    logx=True,
+)
+plt.xlim(left=0, right=1000)
 plt.show()
 
 df = calibration.export(y_type='attenuation',
