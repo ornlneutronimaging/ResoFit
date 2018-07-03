@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 x_type_list = ['energy', 'lambda', 'time', 'number']
 y_type_list = ['transmission', 'attenuation']
 t_unit_list = ['s', 'ms', 'us', 'ns']
-peak_type_list = ['indexed', 'all', 'none']
+peak_type_list = ['indexed', 'all']
+# peak_type_list = ['indexed', 'all', 'none']
 index_level_list = ['iso', 'ele']
 peak_model_list = ['Gaussian', 'Lorentzian']
 

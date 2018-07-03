@@ -91,9 +91,12 @@ class Calibration(object):
             _run = False
 
         self.params_to_calibrate = Parameters()
-        self.params_to_calibrate.add('source_to_detector_m', value=source_to_detector_m,
+        self.params_to_calibrate.add('source_to_detector_m',
+                                     value=source_to_detector_m,
                                      vary=source_to_detector_vary_tag)
-        self.params_to_calibrate.add('offset_us', value=offset_us, vary=offset_vary_tag)
+        self.params_to_calibrate.add('offset_us',
+                                     value=offset_us,
+                                     vary=offset_vary_tag)
         # Print before
         print("+----------------- Calibration -----------------+\nParams before:")
         self.params_to_calibrate.pretty_print()
@@ -121,6 +124,14 @@ class Calibration(object):
             print("\ncalibrate() was not run as requested, input values used:\n"
                   "calibrated_offset_us = {}\ncalibrated_source_to_detector_m = {}".format(offset_us,
                                                                                            source_to_detector_m))
+            self.experiment.xy_scaled(energy_min=self.energy_min,
+                                      energy_max=self.energy_max,
+                                      energy_step=self.energy_step,
+                                      x_type='energy',
+                                      y_type='attenuation',
+                                      offset_us=offset_us,
+                                      source_to_detector_m=source_to_detector_m,
+                                      baseline=self.experiment.baseline)
 
     def __find_peak(self, thres=0.15, min_dist=2):
         # load detected peak with x in image number
@@ -424,14 +435,14 @@ class Calibration(object):
         if table:
             # ax2 = plt.subplot2grid(shape=(10, 7), loc=(0, 1), rowspan=4, colspan=5)
             # ax2.axis('off')
-            columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
+            # columns = list(self.calibrate_result.__dict__['params'].valuesdict().keys())
             columns_to_show = [r'$L$ (m)', r'$\Delta t$ ($\rm{\mu}$s)']
             rows = ['Before', 'After']
-            _row_before = []
-            _row_after = []
-            for _each in columns:
-                _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
-                _row_before.append(self.params_to_calibrate.valuesdict()[_each])
+            _row_before = [self.init_source_to_detector_m, self.init_offset_us]
+            _row_after = [self.calibrated_source_to_detector_m, self.calibrated_offset_us]
+            # for _each in columns:
+            #     _row_after.append(self.calibrate_result.__dict__['params'].valuesdict()[_each])
+            #     _row_before.append(self.params_to_calibrate.valuesdict()[_each])
             table = ax1.table(rowLabels=rows, colLabels=columns_to_show,  # colWidths=
                               cellText=[_row_before, _row_after],  # rows of data values
                               bbox=[0, -0.33, 1.0, 0.18]  # [left,bottom,width,height]

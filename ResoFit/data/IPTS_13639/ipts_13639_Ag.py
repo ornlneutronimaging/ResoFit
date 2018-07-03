@@ -34,7 +34,7 @@ image_end = 2700  # Can be omitted or =None
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'ob_all.csv'
 baseline = False
-each_step = True
+each_step = False
 
 norm_factor = 1.2
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
@@ -57,7 +57,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres=0.05, min_dist=10, map_min_dist=10, map_thres=0.05)
+calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
 # calibration.analyze_peak()
 calibration.plot(
     y_type='attenuation',
@@ -66,17 +66,17 @@ calibration.plot(
     # t_unit='ms',
     # before=True,
     # interp=True,
-    mixed=True,
+    # mixed=True,
     # peak_exp='all',
-    table=False,
+    # table=False,
     peak_exp='indexed',
-    peak_height=True,
+    peak_height=False,
     index_level='iso',
     peak_id='all',
     logx=True,
 )
 plt.xlim(left=0, right=1000)
-plt.show()
+# plt.show()
 
 df = calibration.export(y_type='attenuation',
                         # y_type='transmission',

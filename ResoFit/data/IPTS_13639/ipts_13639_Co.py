@@ -33,10 +33,10 @@ image_end = 2725  # Can be omitted or =None
 # norm_to_file = 'ob_1.csv'  #'Ag.csv'
 # norm_to_file = 'Ag.csv'
 norm_to_file = 'Ag.csv'
-baseline = False
+baseline = True
 each_step = False
 
-repeat = 1
+repeat = 1.1
 source_to_detector_m = 16.126845685903064  # 16#16.445359069030175#16.447496101100739
 offset_us = -12112.431834715671  # 0#2.7120797253959119#2.7355447625559037
 
@@ -63,7 +63,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres=0.1, min_dist=10)
+calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
 # calibration.analyze_peak()
 calibration.plot(
     y_type='attenuation',
@@ -84,15 +84,15 @@ calibration.plot(
 plt.xlim(left=0, right=1000)
 plt.show()
 
-# df = calibration.export(y_type='attenuation',
-#                         # y_type='transmission',
-#                         x_type='energy',
-#                         # t_unit='ms',
-#                         # before=True,
-#                         # interp=True,
-#                         # mixed=True,
-#                         index_level='iso',
-#                         peak_id='all')
+df = calibration.export(y_type='attenuation',
+                        # y_type='transmission',
+                        x_type='energy',
+                        # t_unit='ms',
+                        # before=True,
+                        # interp=True,
+                        # mixed=True,
+                        index_level='iso',
+                        peak_id='all')
 
 # # Fit the peak height
 # fit = FitResonance(folder=folder,
