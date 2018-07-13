@@ -263,7 +263,7 @@ class Experiment(object):
                     df.drop(df.index[:self.slice_start], inplace=True)
                     if reset_index is True:
                         df.reset_index(drop=True, inplace=True)
-        # convert transmission into attenuation
+        # convert counts to transmission
         self.data[0] = (self.data[0] / df[0]) / norm_factor
 
     def find_peak(self, thres=0.15, min_dist=2, deg=7):
