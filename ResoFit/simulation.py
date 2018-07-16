@@ -192,7 +192,8 @@ class Simulation(object):
                 peak_dict[_iso] = {}
                 _iso_y = _stack_signal[_ele][_ele][_iso]['attenuation']
                 _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y, x_name='x',
-                                              thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+                                              thres=thres, min_dist=min_dist,
+                                              impr_reso=impr_reso)
                 peak_dict[_iso]['peak'] = _peak_df
             # Element
             peak_dict[_ele] = {}

@@ -32,8 +32,6 @@ class Calibration(object):
         :type energy_max:
         :param energy_step:
         :type energy_step:
-        :param norm_factor:
-        :type norm_factor:
         :param folder:
         :type folder:
         :param baseline: True -> to remove baseline/background by detrend
