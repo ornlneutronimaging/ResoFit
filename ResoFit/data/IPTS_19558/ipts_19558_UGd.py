@@ -1,33 +1,20 @@
-from ResoFit._utilities import Layer
 from ResoFit.calibration import Calibration
 from ResoFit.fitresonance import FitResonance
-import lmfit
+from ResoFit.experiment import Experiment
 import matplotlib.pyplot as plt
+import numpy as np
 import pprint
+from ResoFit._utilities import get_foil_density_gcm3
+from ResoFit._utilities import Layer
 
 # Global parameters
 energy_min = 7
-energy_max = 250
+energy_max = 1000
 energy_step = 0.01
-# Input sample name or names as str, case sensitive
-# layer = 'UGd'
-# thickness = 0.018  # mm
-# density = get_foil_density_gcm3(length_mm=25, width_mm=25, thickness_mm=0.025, mass_g=0.14)
-# density = None
-# density = 8.86
-layer_1 = 'U'
-thickness_1 = 0.085
-density_1 = None
-layer_2 = 'Gd'
-thickness_2 = 0.085
-density_2 = None
-# layer_3 = 'Cd'
-# thickness_3 = 0.015
-# density_3 = None
-layer = Layer()
-layer.add_layer(layer=layer_1, thickness_mm=thickness_1, density_gcm3=density_1)
-layer.add_layer(layer=layer_2, thickness_mm=thickness_2, density_gcm3=density_2)
-# layer.add_Layer(layer=layer_3, thickness_mm=thickness_3, density_gcm3=density_3)
+
+layers = Layer()
+layers.add_layer(layer='U', thickness_mm=0.018, density_gcm3=None)
+layers.add_layer(layer='Gd', thickness_mm=0.015, density_gcm3=None)
 
 folder = 'data/IPTS_19558/reso_data_19558'
 data_file = 'spheres.csv'
@@ -35,48 +22,54 @@ spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
+# norm_to_file = 'sphere_background_1.csv'
 baseline = True
 each_step = False
-before = False
-table = True
-grid = True
-peak_label = 'indexed'
-# items_to_plot = ['238-U', '235-U', 'Gd']
-# items_to_plot = ['U-238', 'Gd-156', 'U']
-# items_to_plot = [layer_1, layer_2]
-# items_to_plot = [layer_2]
-items_to_plot = None
 
-repeat = 1
-source_to_detector_m = 16.  # 16#16.445359069030175#16.447496101100739
-offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
+norm_factor = 0.99
+source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.579  # 0#2.7120797253959119#2.7355447625559037
 
-# Calibrate source_to_detector and/or delay
+# Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
                           spectra_file=spectra_file,
-                          layer=layer,
+                          layer=layers,
                           energy_min=energy_min,
                           energy_max=energy_max,
                           energy_step=energy_step,
-                          norm_factor=repeat,
                           folder=folder,
                           baseline=baseline)
 
-calibration.norm_to(norm_to_file)
-calibration.slice(slice_start=300, slice_end=image_end)
+calibration.experiment.norm_to(file=norm_to_file, norm_factor=norm_factor)
+calibration.experiment.slice(start=image_start, end=image_end,reset_index=True)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='all',
-                                         each_step=False)
-calibration.index_peak(thres=0.13, min_dist=21, rel_tol=0.0028, impr_reso=False)
-calibration.analyze_peak(report=False, show_fit=True)
+                                         each_step=each_step)
+calibration.index_peak(thres=0.12, min_dist=15, map_min_dist=15, map_thres=0.12)
+# calibration.analyze_peak(report=True)
 
-calibration.plot(before=False, mixed=False, table=table,
-                 peak_id=peak_label, peak_exp=False,
-                 grid=True, items_to_plot=items_to_plot, interp=False)
+calibration.plot(y_type='attenuation',
+                 # y_type='transmission',
+                 x_type='energy',
+                 # t_unit='ms',
+                 # before=True,
+                 # interp=True,
+                 mixed=True,
+                 table=False,
+                 # peak_exp='all',
+                 peak_height=True,
+                 index_level='ele',
+                 # peak_id='all',
+                 logx=False,
+                 )
+plt.xlim(left=0, right=400)
+plt.show()
+# calibration.plot(before=before, items_to_plot=items_to_plot)
+# calibration.plot(before=before, items_to_plot=['Gd', 'U*', '235-U'])
 
-# # Fit sample density or thickness
+# # Fit the peak height
 # fit = FitResonance(spectra_file=spectra_file,
 #                    data_file=data_file,
 #                    folder=folder,
@@ -90,13 +83,8 @@ calibration.plot(before=False, mixed=False, table=table,
 #                    slice_start=image_start,
 #                    slice_end=image_end,
 #                    baseline=baseline)
-# pprint.pprint(fit.fitted_simulation)
 # fit_result = fit.fit(layer, vary='density', each_step=each_step)
-#
-# # Fit isotope ratios (under development)
-# # fit.fit_iso(layer=layer_1, each_step=True)
-#
 # fit.molar_conc()
-# fit.index_peak(thres=0.11, min_dist=21)
-# fit.plot(before=before, table=table, grid=grid, peak_id=peak_label,
-#          items_to_plot=items_to_plot, interp=False, error=False)
+# # fit.fit_iso(layer=layer_1)
+# # fit.molar_conc()
+# fit.plot(before=before, items_to_plot=['Gd', 'U*', '235-U'])

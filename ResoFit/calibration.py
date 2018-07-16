@@ -284,7 +284,9 @@ class Calibration(object):
             _x = self.simulation.get_x(x_type=x_type,
                                        t_unit=t_unit,
                                        offset_us=self.calibrated_offset_us,
-                                       source_to_detector_m=self.calibrated_source_to_detector_m
+                                       source_to_detector_m=self.calibrated_source_to_detector_m,
+                                       t_start_us=self.experiment.t_start_us,
+                                       time_resolution_us=self.experiment.time_resolution_us,
                                        )
             _y = self.simulation.get_y(y_type=y_type)
             ax1.plot(_x, _y, 'b-', label=simu_label, linewidth=1)
@@ -368,16 +370,28 @@ class Calibration(object):
 
             if peak_id == 'all':
                 _current_peak_map = _peak_map_full
-                _tag = 'peak'
+                # _tag = 'ideal'
             else:  # peak_id == 'indexed'
                 _current_peak_map = _peak_map_indexed
-                _tag = 'ideal'
+            _tag = 'ideal'
 
             x_tag = fit_util.get_peak_tag(x_type=x_type)
 
             for _peak_name in _peak_name_list:
                 if len(_current_peak_map[_peak_name][_tag]) > 0:
-                    _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
+                    if x_tag in _current_peak_map[_peak_name][_tag].keys():  # peak_map_indexed
+                        _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
+                        if x_type == 'time':
+                            _peak_x = fit_util.convert_s(x=_peak_x, t_unit=t_unit)
+                    else:  # peak_map_full
+                        _peak_x = fit_util.convert_energy_to(x=_current_peak_map[_peak_name][_tag]['x'],
+                                                             x_type=x_type,
+                                                             offset_us=self.calibrated_offset_us,
+                                                             source_to_detector_m=self.calibrated_source_to_detector_m,
+                                                             t_unit=t_unit,
+                                                             t_start_us=self.experiment.t_start_us,
+                                                             time_resolution_us=self.experiment.time_resolution_us)
+
                     _peak_y = fit_util.convert_attenuation_to(y_type=y_type, y=_current_peak_map[_peak_name][_tag]['y'])
                     if peak_exp == 'indexed':
                         _legend_name = '_nolegend_'

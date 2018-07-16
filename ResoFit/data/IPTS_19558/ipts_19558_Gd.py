@@ -21,9 +21,9 @@ data_file = 'Gd_thick.csv'
 spectra_file = 'Image002_Spectra.txt'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-# norm_to_file = None  # 'sphere_background_1.csv'
+norm_to_file = None  # 'sphere_background_1.csv'
+# norm_to_file = 'Gd_thin.csv'
 # norm_to_file = 'sphere_background_1.csv'
-norm_to_file = 'Gd_thin.csv'
 baseline = False
 each_step = False
 

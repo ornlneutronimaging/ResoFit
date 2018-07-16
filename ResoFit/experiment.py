@@ -70,7 +70,10 @@ class Experiment(object):
         # store raw data (df)
         self.data_raw = self.data
         self.spectra_raw = self.spectra
-
+        self.t_start_us = fit_util.convert_s(self.spectra[0][0], t_unit='us')
+        # self.t_start_us = 5.2
+        self.time_resolution_us = fit_util.convert_s(self.spectra[0][2] - self.spectra[0][1], t_unit='us')
+        # self.time_resolution_us = 0.160
         # convert transmission into attenuation
         # self.data[0] = 1 - self.data[0]
 
@@ -105,7 +108,6 @@ class Experiment(object):
         x_exp_raw = fit_util.convert_energy_to(x=x_e, x_type=x_type, offset_us=self.offset_us,
                                                source_to_detector_m=self.source_to_detector_m, t_unit=t_unit,
                                                num_offset=self.img_start)
-
         return x_exp_raw
 
     def get_y(self, y_type='attenuation', baseline=None, deg=7):
@@ -243,28 +245,34 @@ class Experiment(object):
 
                 # return self.spectra[0], self.data[0]
 
-    def norm_to(self, file, reset_index=False, norm_factor=1):
+    def norm_to(self, file, norm_factor=1, reset_index=False):
         """
         Use specified file for normalization and save normalized data signal in self.data
 
         :param file: string. filename with suffix. ex: 'your_data.csv' inside the folder specified in __init__
+        :param norm_factor:
+        :type norm_factor:
         :param reset_index: True -> reset pd.Dataframe indexes after slicing
         :return: pd.DataFrame in place. normalized data signal in self.data
         """
-        _full_path = os.path.join(self.folder_path, file)
-        df = load_txt_csv(_full_path)
-        if len(self.data) != len(df):
-            if self.slice_start is None and self.slice_end is None:
-                raise ValueError("The length of the 'norm_to_file' is not equal to the length of the data file.")
-            else:
-                if self.slice_end is not None:
-                    df.drop(df.index[self.slice_end:], inplace=True)
-                if self.slice_start is not None:
-                    df.drop(df.index[:self.slice_start], inplace=True)
-                    if reset_index is True:
-                        df.reset_index(drop=True, inplace=True)
-        # convert counts to transmission
-        self.data[0] = (self.data[0] / df[0]) / norm_factor
+        if file is not None:
+            # Load file
+            _full_path = os.path.join(self.folder_path, file)
+            df = load_txt_csv(_full_path)
+            # Resize length
+            if len(self.data) != len(df):
+                if self.slice_start is None and self.slice_end is None:
+                    raise ValueError("The length of the 'norm_to_file' is not equal to the length of the data file.")
+                else:
+                    if self.slice_end is not None:
+                        df.drop(df.index[self.slice_end:], inplace=True)
+                    if self.slice_start is not None:
+                        df.drop(df.index[:self.slice_start], inplace=True)
+                        if reset_index is True:
+                            df.reset_index(drop=True, inplace=True)
+            self.data[0] = self.data[0] / df[0]
+        # Apply norm_factor
+        self.data[0] = self.data[0] / norm_factor
 
     def find_peak(self, thres=0.15, min_dist=2, deg=7):
         """

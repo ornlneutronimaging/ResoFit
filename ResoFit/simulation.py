@@ -98,7 +98,8 @@ class Simulation(object):
         # self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
-    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None, t_unit='us'):
+    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None, t_unit='us',
+              t_start_us=None, time_resolution_us=None):
         """
         Get x by specified type
 
@@ -117,7 +118,9 @@ class Simulation(object):
                                        x_type=x_type,
                                        offset_us=offset_us,
                                        source_to_detector_m=source_to_detector_m,
-                                       t_unit=t_unit)
+                                       t_unit=t_unit,
+                                       t_start_us=t_start_us,
+                                       time_resolution_us=time_resolution_us)
         return x
 
     def get_y(self, y_type='attenuation'):
@@ -194,22 +197,24 @@ class Simulation(object):
                 _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y, x_name='x',
                                               thres=thres, min_dist=min_dist,
                                               impr_reso=impr_reso)
-                peak_dict[_iso]['peak'] = _peak_df
+                peak_dict[_iso]['ideal'] = _peak_df
             # Element
             peak_dict[_ele] = {}
             _ele_y = _stack_signal[_ele][_ele]['attenuation']
             _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_y, x_name='x',
                                           thres=thres, min_dist=min_dist,
                                           impr_reso=impr_reso)
-            peak_dict[_ele]['peak'] = _peak_df
+            peak_dict[_ele]['ideal'] = _peak_df
         return peak_dict
 
     def plot(self, y_type='attenuation', x_type='energy',
              logx=False, logy=False,
              mixed=True, all_layers=False, all_elements=False,
              all_isotopes=False, items_to_plot=None, time_unit='us', offset_us=0.,
+             source_to_detector_m=16.,
+             t_start_us=1,
              time_resolution_us=0.16,
-             source_to_detector_m=16., t_start_us=1, ax_mpl=None,
+             ax_mpl=None,
              fmt='-', ms=2, lw=1.5, alpha=1):
         if len(self.layer_list) == 0:
             raise ValueError("No layer has been added.")

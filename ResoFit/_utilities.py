@@ -27,7 +27,10 @@ def check_if_in_list(name, name_list):
         raise ValueError("'{}' is not valid, only support: '{}'".format(name, name_list))
 
 
-def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us', num_offset=0):
+def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us',
+                      num_offset=0,
+                      time_resolution_us=None,
+                      t_start_us=None):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(t_unit, t_unit_list)
     if x_type == 'lambda':
@@ -42,7 +45,14 @@ def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_un
                               array=x)
         x = convert_s(x=x, t_unit=t_unit)
     if x_type == 'number':
-        x = np.array(range(len(x))) + num_offset
+        if time_resolution_us is not None:
+            x = reso_util.ev_to_image_number(offset_us=offset_us,
+                                             source_to_detector_m=source_to_detector_m,
+                                             array=x,
+                                             time_resolution_us=time_resolution_us,
+                                             t_start_us=t_start_us)
+        else:
+            x = np.array(range(len(x))) + num_offset
     return x
 
 
@@ -436,8 +446,8 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
         _df = pd.DataFrame()
         _df_ideal = pd.DataFrame()
         peak_map_indexed[_peak_name] = {}
-        _peak_x = peak_map[_peak_name]['peak']['x']
-        _peak_y = peak_map[_peak_name]['peak']['y']
+        _peak_x = peak_map[_peak_name]['ideal']['x']
+        _peak_y = peak_map[_peak_name]['ideal']['y']
         _x_indexed_list = []
         _x_num_indexed_list = []
         _x_num_o_indexed_list = []
@@ -582,19 +592,20 @@ class Peak(object):
         pars = model.guess(_y, x=_x)
         self.prefix_list = []
         for _ele in _peak_map_indexed.keys():
-            for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
-                _prefix = _ele + '_' + str(_ind) + '_'
-                if fit_model == 'Gaussian':
-                    _model = lmfit.models.GaussianModel(prefix=_prefix)
-                else:  # fit_model == 'Lorentzian':
-                    _model = lmfit.models.LorentzianModel(prefix=_prefix)
-                _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
-                pars.update(_model.make_params())
-                pars[_prefix + 'amplitude'].value = 3.0
-                pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
-                pars[_prefix + 'sigma'].set(2.0, min=0.5, max=50)
-                model += _model
-                self.prefix_list.append(_prefix)
+            if '-' not in _ele:
+                for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
+                    _prefix = _ele + '_' + str(_ind) + '_'
+                    if fit_model == 'Gaussian':
+                        _model = lmfit.models.GaussianModel(prefix=_prefix)
+                    else:  # fit_model == 'Lorentzian':
+                        _model = lmfit.models.LorentzianModel(prefix=_prefix)
+                    _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
+                    pars.update(_model.make_params())
+                    pars[_prefix + 'amplitude'].value = 3.0
+                    pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
+                    pars[_prefix + 'sigma'].set(2.0, min=0.5, max=50)
+                    model += _model
+                    self.prefix_list.append(_prefix)
         _out = model.fit(_y, pars, x=_x)
         self.shape_report = _out
         self.__fwhm()
@@ -630,8 +641,9 @@ class Peak(object):
         self.fwhm_df = _fwhm_df
 
     def __fill_img_num_to_peak_map_indexed(self):
-        if self.x_s is None:
-            raise ValueError("Column of x in time (s) has not been added.")
+        assert 'x_s' in self.peak_df.keys()
+        # if self.x_s is None:
+        #     raise ValueError("Column of x in time (s) has not been added.")
         _peak_map_indexed = self.peak_map_indexed
         _fwhm_df = self.fwhm_df
         for _ele in _peak_map_indexed.keys():
@@ -651,13 +663,14 @@ class Peak(object):
         self.peak_map_indexed = _peak_map_indexed
 
     def fill_peak_span(self, offset_us, source_to_detector_m):
-        assert self.x_s is not None
-
+        assert 'x_s' in self.peak_df.keys()
         for _keys in self.peak_map_indexed.keys():
             _live_location = self.peak_map_indexed[_keys]['peak_span']
             _img_num_list = _live_location['img_num']
-            _live_location['time_s'] = list(self.x_s.reindex(_img_num_list))
-            _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.reindex(_img_num_list)),
+            # _live_location['time_s'] = list(self.x_s.reindex(_img_num_list))
+            _live_location['time_s'] = list(self.peak_df['x_s'].reindex(_img_num_list))
+            # _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.reindex(_img_num_list)),
+            _live_location['energy_ev'] = reso_util.s_to_ev(array=_live_location['time_s'],
                                                             offset_us=offset_us,
                                                             source_to_detector_m=source_to_detector_m)
             _live_location['y'] = list(self.y.reindex(_img_num_list))
