@@ -109,7 +109,7 @@ class TestExperiment(unittest.TestCase):
 
         self.assertAlmostEqual(x_interp[1] - x_interp[0], self.energy_step, delta=self.energy_step / 1000)
 
-    def test_x_raw(self):
+    def test_get_x(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
         _x_returned = experiment.get_x(x_type='energy', offset_us=0., source_to_detector_m=15)
         _x_expected = np.array([5.825324e+00,
@@ -130,7 +130,7 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(_x_returned[-3], _x_expected[-3], delta=0.000001)
         self.assertAlmostEqual(_x_returned[-4], _x_expected[-4], delta=0.000001)
 
-    def test_y_raw(self):
+    def test_get_y(self):
         experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
         _y_returned = experiment.get_y(y_type='transmission', baseline=False)
         _y_expected = np.array([1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091])

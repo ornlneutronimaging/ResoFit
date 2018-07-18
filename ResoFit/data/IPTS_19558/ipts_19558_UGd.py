@@ -19,7 +19,7 @@ layers.add_layer(layer='Gd', thickness_mm=0.015, density_gcm3=None)
 folder = 'data/IPTS_19558/reso_data_19558'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
-image_start = None  # Can be omitted or =None
+image_start = 200  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 # norm_to_file = 'sphere_background_1.csv'
@@ -27,8 +27,8 @@ baseline = True
 each_step = False
 
 norm_factor = 0.99
-source_to_detector_m = 16.44  # 16#16.445359069030175#16.447496101100739
-offset_us = 2.579  # 0#2.7120797253959119#2.7355447625559037
+source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
+offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -41,30 +41,30 @@ calibration = Calibration(data_file=data_file,
                           baseline=baseline)
 
 calibration.experiment.norm_to(file=norm_to_file, norm_factor=norm_factor)
-calibration.experiment.slice(start=image_start, end=image_end,reset_index=True)
+calibration.experiment.slice(start=image_start, end=image_end)
 
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
 calibration.index_peak(thres=0.12, min_dist=15, map_min_dist=15, map_thres=0.12)
-# calibration.analyze_peak(report=True)
+calibration.analyze_peak(report=True)
 
 calibration.plot(y_type='attenuation',
                  # y_type='transmission',
-                 x_type='energy',
-                 # t_unit='ms',
+                 x_type='number',
+                 # t_unit='ns',
                  # before=True,
                  # interp=True,
                  mixed=True,
                  table=False,
-                 # peak_exp='all',
+                 peak_exp='all',
                  peak_height=True,
                  index_level='ele',
                  # peak_id='all',
                  logx=False,
                  )
-plt.xlim(left=0, right=400)
+# plt.xlim(left=0, right=400)
 plt.show()
 # calibration.plot(before=before, items_to_plot=items_to_plot)
 # calibration.plot(before=before, items_to_plot=['Gd', 'U*', '235-U'])

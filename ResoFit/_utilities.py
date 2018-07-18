@@ -27,7 +27,8 @@ def check_if_in_list(name, name_list):
         raise ValueError("'{}' is not valid, only support: '{}'".format(name, name_list))
 
 
-def convert_energy_to(x_type, x, offset_us=None, source_to_detector_m=None, t_unit='us',
+def convert_energy_to(x_type, x,
+                      offset_us=None, source_to_detector_m=None, t_unit='us',
                       num_offset=0,
                       time_resolution_us=None,
                       t_start_us=None):
@@ -173,7 +174,7 @@ def get_foil_density_gcm3(length_mm, width_mm, thickness_mm, mass_g):
     return density_gcm3
 
 
-def set_plt(ax, fig_title, grid, x_type, y_type, t_unit, logx):
+def set_plt(ax, fig_title, grid, x_type, y_type, t_unit, logx, logy):
     check_if_in_list(x_type, x_type_list)
     check_if_in_list(y_type, y_type_list)
     ax.set_title(fig_title)
@@ -203,6 +204,8 @@ def set_plt(ax, fig_title, grid, x_type, y_type, t_unit, logx):
         ax.grid()
     if logx:
         ax.set_xscale('log')
+    if logy:
+        ax.set_yscale('log')
     return ax
 
 
@@ -592,6 +595,7 @@ class Peak(object):
         pars = model.guess(_y, x=_x)
         self.prefix_list = []
         for _ele in _peak_map_indexed.keys():
+            print(_ele)
             if '-' not in _ele:
                 for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
                     _prefix = _ele + '_' + str(_ind) + '_'

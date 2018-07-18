@@ -207,7 +207,7 @@ class Experiment(object):
                                               offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
         return x_interp, y_interp
 
-    def slice(self, start=None, end=None, reset_index=False):
+    def slice(self, start=None, end=None):
         """
         Slice the signal by image number
 
@@ -239,11 +239,11 @@ class Experiment(object):
             self.slice_start = start
             # raw image number saved
             self.img_num = self.data.index.values
-            if reset_index is True:
-                self.spectra.reset_index(drop=True, inplace=True)
-                self.data.reset_index(drop=True, inplace=True)
-
-                # return self.spectra[0], self.data[0]
+            # Disabled reset_index #
+            # if reset_index is True:
+            #     self.spectra.reset_index(drop=True, inplace=True)
+            #     self.data.reset_index(drop=True, inplace=True)
+            #     self.img_start = 0
 
     def norm_to(self, file, norm_factor=1, reset_index=False):
         """
@@ -274,12 +274,14 @@ class Experiment(object):
         # Apply norm_factor
         self.data[0] = self.data[0] / norm_factor
 
-    def find_peak(self, thres=0.15, min_dist=2, deg=7):
+    def find_peak(self, thres=0.15, min_dist=2, baseline=None, deg=7):
         """
         find and return x and y of detected peak in pd.DataFrame
         x is image number from data file. type (int)
         y is attenuation
-        Note: impr_reso for finding peak is disable here to make sure the output image_num is integer
+        Note: impr_reso for finding peak is disabled here to make sure the output image_num is integer
+        :param baseline:
+        :type baseline:
         :param thres:
         :type thres:
         :param min_dist:
@@ -292,21 +294,20 @@ class Experiment(object):
         """
         _y = self.data[0][:]
         _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
-
         _y = 1 - _y  # force to peaks
-        if self.baseline:
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
+        if _baseline:
             _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
-
         self.o_peak = fit_util.Peak()
-        self.o_peak.find(x=_x, y=_y, y_name='y',
-                         thres=thres, min_dist=min_dist, impr_reso=False)
-        self.o_peak._extend_x_cols(offset_us=self.offset_us,
-                                   source_to_detector_m=self.source_to_detector_m)
+        self.o_peak.find(x=_x, y=_y, y_name='y', thres=thres, min_dist=min_dist, impr_reso=False)
         if len(self.o_peak.peak_df) < 1:
             raise ValueError("No peak has been detected.")
         return self.o_peak.peak_df
 
-    def scale_peak_with_ev(self, energy_min, energy_max):
+    def _scale_peak_with_ev(self, energy_min, energy_max, offset_us=None, source_to_detector_m=None):
         """
 
         :param energy_min:
@@ -320,15 +321,20 @@ class Experiment(object):
         :return:
         :rtype:
         """
-        self.o_peak._scale_peak_df(energy_min=energy_min, energy_max=energy_max, )
+        if offset_us is not None:
+            self.offset_us = offset_us
+        if source_to_detector_m is not None:
+            self.source_to_detector_m = source_to_detector_m
+        self.o_peak._extend_x_cols(offset_us=self.offset_us,
+                                   source_to_detector_m=self.source_to_detector_m)
+        self.o_peak._scale_peak_df(energy_min=energy_min, energy_max=energy_max)
         assert self.o_peak.peak_df_scaled is not None
         return self.o_peak.peak_df_scaled
 
-    def plot(self, xmax=None,
-             # energy_xmax=150, lambda_xmax=None,
+    def plot(self,
              y_type='transmission', baseline=None, deg=7,
              x_type='time', t_unit='us', offset_us=None, source_to_detector_m=None,
-             logx=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1, grid=False):
+             logx=False, logy=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1, grid=False):
         """
         Display the loaded signal from data and spectra files.
         """
@@ -348,41 +354,11 @@ class Experiment(object):
         if ax_mpl is None:
             fig, ax_mpl = plt.subplots()
         """X-axis"""
-        # determine values and labels for x-axis with options from
-        # 'energy(eV)' & 'lambda(A)' & 'time(us)' & 'image number(#)'
-        # if x_type in ['energy', 'lambda']:
-        #     if x_type == 'energy':
-        #         x_axis_label = 'Energy (eV)'
-        #         ax_mpl.set_xlim(xmin=0, xmax=energy_xmax)
-        #     else:
-        #         x_axis_label = u"Wavelength (\u212B)"
-        #         if lambda_xmax is not None:
-        #             ax_mpl.set_xlim(xmin=0, xmax=lambda_xmax)
         x_exp_raw = self.get_x(x_type=x_type,
                                t_unit=t_unit,
                                offset_us=self.offset_us,
                                source_to_detector_m=self.source_to_detector_m)
-
-        # if x_type in ['time', 'number']:
-        #
-        #     if x_type == 'time':
-        #         if t_unit == 's':
-        #             x_axis_label = 'Time (s)'
-        #             x_exp_raw = self.spectra[0][:]
-        #         if t_unit == 'us':
-        #             x_axis_label = 'Time (us)'
-        #             x_exp_raw = 1e6 * self.spectra[0][:]
-        #         if t_unit == 'ns':
-        #             x_axis_label = 'Time (ns)'
-        #             x_exp_raw = 1e9 * self.spectra[0][:]
-        #
-        #     if x_type == 'number':
-        #         # x_axis_label = 'Image number (#)'
-        #         x_exp_raw = self.data.index.values
-
         """Y-axis"""
-        # Determine to plot transmission or attenuation
-        # Determine to put transmission or attenuation words for y-axis
         y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
         # if y_type == 'transmission':
         #     y_axis_label = 'Neutron Transmission'
@@ -398,15 +374,26 @@ class Experiment(object):
         #     df.to_csv(filename)
 
         # Plot
-        if logx:
-            ax_mpl.semilogx(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
-                            ms=ms, lw=lw, alpha=alpha)
-        else:
-            ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
-                        ms=ms, lw=lw, alpha=alpha)
+        ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
+                    ms=ms, lw=lw, alpha=alpha)
 
+        if self.o_peak.peak_df_scaled is not None:
+            _current_peak_df = self.o_peak.peak_df_scaled
+        elif self.o_peak.peak_df is not None:
+            _current_peak_df = self.o_peak.peak_df
+        else:
+            _current_peak_df = None
+        if _current_peak_df is not None:
+            _x_tag = fit_util.get_peak_tag(x_type=x_type)
+            ax_mpl.scatter(_current_peak_df[_x_tag],
+                           _current_peak_df['y'],
+                           c='k',
+                           marker='x',
+                           # s=30,
+                           # marker='o',
+                           # facecolors='none',
+                           # edgecolors='k',
+                           label='_nolegend_')
         ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid,
-                                  x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx)
-        if xmax is not None:
-            ax_mpl.set_xlim(right=xmax)
+                                  x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx, logy=logy)
         return ax_mpl
