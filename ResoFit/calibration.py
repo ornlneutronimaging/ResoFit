@@ -553,9 +553,9 @@ class Calibration(object):
 
             x_tag = fit_util.get_peak_tag(x_type=x_type)
             for _peak_name in _peak_map_indexed.keys():
-                if len(_peak_map_full[_peak_name]['peak']) > 0:
-                    _x_peak_ideal_all = _peak_map_full[_peak_name]['peak'][x_tag]
-                    _y_peak_ideal_all = _peak_map_full[_peak_name]['peak']['y']
+                if len(_peak_map_full[_peak_name]['ideal']) > 0:
+                    _x_peak_ideal_all = _peak_map_full[_peak_name]['ideal'][x_tag]
+                    _y_peak_ideal_all = _peak_map_full[_peak_name]['ideal']['y']
                     _df['x_peak_ideal_all(' + _peak_name + ')'] = _x_peak_ideal_all
                     _df['y_peak_ideal_all(' + _peak_name + ')'] = _y_peak_ideal_all
                 if len(_peak_map_indexed[_peak_name]['ideal']) > 0:
