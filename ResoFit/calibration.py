@@ -358,92 +358,93 @@ class Calibration(object):
                         # edgecolors='k',
                         label='_nolegend_')
         # plot peaks detected and indexed
-        if self.experiment.o_peak.peak_map_indexed is not None:
-            if y_type == 'transmission':
-                _start_point = 1
-                ax1.set_ylim(top=1.1, bottom=-0.01)
-                _pos = 1.05
-            else:
-                _start_point = 0
-                ax1.set_ylim(top=1.01, bottom=-0.1)
-                _pos = -0.05
-            _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
-            _peak_map_full = self.experiment.o_peak.peak_map_full
+        if self.experiment.o_peak is not None:
+            if self.experiment.o_peak.peak_map_indexed is not None:
+                if y_type == 'transmission':
+                    _start_point = 1
+                    ax1.set_ylim(top=1.1, bottom=-0.01)
+                    _pos = 1.05
+                else:
+                    _start_point = 0
+                    ax1.set_ylim(top=1.01, bottom=-0.1)
+                    _pos = -0.05
+                _peak_map_indexed = self.experiment.o_peak.peak_map_indexed
+                _peak_map_full = self.experiment.o_peak.peak_map_full
 
-            if index_level == 'iso':
-                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
-            else:
-                _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
+                if index_level == 'iso':
+                    _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' in _name]
+                else:
+                    _peak_name_list = [_name for _name in _peak_map_indexed.keys() if '-' not in _name]
 
-            if peak_id == 'all':
-                _current_peak_map = _peak_map_full
-                # _tag = 'ideal'
-            else:  # peak_id == 'indexed'
-                _current_peak_map = _peak_map_indexed
-            _tag = 'ideal'
+                if peak_id == 'all':
+                    _current_peak_map = _peak_map_full
+                    # _tag = 'ideal'
+                else:  # peak_id == 'indexed'
+                    _current_peak_map = _peak_map_indexed
+                _tag = 'ideal'
 
-            for _peak_name in _peak_name_list:
-                if len(_current_peak_map[_peak_name][_tag]) > 0:
-                    if x_tag in _current_peak_map[_peak_name][_tag].keys():  # peak_map_indexed
-                        _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
-                        if x_type == 'time':
-                            _peak_x = fit_util.convert_s(x=_peak_x, t_unit=t_unit)
-                    else:  # peak_map_full
-                        _peak_x = fit_util.convert_energy_to(x=_current_peak_map[_peak_name][_tag]['x'],
-                                                             x_type=x_type,
-                                                             offset_us=self.calibrated_offset_us,
-                                                             source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                             t_unit=t_unit,
-                                                             t_start_us=self.experiment.t_start_us,
-                                                             time_resolution_us=self.experiment.time_resolution_us)
+                for _peak_name in _peak_name_list:
+                    if len(_current_peak_map[_peak_name][_tag]) > 0:
+                        if x_tag in _current_peak_map[_peak_name][_tag].keys():  # peak_map_indexed
+                            _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
+                            if x_type == 'time':
+                                _peak_x = fit_util.convert_s(x=_peak_x, t_unit=t_unit)
+                        else:  # peak_map_full
+                            _peak_x = fit_util.convert_energy_to(x=_current_peak_map[_peak_name][_tag]['x'],
+                                                                 x_type=x_type,
+                                                                 offset_us=self.calibrated_offset_us,
+                                                                 source_to_detector_m=self.calibrated_source_to_detector_m,
+                                                                 t_unit=t_unit,
+                                                                 t_start_us=self.experiment.t_start_us,
+                                                                 time_resolution_us=self.experiment.time_resolution_us)
 
-                    _peak_y = fit_util.convert_attenuation_to(y_type=y_type, y=_current_peak_map[_peak_name][_tag]['y'])
-                    if peak_exp == 'indexed':
-                        _legend_name = '_nolegend_'
-                    else:
-                        _legend_name = _peak_name
-                    _current_color = next(color_cycle)
-                    _current_style = next(style_cycle)
-                    ax1.plot(_peak_x,
-                             [_pos] * len(_peak_x),
-                             '|', ms=10,
-                             color=_current_color,
-                             label=_legend_name)
-                    if peak_height:
+                        _peak_y = fit_util.convert_attenuation_to(y_type=y_type, y=_current_peak_map[_peak_name][_tag]['y'])
+                        if peak_exp == 'indexed':
+                            _legend_name = '_nolegend_'
+                        else:
+                            _legend_name = _peak_name
+                        _current_color = next(color_cycle)
+                        _current_style = next(style_cycle)
                         ax1.plot(_peak_x,
-                                 _peak_y,
-                                 '_',
-                                 # marker=next(style_cycle_1),
-                                 # ms=4,
+                                 [_pos] * len(_peak_x),
+                                 '|', ms=10,
                                  color=_current_color,
-                                 label='_nolegend_')
-                        ax1.vlines(_peak_x,
-                                   _start_point,
-                                   _peak_y,
-                                   color=_current_color,
-                                   alpha=1,
-                                   label='_nolegend_')
+                                 label=_legend_name)
+                        if peak_height:
+                            ax1.plot(_peak_x,
+                                     _peak_y,
+                                     '_',
+                                     # marker=next(style_cycle_1),
+                                     # ms=4,
+                                     color=_current_color,
+                                     label='_nolegend_')
+                            ax1.vlines(_peak_x,
+                                       _start_point,
+                                       _peak_y,
+                                       color=_current_color,
+                                       alpha=1,
+                                       label='_nolegend_')
 
-                    if peak_exp == 'indexed':
-                        _peak_x_exp = fit_util.convert_exp_peak_df(x_type=x_type,
-                                                                   peak_df=_peak_map_indexed[_peak_name]['exp'],
-                                                                   t_unit=t_unit)
-                        _peak_y_exp = fit_util.convert_attenuation_to(y_type=y_type,
-                                                                      y=_peak_map_indexed[_peak_name]['exp']['y'])
-                        ax1.scatter(_peak_x_exp,
-                                    _peak_y_exp,
-                                    marker=_current_style,
-                                    # ms=4,
-                                    color=_current_color,
-                                    label=_peak_name)
+                        if peak_exp == 'indexed':
+                            _peak_x_exp = fit_util.convert_exp_peak_df(x_type=x_type,
+                                                                       peak_df=_peak_map_indexed[_peak_name]['exp'],
+                                                                       t_unit=t_unit)
+                            _peak_y_exp = fit_util.convert_attenuation_to(y_type=y_type,
+                                                                          y=_peak_map_indexed[_peak_name]['exp']['y'])
+                            ax1.scatter(_peak_x_exp,
+                                        _peak_y_exp,
+                                        marker=_current_style,
+                                        # ms=4,
+                                        color=_current_color,
+                                        label=_peak_name)
 
-                    if 'peak_span' in _peak_map_indexed[_peak_name].keys():
-                        if len(_peak_map_indexed[_peak_name]['exp']) > 0:
-                            _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
-                            _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
-                            ax1.scatter(_data_point_x,
-                                        _data_point_y,
-                                        label='_nolegend_')
+                        if 'peak_span' in _peak_map_indexed[_peak_name].keys():
+                            if len(_peak_map_indexed[_peak_name]['exp']) > 0:
+                                _data_point_x = _peak_map_indexed[_peak_name]['peak_span']['energy_ev']
+                                _data_point_y = _peak_map_indexed[_peak_name]['peak_span']['y']
+                                ax1.scatter(_data_point_x,
+                                            _data_point_y,
+                                            label='_nolegend_')
 
         # Set plot limit and captions
         ax1 = fit_util.set_plt(ax1, fig_title=fig_title, grid=grid,

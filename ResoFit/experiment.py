@@ -376,24 +376,24 @@ class Experiment(object):
         # Plot
         ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
                     ms=ms, lw=lw, alpha=alpha)
-
-        if self.o_peak.peak_df_scaled is not None:
-            _current_peak_df = self.o_peak.peak_df_scaled
-        elif self.o_peak.peak_df is not None:
-            _current_peak_df = self.o_peak.peak_df
-        else:
-            _current_peak_df = None
-        if _current_peak_df is not None:
-            _x_tag = fit_util.get_peak_tag(x_type=x_type)
-            ax_mpl.scatter(_current_peak_df[_x_tag],
-                           _current_peak_df['y'],
-                           c='k',
-                           marker='x',
-                           # s=30,
-                           # marker='o',
-                           # facecolors='none',
-                           # edgecolors='k',
-                           label='_nolegend_')
+        if self.o_peak is not None:
+            if self.o_peak.peak_df_scaled is not None:
+                _current_peak_df = self.o_peak.peak_df_scaled
+            elif self.o_peak.peak_df is not None:
+                _current_peak_df = self.o_peak.peak_df
+            else:
+                _current_peak_df = None
+            if _current_peak_df is not None:
+                _x_tag = fit_util.get_peak_tag(x_type=x_type)
+                ax_mpl.scatter(_current_peak_df[_x_tag],
+                               _current_peak_df['y'],
+                               c='k',
+                               marker='x',
+                               # s=30,
+                               # marker='o',
+                               # facecolors='none',
+                               # edgecolors='k',
+                               label='_nolegend_')
         ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid,
                                   x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx, logy=logy)
         return ax_mpl
