@@ -9,28 +9,27 @@ from ResoFit._utilities import Layer
 import lmfit
 
 # Global parameters
-energy_min = 4.1
-energy_max = 800
+energy_min = 3
+energy_max = 200
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layers = Layer()
-layers.add_layer(layer='Ta', thickness_mm=0.0635)
+layers.add_layer(layer='Ag', thickness_mm=0.0635)
+layers.add_layer(layer='I', thickness_mm=0.0635)
 
-folder = 'data/IPTS_20439/reso_data_20439'
+folder = 'data/IPTS_20784/reso_data_20784'
 # data_file2 = 'spheres_background_1.csv'
 spectra_file = 'Ta_lead_10mm__0__040_Spectra.txt'
-data_file = 'Ta_Pb_whole.csv'
-# data_file = 'Ta.csv'
+# data_file = 'AgI.csv'
+data_file = 'AgI_pellets_all.csv'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = 'OB_Pb_whole.csv'
-# norm_to_file = 'OB.csv'
-# norm_to_file = 'Gd_thin.csv'
-# norm_to_file = 'sphere_background_1.csv'
-baseline = False
+# norm_to_file = 'blank_region.csv'
+norm_to_file = 'blank_pellets_all.csv'
+baseline = True
 each_step = False
 
-norm_factor = 1.3
+norm_factor = 1
 source_to_detector_m = 16.5  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
@@ -48,7 +47,8 @@ calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
-                                         vary='source_to_detector',
+                                         vary='all',
+                                         # vary='source_to_detector',
                                          each_step=each_step)
 calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
 # calibration.analyze_peak()
@@ -57,20 +57,32 @@ calibration.plot(y_type='attenuation',
                  # y_type='transmission',
                  x_type='energy',
                  # t_unit='ms',
-                 before=True,
+                 # before=True,
                  # interp=True,
-                 mixed=True,
+                 # mixed=True,
                  # peak_exp='all',
                  table=False,
-                 peak_exp='indexed',
-                 peak_height=True,
+                 # peak_exp='indexed',
+                 peak_height=False,
                  index_level='ele',
-                 peak_id='all',
-                 logx=True,
+                 peak_id='indexed',
+                 logx=False,
                  )
-plt.xlim(left=0, right=1000)
+plt.xlim(left=1, right=100)
 plt.show()
 
+calibration.export(y_type='attenuation',
+                   # y_type='transmission',
+                   x_type='energy',
+                   # t_unit='ms',
+                   # before=True,
+                   # interp=True,
+                   # mixed=True,
+                   # peak_exp='all',
+                   # peak_exp='indexed',
+                   index_level='ele',
+                   peak_id='indexed',
+                   )
 # # Fit the peak height
 # fit = FitResonance(spectra_file=spectra_file,
 #                    data_file=data_file,

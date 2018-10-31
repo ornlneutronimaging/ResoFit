@@ -10,27 +10,26 @@ import lmfit
 
 # Global parameters
 energy_min = 4.1
-energy_max = 800
+energy_max = 600
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layers = Layer()
-layers.add_layer(layer='Ta', thickness_mm=0.0635)
+layers.add_layer(layer='Cu', thickness_mm=0.5)
+layers.add_layer(layer='Co', thickness_mm=0.3)
 
-folder = 'data/IPTS_20439/reso_data_20439'
-# data_file2 = 'spheres_background_1.csv'
+folder = 'data/IPTS_22631/reso_data_22631'
 spectra_file = 'Ta_lead_10mm__0__040_Spectra.txt'
-data_file = 'Ta_Pb_whole.csv'
-# data_file = 'Ta.csv'
+data_file = 'HEA_long.csv'
+# data_file = 'HEA_long_18C.csv'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = 'OB_Pb_whole.csv'
-# norm_to_file = 'OB.csv'
-# norm_to_file = 'Gd_thin.csv'
-# norm_to_file = 'sphere_background_1.csv'
-baseline = False
+norm_to_file = 'HEA_blank.csv'
+# norm_to_file = 'HEA_blank_18C.csv'
+baseline = True
+# baseline = False
 each_step = False
 
-norm_factor = 1.3
+norm_factor = 1
 source_to_detector_m = 16.5  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
@@ -49,6 +48,7 @@ calibration.experiment.slice(start=image_start, end=image_end)
 calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
                                          offset_us=offset_us,
                                          vary='source_to_detector',
+                                         # vary='all',
                                          each_step=each_step)
 calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
 # calibration.analyze_peak()
@@ -59,9 +59,9 @@ calibration.plot(y_type='attenuation',
                  # t_unit='ms',
                  before=True,
                  # interp=True,
-                 mixed=True,
+                 # mixed=True,
                  # peak_exp='all',
-                 table=False,
+                 table=True,
                  peak_exp='indexed',
                  peak_height=True,
                  index_level='ele',
