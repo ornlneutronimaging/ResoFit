@@ -76,7 +76,6 @@ class Experiment(object):
         # self.time_resolution_us = 0.160
         # convert transmission into attenuation
         # self.data[0] = 1 - self.data[0]
-
         # raw image number saved
         self.img_num = self.data.index.values
 
@@ -334,7 +333,8 @@ class Experiment(object):
     def plot(self,
              y_type='transmission', baseline=None, deg=7,
              x_type='time', t_unit='us', offset_us=None, source_to_detector_m=None,
-             logx=False, logy=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1, grid=False):
+             logx=False, logy=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1,
+             grid=False, label=None):
         """
         Display the loaded signal from data and spectra files.
         """
@@ -350,6 +350,10 @@ class Experiment(object):
         else:
             _baseline = baseline
         fig_title = 'Experimental data'
+        if label is None:
+            _label = self.data_file.split('.')[0] + '_data'
+        else:
+            _label = label
 
         if ax_mpl is None:
             fig, ax_mpl = plt.subplots()
@@ -374,7 +378,9 @@ class Experiment(object):
         #     df.to_csv(filename)
 
         # Plot
-        ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=self.data_file.split('.')[0] + '_data',
+        if len(y_exp_raw) - len(x_exp_raw) == 1:
+            y_exp_raw = y_exp_raw[:-1]
+        ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=_label,
                     ms=ms, lw=lw, alpha=alpha)
         if self.o_peak is not None:
             if self.o_peak.peak_df_scaled is not None:

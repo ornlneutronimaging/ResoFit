@@ -14,23 +14,23 @@ energy_max = 800
 energy_step = 0.01
 # Input sample name or names as str, case sensitive
 layers = Layer()
-layers.add_layer(layer='Ta', thickness_mm=0.0635)
+layers.add_layer(layer='Ta', thickness_mm=0.127)
 
 folder = 'data/IPTS_20439/reso_data_20439'
 # data_file2 = 'spheres_background_1.csv'
 spectra_file = 'Ta_lead_10mm__0__040_Spectra.txt'
-data_file = 'Ta_Pb_whole.csv'
+data_file = 'Ta_no_lead_6C.csv'
 # data_file = 'Ta.csv'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = 'OB_Pb_whole.csv'
+norm_to_file = 'blank_no_lead_6C.csv'
 # norm_to_file = 'OB.csv'
 # norm_to_file = 'Gd_thin.csv'
 # norm_to_file = 'sphere_background_1.csv'
 baseline = False
 each_step = False
 
-norm_factor = 1.3
+norm_factor = 1.
 source_to_detector_m = 16.5  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
@@ -66,7 +66,7 @@ calibration.plot(y_type='attenuation',
                  peak_height=True,
                  index_level='ele',
                  peak_id='all',
-                 logx=True,
+                 logx=False,
                  )
 plt.xlim(left=0, right=1000)
 plt.show()
