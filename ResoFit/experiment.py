@@ -403,3 +403,31 @@ class Experiment(object):
         ax_mpl = fit_util.set_plt(ax=ax_mpl, fig_title=fig_title, grid=grid,
                                   x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx, logy=logy)
         return ax_mpl
+
+    def export(self, y_type='transmission', baseline=None, deg=7,
+               x_type='energy', t_unit='us', offset_us=None, source_to_detector_m=None):
+        fit_util.check_if_in_list(x_type, fit_util.x_type_list)
+        fit_util.check_if_in_list(y_type, fit_util.y_type_list)
+        fit_util.check_if_in_list(t_unit, fit_util.t_unit_list)
+        if offset_us is not None:
+            self.offset_us = offset_us
+        if source_to_detector_m is not None:
+            self.source_to_detector_m = source_to_detector_m
+        if baseline is None:
+            _baseline = self.baseline
+        else:
+            _baseline = baseline
+        _df = pd.DataFrame()
+        """X-axis"""
+        x_exp_raw = self.get_x(x_type=x_type,
+                               t_unit=t_unit,
+                               offset_us=self.offset_us,
+                               source_to_detector_m=self.source_to_detector_m)
+        """Y-axis"""
+        y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
+
+        _df['x'] = x_exp_raw
+        _df['y'] = y_exp_raw
+        _df.to_clipboard(index=False)
+
+        return _df
