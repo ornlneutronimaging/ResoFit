@@ -129,6 +129,8 @@ class NeutronPulse(object):
         x_type_list = ['energy', 'lambda', 'time', 'none']
         if x1_type not in x_type_list:
             raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
+        if x2_type not in x_type_list:
+            raise ValueError("Please specify the x-axis type using one from '{}'.".format(x_type_list))
         if x1_type == 'time' or x2_type == 'time':
             if source_to_detector_m is None:
                 raise ValueError("Please specify the source-to-detector distance in m.")

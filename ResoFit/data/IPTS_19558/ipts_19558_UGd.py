@@ -50,6 +50,9 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 calibration.index_peak(thres=0.12, min_dist=15, map_min_dist=15, map_thres=0.12)
 calibration.analyze_peak(report=True)
 
+# calibration.export(y_type='attenuation',
+#                  # y_type='transmission',
+#                  x_type='energy',)
 calibration.plot(y_type='attenuation',
                  # y_type='transmission',
                  x_type='number',
