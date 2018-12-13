@@ -241,7 +241,7 @@ class Simulation(object):
                               alpha=alpha)
         return ax
 
-    def export(self, output_type='clip', filename=None, x_axis='energy', y_axis='attenuation',
+    def export(self, output_type='clip', filename=None, x_type='energy', y_type='attenuation',
                all_layers=False, all_elements=False, all_isotopes=False, items_to_export=None,
                offset_us=0., source_to_detector_m=16.,
                t_start_us=1, time_resolution_us=0.16, time_unit='us'):
@@ -252,8 +252,8 @@ class Simulation(object):
 
         _df = self.o_reso.export(output_type=output_type,
                                  filename=filename,
-                                 x_axis=x_axis,
-                                 y_axis=y_axis,
+                                 x_axis=x_type,
+                                 y_axis=y_type,
                                  all_layers=all_layers,
                                  all_elements=all_elements,
                                  all_isotopes=all_isotopes,
