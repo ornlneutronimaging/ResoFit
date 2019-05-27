@@ -120,24 +120,20 @@ class Experiment(object):
         """
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
         if baseline is None:
-            _baseline = self.baseline
+            rm_baseline = self.baseline
         else:
-            _baseline = baseline
+            rm_baseline = baseline
         assert type(baseline) == bool
-        # if norm_factor is None:
-        #     _norm_factor = 1
-        # else:
-        #     _norm_factor = norm_factor
 
         y_exp_raw = np.array(self.data[0])
 
+        if rm_baseline is True:
+            # y_exp_raw = y_exp_raw.max() - y_exp_raw  # convert to attenuation using .max() instead of 1
+            # y_exp_raw = fit_util.rm_baseline(y_exp_raw, deg=deg)
+            y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=deg)
+
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
-            if _baseline is True:
-                y_exp_raw = fit_util.rm_baseline(y_exp_raw, deg=deg)
-        if y_type == 'transmission':
-            if _baseline is True:
-                y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=deg)
 
         return y_exp_raw
 
