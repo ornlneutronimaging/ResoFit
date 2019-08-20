@@ -18,11 +18,11 @@ from ResoFit.simulation import Simulation
 class FitResonance(object):
     def __init__(self, spectra_file, data_file,
                  calibrated_offset_us, calibrated_source_to_detector_m,
-                 folder, repeat=1, baseline=False,
+                 folder, norm_factor=1, baseline=False,
                  norm_to_file=None, slice_start=None, slice_end=None,
                  energy_min=1e-5, energy_max=1000, energy_step=0.01,
                  database='ENDF_VII'):
-        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, folder=folder, norm_factor=repeat)
+        self.experiment = Experiment(spectra_file=spectra_file, data_file=data_file, folder=folder)
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -33,7 +33,7 @@ class FitResonance(object):
         self.experiment.slice(start=slice_start, end=slice_end)
         self.baseline = baseline
         if norm_to_file is not None:
-            self.experiment.norm_to(norm_to_file)
+            self.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
         self.exp_x_interp, self.exp_y_interp = self.experiment.xy_scaled(
             energy_min=self.energy_min,
             energy_max=self.energy_max,

@@ -11,7 +11,7 @@ from ResoFit._utilities import load_txt_csv
 
 
 class Experiment(object):
-    def __init__(self, spectra_file, data_file, folder, baseline=False):
+    def __init__(self, spectra_file, data_file, folder, baseline=False, baseline_deg=3):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
@@ -48,6 +48,7 @@ class Experiment(object):
         self.offset_us = 0.
 
         self.baseline = baseline
+        self.baseline_deg = baseline_deg
         self.slice_start = None
         self.slice_end = None
         self.o_peak = None
@@ -109,7 +110,7 @@ class Experiment(object):
                                                num_offset=self.img_start)
         return x_exp_raw
 
-    def get_y(self, y_type='attenuation', baseline=None, deg=7):
+    def get_y(self, y_type='attenuation', baseline=None, deg=None):
         """
         Get the 'y' in eV or angstrom with experimental parameters
         :param deg:
@@ -125,12 +126,18 @@ class Experiment(object):
             rm_baseline = baseline
         assert type(baseline) == bool
 
+        if deg is None:
+            baseline_deg = self.baseline_deg
+        else:
+            baseline_deg = deg
+        assert type(baseline_deg) == int
+
         y_exp_raw = np.array(self.data[0])
 
         if rm_baseline is True:
             # y_exp_raw = y_exp_raw.max() - y_exp_raw  # convert to attenuation using .max() instead of 1
             # y_exp_raw = fit_util.rm_baseline(y_exp_raw, deg=deg)
-            y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=deg)
+            y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=baseline_deg)
 
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
@@ -139,7 +146,7 @@ class Experiment(object):
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
                   x_type='energy', y_type='attenuation', t_unit='us',
-                  offset_us=None, source_to_detector_m=None, baseline=None, deg=7):
+                  offset_us=None, source_to_detector_m=None, baseline=None, deg=None):
         """
         Get interpolated x & y within the scaled range same as simulation
 
@@ -174,6 +181,10 @@ class Experiment(object):
             _baseline = self.baseline
         else:
             _baseline = baseline
+        if deg is None:
+            _baseline_deg = self.baseline_deg
+        else:
+            _baseline_deg = deg
 
         x_exp_raw = self.get_x(x_type='energy',
                                offset_us=self.offset_us,
@@ -191,7 +202,7 @@ class Experiment(object):
                 "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max,
                                                                                                    _x_max_energy))
 
-        y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=deg)
+        y_exp_raw = self.get_y(y_type=y_type, baseline=_baseline, deg=_baseline_deg)
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         _x_interp = np.linspace(energy_min, energy_max, nbr_point)
@@ -289,13 +300,13 @@ class Experiment(object):
         """
         _y = self.data[0][:]
         _x = self.spectra[0][:]  # slicing is needed here to leave self.spectra[0] untouched
-        _y = 1 - _y  # force to peaks
         if baseline is None:
             _baseline = self.baseline
         else:
             _baseline = baseline
         if _baseline:
-            _y = fit_util.rm_baseline(_y, deg=deg)  # force to remove baseline
+            _y = fit_util.rm_envelope(_y, deg=deg)  # force to remove baseline
+        _y = 1 - _y  # force to peaks
         self.o_peak = fit_util.Peak()
         self.o_peak.find(x=_x, y=_y, y_name='y', thres=thres, min_dist=min_dist, impr_reso=False)
         if len(self.o_peak.peak_df) < 1:
