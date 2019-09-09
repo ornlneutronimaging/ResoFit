@@ -16,7 +16,8 @@ _exp_time_offset_us = 5.2
 
 class Calibration(object):
     def __init__(self, spectra_file: str, data_file: str, layer: fit_util.Layer,
-                 energy_min=1e-5, energy_max=1000, energy_step=0.01,
+                 exp_source_to_detector_m, exp_offset_us,
+                 energy_min, energy_max, energy_step,
                  folder='data', baseline=False, baseline_deg=3,
                  database='ENDF_VII'):
         """
@@ -50,10 +51,12 @@ class Calibration(object):
         self.experiment = Experiment(spectra_file=spectra_file,
                                      data_file=data_file,
                                      folder=folder,
+                                     source_to_detector_m=exp_source_to_detector_m,
+                                     offset_us=exp_offset_us,
                                      baseline=baseline,
                                      baseline_deg=baseline_deg)
-        self.init_source_to_detector_m = None
-        self.init_offset_us = None
+        self.init_source_to_detector_m = exp_source_to_detector_m
+        self.init_offset_us = exp_offset_us
         self.calibrated_offset_us = None
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None

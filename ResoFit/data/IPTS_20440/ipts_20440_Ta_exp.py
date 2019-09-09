@@ -24,6 +24,7 @@ image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
 
 baseline = False
+baseline_deg = 3
 each_step = False
 
 norm_factor = 1
@@ -38,8 +39,10 @@ calibration = Calibration(data_file=data_file,
                           energy_max=energy_max,
                           energy_step=energy_step,
                           folder=folder,
-                          baseline=True,
-                          baseline_deg=3)
+                          baseline=baseline,
+                          baseline_deg=baseline_deg,
+                          exp_source_to_detector_m=source_to_detector_m,
+                          exp_offset_us=offset_us)
 
 calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
@@ -87,11 +90,10 @@ fit = FitResonance(spectra_file=spectra_file,
                    slice_start=image_start,
                    slice_end=image_end,
                    baseline=baseline)
-fit_result = fit.fit('Ta', vary='density', each_step=each_step)
+fit_result = fit.fit(raw_layer=layers, vary='density', each_step=each_step)
 fit.molar_conc()
 fit.index_peak(thres=0.15, min_dist=25)
 # fit.fit_iso(layer=layer_2)
 fit.plot(peak_id='all', interp=False)
 # fit.export('Exp_Gd_150_um.csv')
 plt.xlim(left=0, right=300)
-plt.show()

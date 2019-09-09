@@ -11,7 +11,9 @@ from ResoFit._utilities import load_txt_csv
 
 
 class Experiment(object):
-    def __init__(self, spectra_file, data_file, folder, baseline=False, baseline_deg=3):
+    def __init__(self, spectra_file, data_file, folder,
+                 source_to_detector_m, offset_us,
+                 baseline=False, baseline_deg=3):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
@@ -29,24 +31,13 @@ class Experiment(object):
         self.data_path = os.path.join(self.folder_path, data_file)
         self.spectra_file = spectra_file
         self.data_file = data_file
-        # Error for 'repeat' int & >=1
-        # if isinstance(norm_factor, int) is False:
-        #     raise ValueError("Repeat value must be an integer!")
-        # elif norm_factor < 1:
-        #     raise ValueError("Repeat value must be an integer >= 1 !")
 
         self.spectra = load_txt_csv(self.spectra_path)
         self.data = load_txt_csv(self.data_path)
-        # self.norm_factor = norm_factor
-        # self.data[0] = self.data[0] / norm_factor
         self.img_start = 0
-        # assert type(self.norm_factor) is int
 
-        # detector position (m) for the actual measurement
-        self.source_to_detector_m = 16.
-        # offset in time (us) for the actual measurement
-        self.offset_us = 0.
-
+        self.source_to_detector_m = source_to_detector_m
+        self.offset_us = offset_us
         self.baseline = baseline
         self.baseline_deg = baseline_deg
         self.slice_start = None

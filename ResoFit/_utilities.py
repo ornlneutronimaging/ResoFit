@@ -334,6 +334,12 @@ class Layer(object):
     def __init__(self):
         self.info = {}
 
+    def add_Layer(self, layers):
+        for _each_layer in list(layers.info.keys()):
+            self.add_layer(layer=layers.info[_each_layer]['layer'],
+                           thickness_mm=layers.info[_each_layer]['thickness'],
+                           density_gcm3=layers.info[_each_layer]['density'])
+
     def add_layer(self, layer, thickness_mm, density_gcm3=None):
 
         # Input Validation
@@ -584,7 +590,6 @@ class Peak(object):
         pars = model.guess(_y, x=_x)
         self.prefix_list = []
         for _ele in _peak_map_indexed.keys():
-            print(_ele)
             if '-' not in _ele:
                 for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
                     _prefix = _ele + '_' + str(_ind) + '_'

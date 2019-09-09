@@ -64,7 +64,7 @@ class FitResonance(object):
         # self.peak_map_full = None
         # self.peak_map_indexed = None
 
-    def fit(self, raw_layer, vary='density', each_step=False):
+    def fit(self, raw_layer: fit_util.Layer, vary='density', each_step=False):
         if vary not in ['density', 'thickness', 'none']:
             raise ValueError("'vary=' can only be one of ['density', 'thickness', 'none']")
         # Default vary is: 'density'
@@ -79,7 +79,7 @@ class FitResonance(object):
         self.raw_layer = raw_layer
 
         '''Load params'''
-
+        print(raw_layer)
         self.layer_list = list(raw_layer.info.keys())
         self.params_for_fit = Parameters()
         for _each_layer in self.layer_list:
@@ -226,18 +226,19 @@ class FitResonance(object):
             self.experiment.find_peak(thres=thres, min_dist=min_dist)
         self.experiment._scale_peak_with_ev(energy_min=self.energy_min,
                                             energy_max=self.energy_max,
-                                            calibrated_offset_us=self.calibrated_offset_us,
-                                            calibrated_source_to_detector_m=self.calibrated_source_to_detector_m)
+                                            offset_us=self.calibrated_offset_us,
+                                            source_to_detector_m=self.calibrated_source_to_detector_m)
         assert self.experiment.o_peak.peak_df is not None
         assert self.experiment.o_peak.peak_df_scaled is not None
 
         _peak_map = self.fitted_simulation.peak_map(thres=map_thres,
                                                     min_dist=map_min_dist,
                                                     impr_reso=True,
-                                                    isotope=isotope)
+                                                    # isotope=isotope,
+                                                    )
         self.experiment.o_peak.peak_map_full = _peak_map
-        self.experiment.o_peak.index(peak_map=_peak_map,
-                                     rel_tol=rel_tol)
+        self.experiment.o_peak.index_peak(peak_map=_peak_map,
+                                          rel_tol=rel_tol)
         return self.experiment.o_peak.peak_map_indexed
 
     # def analyze_peak(self):
@@ -246,15 +247,10 @@ class FitResonance(object):
     def plot(self, error=True, table=True, grid=True, before=False, interp=False, total=True,
              all_elements=False, all_isotopes=False, items_to_plot=None,
              peak_mark=True, peak_id='indexed',
+             y_type='transmission', x_type='energy', t_unit='us', logx=False, logy=False,
              save_fig=False):
         """
 
-        :param peak_mark:
-        :type peak_mark:
-        :param total:
-        :type total:
-        :param peak_id:
-        :type peak_id:
         :param error:
         :type error:
         :param table:
@@ -265,12 +261,28 @@ class FitResonance(object):
         :type before:
         :param interp:
         :type interp:
+        :param total:
+        :type total:
         :param all_elements:
         :type all_elements:
         :param all_isotopes:
         :type all_isotopes:
         :param items_to_plot:
         :type items_to_plot:
+        :param peak_mark:
+        :type peak_mark:
+        :param peak_id:
+        :type peak_id:
+        :param y_type:
+        :type y_type:
+        :param x_type:
+        :type x_type:
+        :param t_unit:
+        :type t_unit:
+        :param logx:
+        :type logx:
+        :param logy:
+        :type logy:
         :param save_fig:
         :type save_fig:
         :return:
@@ -452,8 +464,8 @@ class FitResonance(object):
                 ax1.set_ylim(ymin=-0.1)
             for _ele_name in _peak_map_indexed.keys():
                 if peak_id is 'all':
-                    ax1.plot(_peak_map_full[_ele_name]['peak']['x'],
-                             [-0.05] * len(_peak_map_full[_ele_name]['peak']['x']),
+                    ax1.plot(_peak_map_full[_ele_name]['ideal']['x'],
+                             [-0.05] * len(_peak_map_full[_ele_name]['ideal']['x']),
                              '|', ms=10,
                              label=_ele_name)
                 elif peak_id is 'indexed':
@@ -469,7 +481,8 @@ class FitResonance(object):
                                 label='_nolegend_')
 
         # Set plot limit and captions
-        fit_util.set_plt(ax1, x_max=self.energy_max, fig_title=fig_title, grid=grid)
+        fit_util.set_plt(ax=ax1, fig_title=fig_title, grid=grid,
+                         x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx, logy=logy)
 
         # Plot table
         if table is True:
