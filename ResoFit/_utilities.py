@@ -38,9 +38,9 @@ def convert_energy_to(x_type, x,
         x = reso_util.ev_to_angstroms(x)
     if x_type == 'time':
         if offset_us is None:
-            raise ValueError("'offset_us=' are needed when x_type='time'")
+            raise ValueError("'offset_us=' is required when x_type='time'")
         if source_to_detector_m is None:
-            raise ValueError("'source_to_detector_m=' are needed when x_type='time'")
+            raise ValueError("'source_to_detector_m=' is required when x_type='time'")
         x = reso_util.ev_to_s(offset_us=offset_us,
                               source_to_detector_m=source_to_detector_m,
                               array=x)
@@ -408,7 +408,7 @@ class Layer(object):
         pprint.pprint(self.info)
 
 
-def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, imprv_reso=False):
     if x is None:
         x = np.array(range(len(y)))
     # x_num_gap = 0
@@ -418,7 +418,7 @@ def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, im
     _index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
     if len(_index) != 0:
         _peak_y = list(y[_index])
-        if impr_reso is False:
+        if imprv_reso is False:
             _peak_x = list(x[_index])
         else:
             _peak_x = list(pku.interpolate(x, y, ind=_index))
@@ -436,7 +436,7 @@ def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, im
     return peak_df
 
 
-def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
+def index_peak(peak_df, peak_map, rel_tol, x_name='x'):
     num_peak_indexed = 0
     _names = peak_map.keys()
     peak_map_indexed = {}
@@ -493,6 +493,63 @@ def index_peak(peak_df, peak_map, x_name='x', rel_tol=3.5e-3):
     return peak_map_indexed
 
 
+class ResoPeak(object):
+    def __init__(self, y, x, y_type, x_type):
+        """
+        Initialization
+
+        """
+        self.peak_dict = {}
+
+        self.y = y
+        self.x = x
+        self.y_type = y_type
+        self.x_type = x_type
+
+        self.shape_report = None
+        self.prefix_list = None
+
+        self.x_num_gap = 0
+
+    def find_peak(self, thres, min_dist, imprv_reso: bool):
+        _peak_dict = self._find_peak(y=self.y, x=self.x, thres=thres, min_dist=min_dist, imprv_reso=imprv_reso)
+        _peak_dict['x_type'] = self.x_type
+        _peak_dict['y_type'] = self.y_type
+        self.peak_dict = _peak_dict
+        return _peak_dict
+
+    def _find_peak(self, y: np.array, thres, min_dist, imprv_reso: bool, x=None):
+        """"""
+        if x is None:
+            x = np.array(range(len(y)))
+        else:
+            x = np.array(x)
+            if x.shape != y.shape:
+                raise ValueError("The length ({}) of 'x' is not equal the length ({}) of 'y'".format(len(x), len(y)))
+        peak_index = pku.indexes(y=y, thres=thres, min_dist=min_dist)
+        if len(peak_index) != 0:
+            _peak_y = y[peak_index]
+            if imprv_reso:
+                _peak_x = pku.interpolate(x, y, ind=peak_index)
+            else:
+                _peak_x = x[peak_index]
+        else:
+            # No peaks detected
+            _peak_x = []
+            _peak_y = []
+
+        peak_dict = {
+            'x': _peak_x,
+            'y': _peak_y,
+        }
+
+        return peak_dict
+
+    def convert_peak_dict_type(self, x_type_target, y_type_target):
+        _peak_dict = self.peak_dict
+
+
+
 class Peak(object):
     def __init__(self):
         """
@@ -534,9 +591,9 @@ class Peak(object):
         self.x = x
         self.y = y
         peak_df = find_peak(y=y, x=None, x_name='x_num', y_name=y_name,
-                            thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+                            thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
         _peak_df = find_peak(y=y, x=x, x_name='x_s', y_name=y_name,
-                             thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+                             thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
         if type(y) == pd.core.series.Series:
             if y.index[0] != 1:
                 self.x_num_gap = y.index[0]

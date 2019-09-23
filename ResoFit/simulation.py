@@ -98,7 +98,7 @@ class Simulation(object):
         # self.x_simu = np.array(self.o_reso.total_signal['energy_eV']).round(5)
         # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
-    def get_x(self, x_type='energy', offset_us=None, source_to_detector_m=None, t_unit='us',
+    def get_x(self, x_type, offset_us=None, source_to_detector_m=None, t_unit='us',
               t_start_us=None, time_resolution_us=None):
         """
         Get x by specified type
@@ -123,7 +123,7 @@ class Simulation(object):
                                        time_resolution_us=time_resolution_us)
         return x
 
-    def get_y(self, y_type='attenuation'):
+    def get_y(self, y_type):
         """
         Get x by specified type
 
@@ -133,7 +133,7 @@ class Simulation(object):
         :rtype: np.array
         """
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        _y = self.o_reso.total_signal['attenuation']
+        _y = self.o_reso.total_signal[y_type]
         y = fit_util.convert_attenuation_to(y_type=y_type, y=_y)
         return y
 
@@ -196,14 +196,14 @@ class Simulation(object):
                 _iso_y = _stack_signal[_ele][_ele][_iso]['attenuation']
                 _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y, x_name='x',
                                               thres=thres, min_dist=min_dist,
-                                              impr_reso=impr_reso)
+                                              imprv_reso=impr_reso)
                 peak_dict[_iso]['ideal'] = _peak_df
             # Element
             peak_dict[_ele] = {}
             _ele_y = _stack_signal[_ele][_ele]['attenuation']
             _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_y, x_name='x',
                                           thres=thres, min_dist=min_dist,
-                                          impr_reso=impr_reso)
+                                          imprv_reso=impr_reso)
             peak_dict[_ele]['ideal'] = _peak_df
         return peak_dict
 

@@ -14,41 +14,48 @@ class TestExperiment(unittest.TestCase):
     energy_min = 7
     energy_max = 8
     energy_step = 0.01
+    source_to_detector_m = 16.45
+    offset_us = 0
 
     def test_folder(self):
         """assert given folder existence"""
         folder = 'folder_not_exist'
         data_file = self.data_file
         spectra_file = self.spectra_file
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_spectra_file_format(self):
         """assert given spectra_file file existence and format"""
         folder = self.folder
         data_file = self.data_file
         spectra_file = self.spectra_file + '.pdf'
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_data_file_format(self):
         """assert given spectra_file file existence and format"""
         folder = self.folder
         data_file = self.data_file + '.pdf'
         spectra_file = self.spectra_file
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_spectra_file_exist(self):
         """assert given spectra_file file existence and format"""
         folder = self.folder
         data_file = self.data_file
         spectra_file = 'file_does_not_exist' + '.txt'
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_data_file_exist(self):
         """assert given spectra_file file existence and format"""
         folder = self.folder
         data_file = 'file_does_not_exist' + '.txt'
         spectra_file = self.spectra_file
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     # def test_repeat(self):
     #     folder = self.folder
@@ -62,7 +69,8 @@ class TestExperiment(unittest.TestCase):
     #                       folder=folder)
 
     def test_load_txt_csv(self):
-        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder,
+                                source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
         _dict_expected = np.array([1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091])
         _dict_returned = np.array(experiment.data[0])
 
@@ -77,40 +85,47 @@ class TestExperiment(unittest.TestCase):
         folder = self.folder
         data_file = '_data_sep_unit_test.txt'
         spectra_file = self.spectra_file
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_loaded_data_str(self):
         folder = self.folder
         data_file = '_data_str_unit_test.txt'
         spectra_file = self.spectra_file
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_loaded_spectra_sep(self):
         folder = self.folder
         data_file = self.spectra_file
         spectra_file = '_data_sep_unit_test.txt'
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_loaded_spectra_str(self):
         folder = self.folder
         data_file = self.spectra_file
         spectra_file = '_data_str_unit_test.txt'
-        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder)
+        self.assertRaises(ValueError, Experiment, data_file=data_file, spectra_file=spectra_file, folder=folder,
+                          source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
 
     def test_xy_scaled(self):
-        experiment = Experiment(data_file=self.data_file, spectra_file=self.spectra_file, folder=self.folder)
+        experiment = Experiment(data_file=self.data_file, spectra_file=self.spectra_file, folder=self.folder,
+                                source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
         x_interp, y_interp = experiment.xy_scaled(energy_min=self.energy_min,
                                                   energy_max=self.energy_max,
                                                   energy_step=self.energy_step,
                                                   x_type='energy',
                                                   y_type='attenuation',
                                                   offset_us=0,
-                                                  source_to_detector_m=15)
+                                                  source_to_detector_m=15,
+                                                  baseline=False)
 
         self.assertAlmostEqual(x_interp[1] - x_interp[0], self.energy_step, delta=self.energy_step / 1000)
 
     def test_get_x(self):
-        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder,
+                                source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
         _x_returned = experiment.get_x(x_type='energy', offset_us=0., source_to_detector_m=15)
         _x_expected = np.array([5.825324e+00,
                                 5.821177e+00,
@@ -131,7 +146,8 @@ class TestExperiment(unittest.TestCase):
         self.assertAlmostEqual(_x_returned[-4], _x_expected[-4], delta=0.000001)
 
     def test_get_y(self):
-        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder)
+        experiment = Experiment(data_file='_data_xy_unit_test.txt', spectra_file=self.spectra_file, folder=self.folder,
+                                source_to_detector_m=self.source_to_detector_m, offset_us=self.offset_us)
         _y_returned = experiment.get_y(y_type='transmission', baseline=False)
         _y_expected = np.array([1.003423, 1.008694, 1.008373, 1.004356, 1.008168, 1.016091])
         self.assertAlmostEqual(_y_returned[-1], _y_expected[-1], delta=0.000001)

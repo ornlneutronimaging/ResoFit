@@ -137,7 +137,7 @@ class Calibration(object):
                                       source_to_detector_m=source_to_detector_m,
                                       baseline=self.experiment.baseline)
 
-    def __find_peak(self, thres=0.15, min_dist=2):
+    def __find_peak(self, thres, min_dist):
         # load detected peak with x in image number
         # if self.calibrate_result is None:
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
@@ -149,7 +149,7 @@ class Calibration(object):
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
-    def index_peak(self, thres, min_dist, map_thres=0.05, map_min_dist=20, rel_tol=5e-3, impr_reso=True):
+    def index_peak(self, thres, min_dist, map_thres, map_min_dist, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres, min_dist=min_dist)
         # find peak map using Simulation.peak_map()

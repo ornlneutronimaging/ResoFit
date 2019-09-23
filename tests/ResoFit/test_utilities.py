@@ -5,6 +5,7 @@ import pytest
 import ResoFit._utilities as fit_util
 from ResoFit.simulation import Simulation
 
+
 class TestLayer(unittest.TestCase):
     def test_input_type(self):
         layer = fit_util.Layer()
@@ -164,6 +165,47 @@ class TestPeaks(unittest.TestCase):
                             energy_step=energy_step,
                             database='_data_for_unittest')
     simulation.add_layer(layer='U', thickness_mm=0.05)
+    x = simulation.o_reso.stack_sigma['U']['U']['energy_eV']
+    y = simulation.o_reso.stack_sigma['U']['U']['sigma_b']
+
+    def test_findpeak1(self):
+        peak_found = fit_util._find_peak(y=self.y, x=self.x, thres=0.015, min_dist=1, imprv_reso=False)
+        peak_expected = {
+            'x': [20.87, 36.68, 66.03, 80.75, 102.57, 116.91],
+            'y': [9801.184720322835, 13337.61249582717, 4356.4307835150385, 276.22478464487637,
+                  6022.958717161858, 2003.9245670422251],
+        }
+        self.assertDictEqual(peak_found, peak_expected)
+
+    def test_findpeak2(self):
+        peak_found = fit_util._find_peak(y=self.y, x=self.x, thres=0.015, min_dist=1, imprv_reso=True)
+        peak_expected = {
+            'x': [20.87274280816388, 36.68474982964769, 66.03358430830164, 80.75548785869171, 102.56856740218703,
+                  116.91012795048718],
+            'y': [9801.184720322835, 13337.61249582717, 4356.4307835150385, 276.22478464487637, 6022.958717161858,
+                  2003.9245670422251]
+        }
+        self.assertDictEqual(peak_found, peak_expected)
+
+    def test_findpeak3(self):
+        peak_found = fit_util._find_peak(y=self.y, thres=0.015, min_dist=1, imprv_reso=False)
+        peak_expected = {
+            'x': [1387, 2968, 5903, 7375, 9557, 10991],
+            'y': [9801.184720322835, 13337.61249582717, 4356.4307835150385, 276.22478464487637, 6022.958717161858,
+                  2003.9245670422251]
+        }
+        self.assertDictEqual(peak_found, peak_expected)
+
+    def test_findpeak4(self):
+        peak_found = fit_util._find_peak(y=self.y, thres=0.015, min_dist=1, imprv_reso=True)
+        peak_expected = {
+            'x': [1387.2742808163878, 2968.47498296478, 5903.358430830144, 7375.5487858692095, 9556.85674021868,
+                  10991.012795048715],
+            'y': [9801.184720322835, 13337.61249582717, 4356.4307835150385, 276.22478464487637, 6022.958717161858,
+                  2003.9245670422251]
+        }
+        print(peak_found)
+        self.assertDictEqual(peak_found, peak_expected)
 
     def test_indexes(self):
         x = self.simulation.o_reso.stack_sigma['U']['U']['energy_eV']
