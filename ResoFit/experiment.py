@@ -335,9 +335,9 @@ class Experiment(object):
         y_exp_raw = self.get_y(y_type=y_type, baseline=baseline, baseline_deg=baseline_deg)
 
         # Plot
-        assert y_exp_raw.shape == x_exp_raw.shape
         if len(y_exp_raw) - len(x_exp_raw) == 1:
             y_exp_raw = y_exp_raw[:-1]
+        assert y_exp_raw.shape == x_exp_raw.shape
         ax_mpl.plot(x_exp_raw, y_exp_raw, fmt, label=_label, ms=ms, lw=lw, alpha=alpha)
 
         if self.o_peak is not None:
