@@ -65,7 +65,7 @@ class Calibration(object):
         self.calibrate_result = None
         self.params_to_calibrate = None
 
-    def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False):
+    def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False, baseline=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
         :param each_step: boolean. True -> show values and chi^2 of each step
@@ -114,7 +114,7 @@ class Calibration(object):
                                              method='leastsq',
                                              args=(simu_x, simu_y,
                                                    self.energy_min, self.energy_max, self.energy_step,
-                                                   self.experiment, self.experiment.baseline, each_step))
+                                                   self.experiment, baseline, each_step))
             # Print after
             print("\nParams after:")
             self.calibrate_result.__dict__['params'].pretty_print()
@@ -138,7 +138,7 @@ class Calibration(object):
                                       y_type='attenuation',
                                       offset_us=offset_us,
                                       source_to_detector_m=source_to_detector_m,
-                                      baseline=self.experiment.baseline)
+                                      baseline=baseline)
 
     def __find_peak(self, thres, min_dist):
         # load detected peak with x in image number
