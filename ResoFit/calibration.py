@@ -15,11 +15,16 @@ _exp_time_offset_us = 5.2
 
 
 class Calibration(object):
-    def __init__(self, spectra_file: str, data_file: str, layer: fit_util.Layer,
+    def __init__(self,
+                 # Initialize ResoFit.experiment
+                 spectra_file: str,
+                 data_file: str,
+                 folder: str,
                  exp_source_to_detector_m, exp_offset_us,
+                 # Initialize ResoFit.simulation
+                 layer: fit_util.Layer,
                  energy_min, energy_max, energy_step,
-                 folder='data', baseline=False, baseline_deg=3,
-                 database='ENDF_VII'):
+                 database: str):
         """
         Initialization with passed file location and sample info
 
@@ -52,9 +57,7 @@ class Calibration(object):
                                      data_file=data_file,
                                      folder=folder,
                                      source_to_detector_m=exp_source_to_detector_m,
-                                     offset_us=exp_offset_us,
-                                     baseline=baseline,
-                                     baseline_deg=baseline_deg)
+                                     offset_us=exp_offset_us)
         self.init_source_to_detector_m = exp_source_to_detector_m
         self.init_offset_us = exp_offset_us
         self.calibrated_offset_us = None
@@ -402,7 +405,8 @@ class Calibration(object):
                                                                  t_start_us=self.experiment.t_start_us,
                                                                  time_resolution_us=self.experiment.time_resolution_us)
 
-                        _peak_y = fit_util.convert_attenuation_to(y_type=y_type, y=_current_peak_map[_peak_name][_tag]['y'])
+                        _peak_y = fit_util.convert_attenuation_to(y_type=y_type,
+                                                                  y=_current_peak_map[_peak_name][_tag]['y'])
                         if peak_exp == 'indexed':
                             _legend_name = '_nolegend_'
                         else:

@@ -11,8 +11,12 @@ from ResoFit._utilities import load_txt_csv
 
 
 class Experiment(object):
-    def __init__(self, spectra_file: str, data_file: str, folder: str,
-                 source_to_detector_m, offset_us):
+    def __init__(self,
+                 spectra_file: str,
+                 data_file: str,
+                 folder: str,
+                 source_to_detector_m,
+                 offset_us):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
