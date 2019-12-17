@@ -64,8 +64,9 @@ class Calibration(object):
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None
         self.params_to_calibrate = None
+        self.baseline = False
 
-    def calibrate(self, source_to_detector_m, offset_us, vary='all', each_step=False, baseline=False):
+    def calibrate(self, source_to_detector_m=None, offset_us=None, vary='all', each_step=False, baseline=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
         :param each_step: boolean. True -> show values and chi^2 of each step
@@ -75,8 +76,13 @@ class Calibration(object):
 
         :return: lmfit MinimizerResult
         """
-        self.init_source_to_detector_m = source_to_detector_m
-        self.init_offset_us = offset_us
+        # Overwrite init values if input detected
+        if source_to_detector_m is None:
+            source_to_detector_m = self.init_source_to_detector_m
+        if offset_us is None:
+            offset_us = self.init_offset_us
+        self.baseline = baseline
+
         vary_type_list = ['source_to_detector', 'offset', 'all', 'none']
         if vary not in vary_type_list:
             raise ValueError("'vary=' can only be one of '{}'".format(vary_type_list))
@@ -114,7 +120,7 @@ class Calibration(object):
                                              method='leastsq',
                                              args=(simu_x, simu_y,
                                                    self.energy_min, self.energy_max, self.energy_step,
-                                                   self.experiment, baseline, each_step))
+                                                   self.experiment, self.baseline, each_step))
             # Print after
             print("\nParams after:")
             self.calibrate_result.__dict__['params'].pretty_print()
@@ -138,7 +144,7 @@ class Calibration(object):
                                       y_type='attenuation',
                                       offset_us=offset_us,
                                       source_to_detector_m=source_to_detector_m,
-                                      baseline=baseline)
+                                      baseline=self.baseline)
 
     def __find_peak(self, thres, min_dist):
         # load detected peak with x in image number
@@ -309,7 +315,7 @@ class Calibration(object):
                                             offset_us=self.init_offset_us,
                                             source_to_detector_m=self.init_source_to_detector_m)
             _y_init = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.experiment.baseline)
+                                            baseline=self.baseline)
             ax1.plot(_x_init,
                      _y_init,
                      linestyle='-', linewidth=1,
@@ -327,7 +333,7 @@ class Calibration(object):
                 t_unit=t_unit,
                 offset_us=self.calibrated_offset_us,
                 source_to_detector_m=self.calibrated_source_to_detector_m,
-                baseline=self.experiment.baseline,
+                baseline=self.baseline,
             )
             # plot the interpolated raw data
             ax1.plot(_exp_x_interp_calibrated,
@@ -340,7 +346,7 @@ class Calibration(object):
                                             offset_us=self.calibrated_offset_us,
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
             _y_cali = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.experiment.baseline)
+                                            baseline=self.baseline)
             ax1.plot(_x_cali,
                      _y_cali,
                      linestyle='-', linewidth=1,
@@ -518,7 +524,7 @@ class Calibration(object):
                                             offset_us=self.init_offset_us,
                                             source_to_detector_m=self.init_source_to_detector_m)
             _y_init = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.experiment.baseline)
+                                            baseline=self.baseline)
             _df['x_' + exp_before_label] = _x_init
             _df['y_' + exp_before_label] = _y_init
 
@@ -533,7 +539,7 @@ class Calibration(object):
                 t_unit=t_unit,
                 offset_us=self.calibrated_offset_us,
                 source_to_detector_m=self.calibrated_source_to_detector_m,
-                baseline=self.experiment.baseline)
+                baseline=self.baseline)
             # Interpolated raw data
             _df['x_' + exp_interp_label + _col_suffix] = _exp_x_interp_calibrated
             _df['y_' + exp_interp_label] = _exp_y_interp_calibrated
@@ -544,7 +550,7 @@ class Calibration(object):
                                             offset_us=self.calibrated_offset_us,
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
             _y_cali = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.experiment.baseline)
+                                            baseline=self.baseline)
             _df['x_' + exp_label + _col_suffix] = pd.Series(_x_cali)
             _df['y_' + exp_label] = pd.Series(_y_cali)
 

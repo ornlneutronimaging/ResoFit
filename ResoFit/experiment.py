@@ -185,6 +185,7 @@ class Experiment(object):
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         _x_interp = np.linspace(energy_min, energy_max, nbr_point)
         # y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='slinear')
+
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(_x_interp)
         x_interp = fit_util.convert_energy_to(x_type=x_type, x=_x_interp, t_unit=self.t_unit,
