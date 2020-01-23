@@ -28,7 +28,7 @@ each_step = False
 
 norm_factor = 1
 
-source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
+source_to_detector_m = 16.2  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 database = 'ENDF_VIII'
 
@@ -52,7 +52,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          # vary='all',
                                          each_step=each_step,
                                          baseline=baseline)
-# calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
+calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
 # calibration.analyze_peak()
 # calibration.experiment.plot()
 calibration.plot(

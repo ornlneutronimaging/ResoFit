@@ -45,6 +45,8 @@ class Calibration(object):
         :param baseline: True -> to remove baseline/background by detrend
         :type baseline: boolean
         """
+        self.x_type = 'energy'
+        self.y_type = 'attenuation'
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -66,7 +68,7 @@ class Calibration(object):
         self.params_to_calibrate = None
         self.baseline = False
 
-    def calibrate(self, source_to_detector_m=None, offset_us=None, vary='all', each_step=False, baseline=False):
+    def calibrate(self, x_type=None, y_type=None, source_to_detector_m=None, offset_us=None, vary='all', each_step=False, baseline=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
         :param each_step: boolean. True -> show values and chi^2 of each step
@@ -82,12 +84,16 @@ class Calibration(object):
         if offset_us is None:
             offset_us = self.init_offset_us
         self.baseline = baseline
+        if x_type is not None:
+            self.x_type = x_type
+        if y_type is not None:
+            self.y_type = y_type
 
         vary_type_list = ['source_to_detector', 'offset', 'all', 'none']
         if vary not in vary_type_list:
             raise ValueError("'vary=' can only be one of '{}'".format(vary_type_list))
-        simu_x = self.simulation.get_x(x_type='energy')
-        simu_y = self.simulation.get_y(y_type='attenuation')
+        simu_x = self.simulation.get_x(x_type=self.x_type)
+        simu_y = self.simulation.get_y(y_type=self.y_type)
         _run = True
         if vary == 'all':
             source_to_detector_vary_tag = True
@@ -120,7 +126,7 @@ class Calibration(object):
                                              method='leastsq',
                                              args=(simu_x, simu_y,
                                                    self.energy_min, self.energy_max, self.energy_step,
-                                                   self.experiment, self.baseline, each_step))
+                                                   self.experiment, self.x_type, self.y_type, self.baseline, each_step))
             # Print after
             print("\nParams after:")
             self.calibrate_result.__dict__['params'].pretty_print()
@@ -146,12 +152,14 @@ class Calibration(object):
                                       source_to_detector_m=source_to_detector_m,
                                       baseline=self.baseline)
 
-    def __find_peak(self, thres, min_dist):
+    def __find_peak(self, x_type, y_type, thres, min_dist, baseline, baseline_deg):
         # load detected peak with x in image number
         # if self.calibrate_result is None:
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
-        self.experiment.find_peak(thres=thres, min_dist=min_dist)
+        self.experiment.find_peak(x_type=x_type, y_type=y_type,
+                                  thres=thres, min_dist=min_dist,
+                                  baseline=baseline, baseline_deg=baseline_deg)
 
         self.experiment._scale_peak_with_ev(energy_min=self.energy_min,
                                             energy_max=self.energy_max)

@@ -133,8 +133,7 @@ class Simulation(object):
         :rtype: np.array
         """
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
-        _y = self.o_reso.total_signal[y_type]
-        y = fit_util.convert_attenuation_to(y_type=y_type, y=_y)
+        y = self.o_reso.total_signal[y_type]
         return y
 
     def _convolve_beam_shapes(self, source_to_detector_m, conv_proton, proton_params={}, model_index=1):

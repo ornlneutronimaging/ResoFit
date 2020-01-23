@@ -5,7 +5,7 @@ from ResoFit.model import cole_windsor
 
 
 def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy_step, experiment,
-                          baseline=False, each_step=False):
+                          x_type, y_type, baseline=False, each_step=False):
     # Unpack Parameters:
     parvals = params.valuesdict()
     source_to_detector_m = parvals['source_to_detector_m']
@@ -13,13 +13,13 @@ def y_gap_for_calibration(params, simu_x, simu_y, energy_min, energy_max, energy
     exp_x, exp_y = experiment.xy_scaled(energy_min=energy_min,
                                         energy_max=energy_max,
                                         energy_step=energy_step,
-                                        x_type='energy',
-                                        y_type='attenuation',
+                                        x_type=x_type,
+                                        y_type=y_type,
                                         offset_us=offset_us,
                                         source_to_detector_m=source_to_detector_m,
                                         baseline=baseline)
 
-    gap = (exp_y - simu_y)  # ** 2
+    gap = abs(exp_y - simu_y)  # ** 2
     if each_step is True:
         print("Trying: source_to_detector_m: {}    offset_us: {}    chi^2: {}".format(source_to_detector_m,
                                                                                       offset_us,
