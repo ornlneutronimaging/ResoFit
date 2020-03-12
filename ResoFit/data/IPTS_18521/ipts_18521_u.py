@@ -62,7 +62,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres=0.05, min_dist=10, map_min_dist=10, map_thres=0.05)
+calibration.index_peak(thres_exp=0.05, min_dist_exp=10, min_dist_map=10, thres_map=0.05)
 # calibration.analyze_peak()
 calibration.plot(
     y_type='attenuation',

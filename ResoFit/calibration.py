@@ -164,17 +164,19 @@ class Calibration(object):
         self.experiment.find_peak(x_type=x_type, y_type=y_type,
                                   thres=thres, min_dist=min_dist,
                                   )
+        print(self.experiment.o_peak.peak_dict)
 
         self.experiment._scale_peak_with_ev(energy_min=self.energy_min,
                                             energy_max=self.energy_max)
         assert self.experiment.o_peak.peak_df_scaled is not None
         return self.experiment.o_peak.peak_df_scaled
 
-    def index_peak(self, thres, min_dist, map_thres, map_min_dist, rel_tol, impr_reso=True):
+    def index_peak(self, x_type, y_type, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
-            self.__find_peak(thres=thres, min_dist=min_dist)
+            self.__find_peak(x_type=x_type, y_type=y_type, thres=thres_exp, min_dist=min_dist_exp)
+        print(self.experiment.o_peak.peak_df_scaled)
         # find peak map using Simulation.peak_map()
-        _peak_map = self.simulation.peak_map(thres=map_thres, min_dist=map_min_dist, impr_reso=impr_reso)
+        _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         # index using Peak()
@@ -326,8 +328,7 @@ class Calibration(object):
                                             t_unit=t_unit,
                                             offset_us=self.init_offset_us,
                                             source_to_detector_m=self.init_source_to_detector_m)
-            _y_init = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.baseline)
+            _y_init = self.experiment.get_y(y_type=y_type)
             ax1.plot(_x_init,
                      _y_init,
                      linestyle='-', linewidth=1,
@@ -345,7 +346,6 @@ class Calibration(object):
                 t_unit=t_unit,
                 offset_us=self.calibrated_offset_us,
                 source_to_detector_m=self.calibrated_source_to_detector_m,
-                baseline=self.baseline,
             )
             # plot the interpolated raw data
             ax1.plot(_exp_x_interp_calibrated,
@@ -357,8 +357,7 @@ class Calibration(object):
                                             t_unit=t_unit,
                                             offset_us=self.calibrated_offset_us,
                                             source_to_detector_m=self.calibrated_source_to_detector_m)
-            _y_cali = self.experiment.get_y(y_type=y_type,
-                                            baseline=self.baseline)
+            _y_cali = self.experiment.get_y(y_type=y_type)
             ax1.plot(_x_cali,
                      _y_cali,
                      linestyle='-', linewidth=1,
