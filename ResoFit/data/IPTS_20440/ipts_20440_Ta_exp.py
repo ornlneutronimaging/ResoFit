@@ -12,6 +12,7 @@ import lmfit
 energy_min = 4.1
 energy_max = 800
 energy_step = 0.01
+database = 'ENDF_VIII'
 # Input sample name or names as str, case sensitive
 layers = Layer()
 layers.add_layer(layer='Ta', thickness_mm=0.127)
@@ -20,10 +21,10 @@ folder = 'data/IPTS_20440'
 spectra_file = 'spectra.txt'
 data_file = 'Ta_80C_12pC.csv'
 norm_to_file = 'OB_80C_12pC.csv'
-image_start = 600  # Can be omitted or =None
+image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
 
-baseline = True
+baseline = False
 baseline_deg = 3
 each_step = False
 
@@ -39,14 +40,15 @@ experiment = Experiment(data_file=data_file,
                         source_to_detector_m=source_to_detector_m,
                         offset_us=offset_us,
                         folder=folder,
+                        baseline=baseline,
+                        baseline_deg=baseline_deg,
                         )
 experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 experiment.slice(start=image_start)
 experiment.find_peak(x_type=x_type, y_type=y_type, thres=0.07, min_dist=50,
-                     baseline=baseline,
-                     baseline_deg=baseline_deg)
-experiment.plot(x_type=x_type, y_type=y_type, plot_before=True, baseline=baseline, baseline_deg=3)
-# plt.xlim(left=0, right=300)
+                     )
+experiment.plot(x_type=x_type, y_type=y_type, plot_with_baseline=True)
+plt.xlim(left=0, right=300)
 plt.show()
 
 # # Calibrate the peak positions
@@ -57,11 +59,13 @@ plt.show()
 #                           energy_max=energy_max,
 #                           energy_step=energy_step,
 #                           folder=folder,
+#                           exp_source_to_detector_m=source_to_detector_m,
+#                           exp_offset_us=offset_us,
+#                           database=database,
 #                           baseline=baseline,
 #                           baseline_deg=baseline_deg,
-#                           exp_source_to_detector_m=source_to_detector_m,
-#                           exp_offset_us=offset_us)
-
+#                           )
+#
 # calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
 # calibration.experiment.slice(start=image_start, end=image_end)
 # calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector_m,
@@ -69,12 +73,6 @@ plt.show()
 #                                          vary='source_to_detector',
 #                                          # vary='all',
 #                                          each_step=each_step)
-# # ax1 = calibration.experiment.plot(x_type='energy', baseline=False)
-# # calibration.experiment.plot(x_type='energy', baseline=True, deg=3, ax_mpl=ax1)
-#
-# calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05)
-# calibration.analyze_peak()
-#
 # calibration.plot(
 #     # y_type='attenuation',
 #     y_type='transmission',
@@ -93,6 +91,15 @@ plt.show()
 # )
 # plt.xlim(left=0, right=300)
 # plt.show()
+
+
+# ax1 = calibration.experiment.plot(x_type='energy', baseline=False)
+# calibration.experiment.plot(x_type='energy', baseline=True, deg=3, ax_mpl=ax1)
+
+calibration.index_peak(thres=0.05, min_dist=2, map_min_dist=5, map_thres=0.05, rel_tol=0.1)
+# calibration.analyze_peak()
+
+
 #
 # # Fit the peak height
 # fit = FitResonance(spectra_file=spectra_file,

@@ -209,7 +209,7 @@ def set_plt(ax, fig_title, grid, x_type, y_type, t_unit, logx, logy):
     return ax
 
 
-def rm_envelope(y, deg=7, max_it=None, tol=None):
+def rm_envelope(y, deg, max_it=None, tol=None):
     envelope = pku.envelope(y=y, deg=deg, max_it=max_it, tol=tol)
     # return y + y.max() - envelope
     return y / envelope

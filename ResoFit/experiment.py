@@ -16,7 +16,9 @@ class Experiment(object):
                  data_file: str,
                  folder: str,
                  source_to_detector_m,
-                 offset_us):
+                 offset_us,
+                 baseline: bool,
+                 baseline_deg: int):
         """
         Load experiment data from 'YOUR_FILE_NAME.csv' or 'YOUR_FILE_NAME.txt' files
         :param spectra_file: data file stores the time-of-flight
@@ -72,6 +74,9 @@ class Experiment(object):
         self.time_resolution_us = fit_util.convert_s(self.spectra[0][2] - self.spectra[0][1], t_unit='us')
         # raw image number saved
         self.img_num = self.data.index.values
+        # Baseline_rmv
+        self.baseline = baseline
+        self.baseline_deg = baseline_deg
 
     def get_x(self, x_type, offset_us=None, source_to_detector_m=None, t_unit='us'):
         """
@@ -106,22 +111,17 @@ class Experiment(object):
                                                num_offset=self.img_start)
         return x_exp_raw
 
-    def get_y(self, y_type, baseline: bool, baseline_deg=None):
+    def get_y(self, y_type, disable_rmv=False):
         """
         Get the 'y' in eV or angstrom with experimental parameters
-        :param baseline_deg:
-        :type baseline_deg:
         :param y_type: bool to switch between transmission and attenuation
-        :param baseline: boolean to remove baseline/background by detrend
         :return: array
         """
         fit_util.check_if_in_list(y_type, fit_util.y_type_list)
         y_exp_raw = np.array(self.data[0][:])
-        if baseline:
-            if type(baseline_deg) is not int:
-                raise ValueError("{} 'baseline_deg' only accept 'int' input".format(baseline_deg))
-            else:
-                y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=baseline_deg)
+        if not disable_rmv:
+            if self.baseline:
+                y_exp_raw = fit_util.rm_envelope(y_exp_raw, deg=self.baseline_deg)
 
         if y_type == 'attenuation':
             y_exp_raw = 1 - y_exp_raw
@@ -129,8 +129,8 @@ class Experiment(object):
         return y_exp_raw
 
     def xy_scaled(self, energy_min, energy_max, energy_step,
-                  x_type, y_type, baseline, baseline_deg=None, t_unit='us',
-                  offset_us=None, source_to_detector_m=None):
+                  x_type, y_type, t_unit='us',
+                  offset_us=None, source_to_detector_m=None, disable_rmv=False):
         """
         Get interpolated x & y within the scaled range same as simulation
 
@@ -150,10 +150,6 @@ class Experiment(object):
         :type offset_us:
         :param source_to_detector_m:
         :type source_to_detector_m:
-        :param baseline:
-        :type baseline:
-        :param baseline_deg:
-        :type baseline_deg:
         :return:
         :rtype:
         """
@@ -180,7 +176,7 @@ class Experiment(object):
                 "'Energy max' ({} eV) used for interpolation is beyond 'data max' ({} eV) ".format(energy_max,
                                                                                                    _x_max_energy))
 
-        y_exp_raw = self.get_y(y_type=y_type, baseline=baseline, baseline_deg=baseline_deg)
+        y_exp_raw = self.get_y(y_type=y_type, disable_rmv=disable_rmv)
 
         nbr_point = int((energy_max - energy_min) / energy_step + 1)
         _x_interp = np.linspace(energy_min, energy_max, nbr_point)
@@ -259,7 +255,7 @@ class Experiment(object):
             #     self.data.reset_index(drop=True, inplace=True)
             #     self.img_start = 0
 
-    def find_peak(self, x_type, y_type, thres, min_dist, baseline, baseline_deg=None, imprv_reso=False):
+    def find_peak(self, x_type, y_type, thres, min_dist, imprv_reso=False):
         """
         find and return x and y of detected peak in pd.DataFrame
         x is image number from data file. type (int)
@@ -274,10 +270,6 @@ class Experiment(object):
         :type thres:
         :param min_dist:
         :type min_dist:
-        :param baseline:
-        :type baseline:
-        :param baseline_deg:
-        :type baseline_deg:
         :param imprv_reso:
         :type imprv_reso:
         :return:
@@ -292,8 +284,6 @@ class Experiment(object):
         )
         _y = self.get_y(
             y_type='attenuation',
-            baseline=baseline,
-            baseline_deg=baseline_deg
         )
         self.o_peak = fit_util.ResoPeak(x=_x, y=_y, x_type=x_type, y_type=y_type)
         self.o_peak.find_peak(thres=thres, min_dist=min_dist, imprv_reso=imprv_reso)
@@ -303,10 +293,10 @@ class Experiment(object):
             self.o_peak.peak_dict['y'] = 1 - self.o_peak.peak_dict['y']
         return self.o_peak.peak_dict
 
-    def plot(self, x_type, y_type, baseline, baseline_deg=None,
+    def plot(self, x_type, y_type,
              t_unit='us', offset_us=None, source_to_detector_m=None,
              logx=False, logy=False, ax_mpl=None, fmt='.', ms=2, lw=1.5, alpha=1,
-             grid=False, label=None, plot_before=False):
+             grid=False, label=None, plot_with_baseline=False):
         """
         Display the loaded signal from data and spectra files.
         """
@@ -332,12 +322,13 @@ class Experiment(object):
                                offset_us=self.offset_us,
                                source_to_detector_m=self.source_to_detector_m)
         """Y-axis"""
-        if baseline:
-            if plot_before:
-                y_exp_raw_before = self.get_y(y_type=y_type, baseline=False, baseline_deg=baseline_deg)
-                ax_mpl.plot(x_exp_raw, y_exp_raw_before, '--', label='Before baseline removal', ms=ms, lw=lw,
-                            alpha=alpha)
-        y_exp_raw = self.get_y(y_type=y_type, baseline=baseline, baseline_deg=baseline_deg)
+        if self.baseline:
+            if plot_with_baseline:
+                y_exp_raw_before = self.get_y(y_type=y_type, disable_rmv=True)
+                ax_mpl.plot(x_exp_raw, y_exp_raw_before, '--',
+                            label='Before baseline removal (deg={})'.format(self.baseline_deg),
+                            ms=ms, lw=lw, alpha=alpha)
+        y_exp_raw = self.get_y(y_type=y_type)
 
         # Plot
         if len(y_exp_raw) - len(x_exp_raw) == 1:
@@ -361,7 +352,7 @@ class Experiment(object):
                                   x_type=x_type, y_type=y_type, t_unit=t_unit, logx=logx, logy=logy)
         return ax_mpl
 
-    def export(self, x_type, y_type, baseline, baseline_deg=None,
+    def export(self, x_type, y_type,
                t_unit='us', offset_us=None, source_to_detector_m=None):
         self.__check_in_list(x_type=x_type, y_type=y_type, t_unit=t_unit)
         if offset_us is not None:
@@ -377,7 +368,7 @@ class Experiment(object):
                                offset_us=self.offset_us,
                                source_to_detector_m=self.source_to_detector_m)
         """Y-axis"""
-        y_exp_raw = self.get_y(y_type=y_type, baseline=baseline, baseline_deg=baseline_deg)
+        y_exp_raw = self.get_y(y_type=y_type)
 
         _df['x'] = x_exp_raw
         _df['y'] = y_exp_raw

@@ -21,6 +21,8 @@ class Calibration(object):
                  data_file: str,
                  folder: str,
                  exp_source_to_detector_m, exp_offset_us,
+                 baseline: bool,
+                 baseline_deg: int,
                  # Initialize ResoFit.simulation
                  layer: fit_util.Layer,
                  energy_min, energy_max, energy_step,
@@ -59,16 +61,19 @@ class Calibration(object):
                                      data_file=data_file,
                                      folder=folder,
                                      source_to_detector_m=exp_source_to_detector_m,
-                                     offset_us=exp_offset_us)
+                                     offset_us=exp_offset_us,
+                                     baseline=baseline,
+                                     baseline_deg=baseline_deg)
         self.init_source_to_detector_m = exp_source_to_detector_m
         self.init_offset_us = exp_offset_us
         self.calibrated_offset_us = None
         self.calibrated_source_to_detector_m = None
         self.calibrate_result = None
         self.params_to_calibrate = None
-        self.baseline = False
 
-    def calibrate(self, x_type=None, y_type=None, source_to_detector_m=None, offset_us=None, vary='all', each_step=False, baseline=False):
+    def calibrate(self, x_type=None, y_type=None,
+                  source_to_detector_m=None, offset_us=None, vary='all',
+                  each_step=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
         :param each_step: boolean. True -> show values and chi^2 of each step
@@ -83,7 +88,6 @@ class Calibration(object):
             source_to_detector_m = self.init_source_to_detector_m
         if offset_us is None:
             offset_us = self.init_offset_us
-        self.baseline = baseline
         if x_type is not None:
             self.x_type = x_type
         if y_type is not None:
@@ -126,7 +130,7 @@ class Calibration(object):
                                              method='leastsq',
                                              args=(simu_x, simu_y,
                                                    self.energy_min, self.energy_max, self.energy_step,
-                                                   self.experiment, self.x_type, self.y_type, self.baseline, each_step))
+                                                   self.experiment, self.x_type, self.y_type, each_step))
             # Print after
             print("\nParams after:")
             self.calibrate_result.__dict__['params'].pretty_print()
@@ -150,16 +154,16 @@ class Calibration(object):
                                       y_type='attenuation',
                                       offset_us=offset_us,
                                       source_to_detector_m=source_to_detector_m,
-                                      baseline=self.baseline)
+                                      )
 
-    def __find_peak(self, x_type, y_type, thres, min_dist, baseline, baseline_deg):
+    def __find_peak(self, x_type, y_type, thres, min_dist):
         # load detected peak with x in image number
         # if self.calibrate_result is None:
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
         self.experiment.find_peak(x_type=x_type, y_type=y_type,
                                   thres=thres, min_dist=min_dist,
-                                  baseline=baseline, baseline_deg=baseline_deg)
+                                  )
 
         self.experiment._scale_peak_with_ev(energy_min=self.energy_min,
                                             energy_max=self.energy_max)
