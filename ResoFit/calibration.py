@@ -157,18 +157,19 @@ class Calibration(object):
                                       source_to_detector_m=source_to_detector_m,
                                       )
 
-    def __find_peak(self, x_type, y_type, thres, min_dist):
+    def __find_peak(self, thres, min_dist):
         # load detected peak with x in image number
         # if self.calibrate_result is None:
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
-        self.experiment.find_peak(x_type=x_type, y_type=y_type,
+        self.experiment.find_peak(x_type='energy', y_type='attenuation',
                                   thres=thres, min_dist=min_dist)
+        self.experiment.o_peak._scale_peak_df(energy_min=self.energy_min, energy_max=self.energy_max)
         return self.experiment.o_peak.peak_dict
 
     def index_peak(self, x_type, y_type, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
-            self.__find_peak(x_type=x_type, y_type=y_type, thres=thres_exp, min_dist=min_dist_exp)
+            self.__find_peak(thres=thres_exp, min_dist=min_dist_exp)  # type is forced to be 'energy' and 'attenuation'
         # find peak map using Simulation.peak_map()
         _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso)
         pprint.pprint(self.experiment.o_peak.peak_dict)

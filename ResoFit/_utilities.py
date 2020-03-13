@@ -499,7 +499,8 @@ class ResoPeak(object):
         Initialization
 
         """
-        self.peak_dict = {}
+        self.peak_dict = None
+        self.peak_map_indexed = None
 
         self.y = y
         self.x = x
@@ -537,21 +538,30 @@ class ResoPeak(object):
             # No peaks detected
             _peak_x = []
             _peak_y = []
-
+        peak_df = pd.DataFrame()
+        peak_df['x'] = _peak_x
+        peak_df['y'] = _peak_y
         peak_dict = {
-            'x': _peak_x,
-            'y': _peak_y,
+            'df': peak_df
         }
 
         return peak_dict
 
-    # def scale_with_ev(self, energy_min, energy_max):
-    #     assert self.peak_dict != {}
-    #     assert self.
+    def _scale_peak_df(self, energy_min, energy_max):
+        _peak_df_scaled = self.peak_dict['df'].copy()
+        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
+        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
+        _peak_df_scaled.reset_index(drop=True, inplace=True)
+        self.peak_dict['df'] = _peak_df_scaled
+
+    def index_peak(self, peak_map, rel_tol=5e-3):
+        if self.peak_dict is None:
+            raise ValueError("Please identify peak use 'Peak.find()' before indexing.")
+        assert self.peak_dict['x_type'] == 'energy'
+        self.peak_map_indexed = index_peak(peak_df=self.peak_dict['df'], peak_map=peak_map, rel_tol=rel_tol)
 
     def convert_peak_dict_type(self, x_type_target, y_type_target):
         _peak_dict = self.peak_dict
-
 
 
 class Peak(object):
@@ -629,18 +639,18 @@ class Peak(object):
         _peak_df['x_A'] = reso_util.ev_to_angstroms(_peak_df['x'])
         self.peak_df = _peak_df
 
-    def _scale_peak_df(self, energy_min, energy_max):
-        _peak_df_scaled = self.peak_df.copy()
-        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
-        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
-        _peak_df_scaled.reset_index(drop=True, inplace=True)
-        self.peak_df_scaled = _peak_df_scaled
+    # def _scale_peak_df(self, energy_min, energy_max):
+    #     _peak_df_scaled = self.peak_df.copy()
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
+    #     _peak_df_scaled.reset_index(drop=True, inplace=True)
+    #     self.peak_df_scaled = _peak_df_scaled
 
-    def index_peak(self, peak_map, rel_tol=5e-3):
-        if self.peak_df is None:
-            raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
-        assert self.peak_df_scaled is not None
-        self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
+    # def index_peak(self, peak_map, rel_tol=5e-3):
+    #     if self.peak_df is None:
+    #         raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
+    #     assert self.peak_df_scaled is not None
+    #     self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
     def analyze(self, report=False, fit_model='Lorentzian'):
         check_if_in_list(fit_model, peak_model_list)

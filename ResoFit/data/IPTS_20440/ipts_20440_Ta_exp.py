@@ -10,7 +10,7 @@ import lmfit
 
 # Global parameters
 energy_min = 4.1
-energy_max = 800
+energy_max = 600
 energy_step = 0.01
 database = 'ENDF_VIII'
 # Input sample name or names as str, case sensitive
@@ -77,7 +77,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
 calibration.index_peak(x_type=x_type, y_type=y_type,
                        thres_exp=0.05, min_dist_exp=2, min_dist_map=5, thres_map=0.05, rel_tol=0.1)
 # calibration.analyze_peak()
-pprint.pprint(calibration.experiment.o_peak.peak_df_scaled)
+pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)
 
 calibration.plot(
     # y_type='attenuation',

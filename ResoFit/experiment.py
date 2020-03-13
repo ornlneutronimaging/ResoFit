@@ -287,10 +287,10 @@ class Experiment(object):
         )
         self.o_peak = fit_util.ResoPeak(x=_x, y=_y, x_type=x_type, y_type=y_type)
         self.o_peak.find_peak(thres=thres, min_dist=min_dist, imprv_reso=imprv_reso)
-        if len(self.o_peak.peak_dict['y']) < 1:
+        if len(self.o_peak.peak_dict['df']) < 1:
             raise ValueError("No peak has been detected.")
         if y_type == 'transmission':
-            self.o_peak.peak_dict['y'] = 1 - self.o_peak.peak_dict['y']
+            self.o_peak.peak_dict['df']['y'] = 1 - self.o_peak.peak_dict['df']['y']
         return self.o_peak.peak_dict
 
     def plot(self, x_type, y_type,
