@@ -4,6 +4,7 @@ from lmfit import Parameters
 from lmfit import minimize
 import pandas as pd
 from itertools import cycle
+import pprint
 
 import ResoFit._utilities as fit_util
 from ResoFit._gap_functions import y_gap_for_calibration
@@ -162,23 +163,18 @@ class Calibration(object):
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
         self.experiment.find_peak(x_type=x_type, y_type=y_type,
-                                  thres=thres, min_dist=min_dist,
-                                  )
-        print(self.experiment.o_peak.peak_dict)
-
-        self.experiment._scale_peak_with_ev(energy_min=self.energy_min,
-                                            energy_max=self.energy_max)
-        assert self.experiment.o_peak.peak_df_scaled is not None
-        return self.experiment.o_peak.peak_df_scaled
+                                  thres=thres, min_dist=min_dist)
+        return self.experiment.o_peak.peak_dict
 
     def index_peak(self, x_type, y_type, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
             self.__find_peak(x_type=x_type, y_type=y_type, thres=thres_exp, min_dist=min_dist_exp)
-        print(self.experiment.o_peak.peak_df_scaled)
         # find peak map using Simulation.peak_map()
         _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso)
+        pprint.pprint(self.experiment.o_peak.peak_dict)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
+        pprint.pprint(self.experiment.o_peak.peak_map_full)
         # index using Peak()
         self.experiment.o_peak.index_peak(_peak_map, rel_tol=rel_tol)
         return self.experiment.o_peak.peak_map_indexed

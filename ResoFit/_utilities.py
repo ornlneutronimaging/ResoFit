@@ -545,6 +545,10 @@ class ResoPeak(object):
 
         return peak_dict
 
+    # def scale_with_ev(self, energy_min, energy_max):
+    #     assert self.peak_dict != {}
+    #     assert self.
+
     def convert_peak_dict_type(self, x_type_target, y_type_target):
         _peak_dict = self.peak_dict
 
