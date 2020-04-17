@@ -291,6 +291,8 @@ class Experiment(object):
             raise ValueError("No peak has been detected.")
         if y_type == 'transmission':
             self.o_peak.peak_dict['df']['y'] = 1 - self.o_peak.peak_dict['df']['y']
+
+
         return self.o_peak.peak_dict
 
     def plot(self, x_type, y_type,

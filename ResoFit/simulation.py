@@ -168,7 +168,10 @@ class Simulation(object):
         self.x_tof_us = np.array(tof_beam_shape_df.index)
         self.y_att = 1 - np.array(tof_trans_df['sum'] / tof_beam_shape_df['sum'])
 
-    def peak_map(self, thres=0.15, min_dist=20, impr_reso=True):
+    def peak_map(self, x_type, y_type, thres=0.15, min_dist=20, impr_reso=True,
+                 offset_us=None, source_to_detector_m=None, t_unit='us',
+                 t_start_us=None, time_resolution_us=None
+                 ):
         """
         Get peak map for each element and/or isotope
 
@@ -186,24 +189,33 @@ class Simulation(object):
 
         _stack_signal = self.o_reso.stack_signal
         _layer_list = self.layer_list
-        _x_energy = _stack_signal[_layer_list[0]][_layer_list[0]]['energy_eV']
+        # _x_energy = _stack_signal[_layer_list[0]][_layer_list[0]]['energy_eV']
+        _x = self.get_x(x_type=x_type,
+                        offset_us=offset_us,
+                        source_to_detector_m=source_to_detector_m,
+                        t_unit=t_unit,
+                        t_start_us=t_start_us,
+                        time_resolution_us=time_resolution_us
+                        )
         peak_dict = {}
         for _ele in _layer_list:
             # Isotope
             for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
                 peak_dict[_iso] = {}
-                _iso_y = _stack_signal[_ele][_ele][_iso]['attenuation']
-                _peak_df = fit_util.find_peak(x=_x_energy, y=_iso_y, x_name='x',
+                _iso_y = _stack_signal[_ele][_ele][_iso][y_type]
+                _peak_df = fit_util.find_peak(x=_x, y=_iso_y, x_name='x',
                                               thres=thres, min_dist=min_dist,
                                               imprv_reso=impr_reso)
                 peak_dict[_iso]['ideal'] = _peak_df
             # Element
             peak_dict[_ele] = {}
-            _ele_y = _stack_signal[_ele][_ele]['attenuation']
-            _peak_df = fit_util.find_peak(x=_x_energy, y=_ele_y, x_name='x',
+            _ele_y = _stack_signal[_ele][_ele][y_type]
+            _peak_df = fit_util.find_peak(x=_x, y=_ele_y, x_name='x',
                                           thres=thres, min_dist=min_dist,
                                           imprv_reso=impr_reso)
             peak_dict[_ele]['ideal'] = _peak_df
+        peak_dict['x_type'] = x_type
+        peak_dict['y_type'] = y_type
         return peak_dict
 
     def plot(self, y_type='attenuation', x_type='energy',

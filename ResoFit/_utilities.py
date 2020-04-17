@@ -547,21 +547,32 @@ class ResoPeak(object):
 
         return peak_dict
 
-    def _scale_peak_df(self, energy_min, energy_max):
-        _peak_df_scaled = self.peak_dict['df'].copy()
-        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
-        _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
-        _peak_df_scaled.reset_index(drop=True, inplace=True)
-        self.peak_dict['df'] = _peak_df_scaled
+    # def _scale_peak_df(self, energy_min, energy_max,
+    #                    offset_us=None, source_to_detector_m=None, t_unit='us',
+    #                    num_offset=0,
+    #                    time_resolution_us=None,
+    #                    t_start_us=None):
+    #     _peak_df_scaled = self.peak_dict['df'].copy()
+    #     if self.peak_dict['x_type'] == 'energy':
+    #         _min = energy_min
+    #         _max = energy_max
+    #     elif self.peak_dict['x_type'] == 'lambda':
+    #         _min = convert_energy_to(x=energy_max,
+    #                                  x_type='lambda',
+    #                                  offset_us=None, source_to_detector_m=None, t_unit='us',
+    #                                  num_offset=0,
+    #                                  time_resolution_us=None,
+    #                                  t_start_us=None)
+    #         self.peak_dict['df'] = _peak_df_scaled
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < _min].index, inplace=True)
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > _max].index, inplace=True)
+    #     _peak_df_scaled.reset_index(drop=True, inplace=True)
 
     def index_peak(self, peak_map, rel_tol=5e-3):
         if self.peak_dict is None:
             raise ValueError("Please identify peak use 'Peak.find()' before indexing.")
         assert self.peak_dict['x_type'] == 'energy'
         self.peak_map_indexed = index_peak(peak_df=self.peak_dict['df'], peak_map=peak_map, rel_tol=rel_tol)
-
-    def convert_peak_dict_type(self, x_type_target, y_type_target):
-        _peak_dict = self.peak_dict
 
 
 class Peak(object):

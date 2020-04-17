@@ -32,7 +32,9 @@ norm_factor = 1
 source_to_detector_m = 16.45  # 16#16.445359069030175#16.447496101100739
 offset_us = 0  # 0#2.7120797253959119#2.7355447625559037
 
+# x_type = 'lambda'
 x_type = 'energy'
+# y_type = 'transmission'
 y_type = 'attenuation'
 
 # experiment = Experiment(data_file=data_file,
@@ -64,6 +66,8 @@ calibration = Calibration(data_file=data_file,
                           database=database,
                           baseline=baseline,
                           baseline_deg=baseline_deg,
+                          x_type=x_type,
+                          y_type=y_type
                           )
 
 calibration.experiment.norm_to(norm_to_file, norm_factor=norm_factor)
@@ -74,7 +78,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          # vary='all',
                                          each_step=each_step)
 
-calibration.index_peak(x_type=x_type, y_type=y_type,
+calibration.index_peak(
                        thres_exp=0.05, min_dist_exp=2, min_dist_map=5, thres_map=0.05, rel_tol=0.1)
 # calibration.analyze_peak()
 pprint.pprint(calibration.experiment.o_peak.peak_map_indexed)

@@ -27,7 +27,9 @@ class Calibration(object):
                  # Initialize ResoFit.simulation
                  layer: fit_util.Layer,
                  energy_min, energy_max, energy_step,
-                 database: str):
+                 database: str,
+                 x_type: str,
+                 y_type: str):
         """
         Initialization with passed file location and sample info
 
@@ -48,8 +50,8 @@ class Calibration(object):
         :param baseline: True -> to remove baseline/background by detrend
         :type baseline: boolean
         """
-        self.x_type = 'energy'
-        self.y_type = 'attenuation'
+        self.x_type = x_type
+        self.y_type = y_type
         self.energy_min = energy_min
         self.energy_max = energy_max
         self.energy_step = energy_step
@@ -148,31 +150,35 @@ class Calibration(object):
             print("\ncalibrate() was not run as requested, input values used:\n"
                   "calibrated_offset_us = {}\ncalibrated_source_to_detector_m = {}".format(offset_us,
                                                                                            source_to_detector_m))
-            self.experiment.xy_scaled(energy_min=self.energy_min,
-                                      energy_max=self.energy_max,
-                                      energy_step=self.energy_step,
-                                      x_type='energy',
-                                      y_type='attenuation',
-                                      offset_us=offset_us,
-                                      source_to_detector_m=source_to_detector_m,
-                                      )
+            # self.experiment.xy_scaled(energy_min=self.energy_min,
+            #                           energy_max=self.energy_max,
+            #                           energy_step=self.energy_step,
+            #                           x_type='energy',
+            #                           y_type='attenuation',
+            #                           offset_us=offset_us,
+            #                           source_to_detector_m=source_to_detector_m,
+            #                           )
 
     def __find_peak(self, thres, min_dist):
         # load detected peak with x in image number
         # if self.calibrate_result is None:
         if self.calibrated_source_to_detector_m is None or self.calibrated_offset_us is None:
             raise ValueError("Instrument params have not been calibrated.")
-        self.experiment.find_peak(x_type='energy', y_type='attenuation',
+        self.experiment.find_peak(x_type=self.x_type, y_type=self.y_type,
                                   thres=thres, min_dist=min_dist)
-        self.experiment.o_peak._scale_peak_df(energy_min=self.energy_min, energy_max=self.energy_max)
+        # self.experiment.o_peak._scale_peak_df(energy_min=self.energy_min, energy_max=self.energy_max,
+        #                                       )
         return self.experiment.o_peak.peak_dict
 
-    def index_peak(self, x_type, y_type, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
+    def index_peak(self, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
-            self.__find_peak(thres=thres_exp, min_dist=min_dist_exp)  # type is forced to be 'energy' and 'attenuation'
-        # find peak map using Simulation.peak_map()
-        _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso)
+            self.__find_peak(thres=thres_exp, min_dist=min_dist_exp)
         pprint.pprint(self.experiment.o_peak.peak_dict)
+        # find peak map using Simulation.peak_map()
+        _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso,
+                                             x_type=self.x_type, y_type=self.y_type, offset_us=self.calibrated_offset_us,
+                                             source_to_detector_m=self.calibrated_source_to_detector_m, t_unit='us',
+                                             t_start_us=None, time_resolution_us=None)
         # pass peak map to Peak()
         self.experiment.o_peak.peak_map_full = _peak_map
         pprint.pprint(self.experiment.o_peak.peak_map_full)
