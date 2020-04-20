@@ -44,7 +44,7 @@ def convert_energy_to(x_type, x,
         x = reso_util.ev_to_s(offset_us=offset_us,
                               source_to_detector_m=source_to_detector_m,
                               array=x)
-        x = convert_s(x=x, t_unit=t_unit)
+        x = convert_s_to(x=x, t_unit=t_unit)
     if x_type == 'number':
         if time_resolution_us is not None:
             x = reso_util.ev_to_image_number(offset_us=offset_us,
@@ -52,41 +52,43 @@ def convert_energy_to(x_type, x,
                                              array=x,
                                              time_resolution_us=time_resolution_us,
                                              t_start_us=t_start_us)
+            # x = x + num_offset
         else:
             x = np.array(range(len(x))) + num_offset
+
     return x
 
 
-def get_peak_tag(x_type):
-    tag = 'x'
-    if x_type == 'lambda':
-        tag = 'x_A'
-    if x_type == 'time':
-        tag = 'x_s'
-    if x_type == 'number':
-        tag = 'x_num_o'
-    return tag
+# def get_peak_tag(x_type):
+#     tag = 'x'
+#     if x_type == 'lambda':
+#         tag = 'x_A'
+#     if x_type == 'time':
+#         tag = 'x_s'
+#     if x_type == 'number':
+#         tag = 'x_num_o'
+#     return tag
+#
+#
+# def get_df_col_name(x_type):
+#     tag = '_E'
+#     if x_type == 'lambda':
+#         tag = '_A'
+#     if x_type == 'time':
+#         tag = '_t'
+#     if x_type == 'number':
+#         tag = '_#'
+#     return tag
 
 
-def get_df_col_name(x_type):
-    tag = '_E'
-    if x_type == 'lambda':
-        tag = '_A'
-    if x_type == 'time':
-        tag = '_t'
-    if x_type == 'number':
-        tag = '_#'
-    return tag
+# def convert_attenuation_to(y_type, y):
+#     check_if_in_list(y_type, y_type_list)
+#     if y_type == 'transmission':
+#         y = 1 - y
+#     return np.array(y)
 
 
-def convert_attenuation_to(y_type, y):
-    check_if_in_list(y_type, y_type_list)
-    if y_type == 'transmission':
-        y = 1 - y
-    return np.array(y)
-
-
-def convert_s(x, t_unit):
+def convert_s_to(x, t_unit):
     if t_unit == 'ns':
         _x = x * 1e9
     elif t_unit == 'us':
@@ -110,7 +112,7 @@ def convert_exp_peak_df(peak_df: pd.DataFrame, x_type, t_unit):
     elif x_type == 'time':
         assert 'x_s' in peak_df.columns
         _x = peak_df['x_s']
-        _x = convert_s(x=_x, t_unit=t_unit)
+        _x = convert_s_to(x=_x, t_unit=t_unit)
     else:
         assert 'x_num_o' in peak_df.columns
         _x = peak_df['x_num_o']
@@ -428,15 +430,15 @@ def find_peak(y, x=None, x_name='x_num', y_name='y', thres=0.015, min_dist=1, im
         _peak_x = []
 
     peak_df = pd.DataFrame()
+    peak_df[x_name] = _peak_x
     peak_df[y_name] = _peak_y
     # peak_df[x_name] = [x_num + x_num_gap for x_num in _peak_x]
-    peak_df[x_name] = _peak_x
     peak_df.sort_values([x_name], inplace=True)
     peak_df.reset_index(inplace=True, drop=True)
     return peak_df
 
 
-def index_peak(peak_df, peak_map, rel_tol, x_name='x'):
+def index_peak(peak_df, peak_map, rel_tol):
     num_peak_indexed = 0
     _names = peak_map.keys()
     peak_map_indexed = {}
@@ -447,49 +449,46 @@ def index_peak(peak_df, peak_map, rel_tol, x_name='x'):
         _peak_x = peak_map[_peak_name]['ideal']['x']
         _peak_y = peak_map[_peak_name]['ideal']['y']
         _x_indexed_list = []
-        _x_num_indexed_list = []
-        _x_num_o_indexed_list = []
-        _x_s_indexed_list = []
-        _x_A_indexed_list = []
         _y_indexed_list = []
         _x_ideal_list = []
         _y_ideal_list = []
-        for _i in range(len(peak_df[x_name])):
+        for _i in range(len(peak_df['x'])):
             for _j in range(len(_peak_x)):
-                if isclose(_peak_x[_j], peak_df[x_name][_i], rel_tol=rel_tol):
+                if isclose(_peak_x[_j], peak_df['x'][_i], rel_tol=rel_tol):
+                    _x_indexed_list.append(peak_df['x'][_i])
                     _y_indexed_list.append(peak_df['y'][_i])
-                    _x_indexed_list.append(peak_df[x_name][_i])
                     _x_ideal_list.append(_peak_x[_j])
                     _y_ideal_list.append(_peak_y[_j])
-                    if 'x_num' in peak_df.columns:
-                        _x_num_indexed_list.append(peak_df['x_num'][_i])
-                    if 'x_num_o' in peak_df.columns:
-                        _x_num_o_indexed_list.append(peak_df['x_num_o'][_i])
-                    if 'x_s' in peak_df.columns:
-                        _x_s_indexed_list.append(peak_df['x_s'][_i])
-                    if 'x_A' in peak_df.columns:
-                        _x_A_indexed_list.append(peak_df['x_A'][_i])
-                        # _peak_name_list.append(_peak_name)
+                    # if 'x_num' in peak_df.columns:
+                    #     _x_num_indexed_list.append(peak_df['x_num'][_i])
+                    # if 'x_num_o' in peak_df.columns:
+                    #     _x_num_o_indexed_list.append(peak_df['x_num_o'][_i])
+                    # if 'x_s' in peak_df.columns:
+                    #     _x_s_indexed_list.append(peak_df['x_s'][_i])
+                    # if 'x_A' in peak_df.columns:
+                    #     _x_A_indexed_list.append(peak_df['x_A'][_i])
+                    #     # _peak_name_list.append(_peak_name)
         num_peak_indexed += len(_x_indexed_list)
-        _df[x_name] = _x_indexed_list
+        _df['x'] = _x_indexed_list
         _df['y'] = _y_indexed_list
         _df_ideal['x'] = _x_ideal_list
         _df_ideal['y'] = _y_ideal_list
-        if 'x_num' in peak_df.columns:
-            _df['x_num'] = _x_num_indexed_list
-            _df_ideal['x_num'] = _x_num_indexed_list
-        if 'x_num_o' in peak_df.columns:
-            _df['x_num_o'] = _x_num_o_indexed_list
-            _df_ideal['x_num_o'] = _x_num_o_indexed_list
-        if 'x_s' in peak_df.columns:
-            _df['x_s'] = _x_s_indexed_list
-            _df_ideal['x_s'] = _x_s_indexed_list
-        if 'x_A' in peak_df.columns:
-            _df['x_A'] = _x_A_indexed_list
-            _df_ideal['x_A'] = reso_util.ev_to_angstroms(np.array(_x_ideal_list))
+        # if 'x_num' in peak_df.columns:
+        #     _df['x_num'] = _x_num_indexed_list
+        #     _df_ideal['x_num'] = _x_num_indexed_list
+        # if 'x_num_o' in peak_df.columns:
+        #     _df['x_num_o'] = _x_num_o_indexed_list
+        #     _df_ideal['x_num_o'] = _x_num_o_indexed_list
+        # if 'x_s' in peak_df.columns:
+        #     _df['x_s'] = _x_s_indexed_list
+        #     _df_ideal['x_s'] = _x_s_indexed_list
+        # if 'x_A' in peak_df.columns:
+        #     _df['x_A'] = _x_A_indexed_list
+        #     _df_ideal['x_A'] = reso_util.ev_to_angstroms(np.array(_x_ideal_list))
 
         peak_map_indexed[_peak_name]['exp'] = _df
         peak_map_indexed[_peak_name]['ideal'] = _df_ideal
+    pprint.pprint(peak_map_indexed)
     return peak_map_indexed
 
 
@@ -544,7 +543,7 @@ class ResoPeak(object):
         peak_dict = {
             'df': peak_df
         }
-
+        self.peak_dict = peak_dict
         return peak_dict
 
     # def _scale_peak_df(self, energy_min, energy_max,
@@ -568,100 +567,10 @@ class ResoPeak(object):
     #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > _max].index, inplace=True)
     #     _peak_df_scaled.reset_index(drop=True, inplace=True)
 
-    def index_peak(self, peak_map, rel_tol=5e-3):
+    def index_peak(self, peak_map, rel_tol):
         if self.peak_dict is None:
             raise ValueError("Please identify peak use 'Peak.find()' before indexing.")
-        assert self.peak_dict['x_type'] == 'energy'
         self.peak_map_indexed = index_peak(peak_df=self.peak_dict['df'], peak_map=peak_map, rel_tol=rel_tol)
-
-
-class Peak(object):
-    def __init__(self):
-        """
-        Initialization
-
-        """
-        self.peak_df = None
-        self.peak_df_scaled = None
-        self.peak_map_full = None
-        self.peak_map_indexed = None
-        self.y = None
-        self.x = None
-
-        self.shape_report = None
-        self.prefix_list = None
-
-        self.x_num_gap = 0
-
-    def find(self, x, y, y_name='y', thres=0.015, min_dist=1, impr_reso=False):
-        """
-        find peaks in 1d data and return peaks detected using pd.DataFrame
-        :param y: 1d data
-        :type y: array
-        :param x:
-        :type x: array (optional)
-        :param y_name:
-        :type y_name:
-        :param thres:
-        :type thres:
-        :param min_dist:
-        :type min_dist:
-        :param impr_reso:
-        :type impr_reso:
-        :return:
-        :rtype:
-        """
-        if x is None:
-            x = np.array(range(len(y)))
-        self.x = x
-        self.y = y
-        peak_df = find_peak(y=y, x=None, x_name='x_num', y_name=y_name,
-                            thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
-        _peak_df = find_peak(y=y, x=x, x_name='x_s', y_name=y_name,
-                             thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
-        if type(y) == pd.core.series.Series:
-            if y.index[0] != 1:
-                self.x_num_gap = y.index[0]
-                peak_df['x_num_o'] = peak_df['x_num'] + self.x_num_gap
-        peak_df['x_s'] = _peak_df['x_s']
-        self.peak_df = peak_df
-        return self.peak_df
-
-    # def add_x_s(self, y, x=None, x_name='x', y_name='y', thres=0.15, min_dist=1, impr_reso=False):
-    #     if x_name == 'x_s':
-    #         self.x_s = x
-    #
-    #     _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
-    #                          thres=thres, min_dist=min_dist, impr_reso=impr_reso)
-    #     _x_name = x_name
-    #     if _x_name in self.peak_df.columns:
-    #         _x_name += '0'
-    #     _len_before = len(self.peak_df.columns)
-    #     self.peak_df[_x_name] = _peak_df[x_name]
-    #     _len_after = len(self.peak_df.columns)
-    #     assert _len_after > _len_before
-
-    def _extend_x_cols(self, offset_us, source_to_detector_m):
-        assert 'x_s' in self.peak_df.keys()
-        _peak_df = self.peak_df.copy()
-        _peak_df['x'] = reso_util.s_to_ev(array=_peak_df['x_s'],
-                                          offset_us=offset_us,
-                                          source_to_detector_m=source_to_detector_m)
-        _peak_df['x_A'] = reso_util.ev_to_angstroms(_peak_df['x'])
-        self.peak_df = _peak_df
-
-    # def _scale_peak_df(self, energy_min, energy_max):
-    #     _peak_df_scaled = self.peak_df.copy()
-    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
-    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
-    #     _peak_df_scaled.reset_index(drop=True, inplace=True)
-    #     self.peak_df_scaled = _peak_df_scaled
-
-    # def index_peak(self, peak_map, rel_tol=5e-3):
-    #     if self.peak_df is None:
-    #         raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
-    #     assert self.peak_df_scaled is not None
-    #     self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
 
     def analyze(self, report=False, fit_model='Lorentzian'):
         check_if_in_list(fit_model, peak_model_list)
@@ -755,6 +664,188 @@ class Peak(object):
                                                             source_to_detector_m=source_to_detector_m)
             _live_location['y'] = list(self.y.reindex(_img_num_list))
             # _live_location['y'] = list(self.y.loc[_img_num_list])
+
+
+class Peak(object):
+    def __init__(self):
+        """
+        Initialization
+
+        """
+        self.peak_df = None
+        self.peak_df_scaled = None
+        self.peak_map_full = None
+        self.peak_map_indexed = None
+        self.y = None
+        self.x = None
+
+        self.shape_report = None
+        self.prefix_list = None
+
+        self.x_num_gap = 0
+
+    def find(self, x, y, y_name='y', thres=0.015, min_dist=1, impr_reso=False):
+        """
+        find peaks in 1d data and return peaks detected using pd.DataFrame
+        :param y: 1d data
+        :type y: array
+        :param x:
+        :type x: array (optional)
+        :param y_name:
+        :type y_name:
+        :param thres:
+        :type thres:
+        :param min_dist:
+        :type min_dist:
+        :param impr_reso:
+        :type impr_reso:
+        :return:
+        :rtype:
+        """
+        if x is None:
+            x = np.array(range(len(y)))
+        self.x = x
+        self.y = y
+        peak_df = find_peak(y=y, x=None, x_name='x_num', y_name=y_name,
+                            thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
+        _peak_df = find_peak(y=y, x=x, x_name='x_s', y_name=y_name,
+                             thres=thres, min_dist=min_dist, imprv_reso=impr_reso)
+        if type(y) == pd.core.series.Series:
+            if y.index[0] != 1:
+                self.x_num_gap = y.index[0]
+                peak_df['x_num_o'] = peak_df['x_num'] + self.x_num_gap
+        peak_df['x_s'] = _peak_df['x_s']
+        self.peak_df = peak_df
+        return self.peak_df
+
+    # def add_x_s(self, y, x=None, x_name='x', y_name='y', thres=0.15, min_dist=1, impr_reso=False):
+    #     if x_name == 'x_s':
+    #         self.x_s = x
+    #
+    #     _peak_df = find_peak(y=y, x=x, x_name=x_name, y_name=y_name,
+    #                          thres=thres, min_dist=min_dist, impr_reso=impr_reso)
+    #     _x_name = x_name
+    #     if _x_name in self.peak_df.columns:
+    #         _x_name += '0'
+    #     _len_before = len(self.peak_df.columns)
+    #     self.peak_df[_x_name] = _peak_df[x_name]
+    #     _len_after = len(self.peak_df.columns)
+    #     assert _len_after > _len_before
+
+    def _extend_x_cols(self, offset_us, source_to_detector_m):
+        assert 'x_s' in self.peak_df.keys()
+        _peak_df = self.peak_df.copy()
+        _peak_df['x'] = reso_util.s_to_ev(array=_peak_df['x_s'],
+                                          offset_us=offset_us,
+                                          source_to_detector_m=source_to_detector_m)
+        _peak_df['x_A'] = reso_util.ev_to_angstroms(_peak_df['x'])
+        self.peak_df = _peak_df
+
+    # def _scale_peak_df(self, energy_min, energy_max):
+    #     _peak_df_scaled = self.peak_df.copy()
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x < energy_min].index, inplace=True)
+    #     _peak_df_scaled.drop(_peak_df_scaled[_peak_df_scaled.x > energy_max].index, inplace=True)
+    #     _peak_df_scaled.reset_index(drop=True, inplace=True)
+    #     self.peak_df_scaled = _peak_df_scaled
+
+    # def index_peak(self, peak_map, rel_tol=5e-3):
+    #     if self.peak_df is None:
+    #         raise ValueError("Please identify use 'Peak.find()' before indexing peak.")
+    #     assert self.peak_df_scaled is not None
+    #     self.peak_map_indexed = index_peak(peak_df=self.peak_df_scaled, peak_map=peak_map, rel_tol=rel_tol)
+
+    # def analyze(self, report=False, fit_model='Lorentzian'):
+    #     check_if_in_list(fit_model, peak_model_list)
+    #     _y = self.y
+    #     _x = self.x
+    #     _peak_map_indexed = self.peak_map_indexed
+    #     model = lmfit.models.GaussianModel(prefix='bkg_')
+    #     pars = model.guess(_y, x=_x)
+    #     self.prefix_list = []
+    #     for _ele in _peak_map_indexed.keys():
+    #         if '-' not in _ele:
+    #             for _ind in range(len(_peak_map_indexed[_ele]['exp'])):
+    #                 _prefix = _ele + '_' + str(_ind) + '_'
+    #                 if fit_model == 'Gaussian':
+    #                     _model = lmfit.models.GaussianModel(prefix=_prefix)
+    #                 else:  # fit_model == 'Lorentzian':
+    #                     _model = lmfit.models.LorentzianModel(prefix=_prefix)
+    #                 _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
+    #                 pars.update(_model.make_params())
+    #                 pars[_prefix + 'amplitude'].value = 3.0
+    #                 pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
+    #                 pars[_prefix + 'sigma'].set(2.0, min=0.5, max=50)
+    #                 model += _model
+    #                 self.prefix_list.append(_prefix)
+    #     _out = model.fit(_y, pars, x=_x)
+    #     self.shape_report = _out
+    #     self.__fwhm()
+    #     self.__fill_img_num_to_peak_map_indexed()
+    #     print("+------------ Peak analysis ------------+\n{} peak fitting:".format(fit_model))
+    #     print("{}\n".format(self.fwhm_df))
+    #
+    #     if report is True:
+    #         print(_out.fit_report())
+    #
+    # def plot_fit(self):
+    #     if self.shape_report is not None:
+    #         self.shape_report.plot()
+    #         plt.show()
+    #     else:
+    #         print("Peaks have not been fitted. Please run 'Peak.analyze()' before plotting.")
+    #
+    # def __fwhm(self):
+    #     _fwhm_df = pd.DataFrame()
+    #     # generate ele list for _fwhm_df
+    #     _ele_list = [_ele_name.split('_')[0] for _ele_name in self.prefix_list]
+    #     _prefix_list = self.prefix_list
+    #     _values = self.shape_report.__dict__['params'].valuesdict()
+    #     pars_center_name = [_i + 'center' for _i in _prefix_list]
+    #     pars_fwhm_name = [_i + 'fwhm' for _i in _prefix_list]
+    #     pars_center_value = [_values[_name] for _name in pars_center_name]
+    #     pars_fwhm_value = [_values[_name] for _name in pars_fwhm_name]
+    #     _fwhm_df['ele_name'] = _ele_list
+    #     _fwhm_df['center_val'] = pars_center_value
+    #     _fwhm_df['fwhm_val'] = pars_fwhm_value
+    #     _fwhm_df.sort_values(['center_val'], inplace=True)
+    #     _fwhm_df.reset_index(inplace=True, drop=True)
+    #     self.fwhm_df = _fwhm_df
+    #
+    # def __fill_img_num_to_peak_map_indexed(self):
+    #     assert 'x_s' in self.peak_df.keys()
+    #     # if self.x_s is None:
+    #     #     raise ValueError("Column of x in time (s) has not been added.")
+    #     _peak_map_indexed = self.peak_map_indexed
+    #     _fwhm_df = self.fwhm_df
+    #     for _ele in _peak_map_indexed.keys():
+    #         _peak_map_indexed[_ele]['peak_span'] = {}
+    #         _img_num_list = []
+    #         _peak_span_df = pd.DataFrame()
+    #         for _ind in range(len(_fwhm_df)):
+    #             if _fwhm_df['ele_name'][_ind] == _ele:
+    #                 half_fwhm = _fwhm_df['fwhm_val'][_ind] / 2
+    #                 _min = _fwhm_df['center_val'][_ind] - half_fwhm + self.x_num_gap
+    #                 _max = _fwhm_df['center_val'][_ind] + half_fwhm + self.x_num_gap
+    #                 _min = int(np.floor(_min))
+    #                 _max = int(np.ceil(_max)) + 1
+    #                 _img_num_list += [a for a in range(_min, _max)]
+    #         _peak_span_df['img_num'] = _img_num_list
+    #         _peak_map_indexed[_ele]['peak_span'] = _peak_span_df
+    #     self.peak_map_indexed = _peak_map_indexed
+    #
+    # def fill_peak_span(self, offset_us, source_to_detector_m):
+    #     assert 'x_s' in self.peak_df.keys()
+    #     for _keys in self.peak_map_indexed.keys():
+    #         _live_location = self.peak_map_indexed[_keys]['peak_span']
+    #         _img_num_list = _live_location['img_num']
+    #         # _live_location['time_s'] = list(self.x_s.reindex(_img_num_list))
+    #         _live_location['time_s'] = list(self.peak_df['x_s'].reindex(_img_num_list))
+    #         # _live_location['energy_ev'] = reso_util.s_to_ev(array=list(self.x_s.reindex(_img_num_list)),
+    #         _live_location['energy_ev'] = reso_util.s_to_ev(array=_live_location['time_s'],
+    #                                                         offset_us=offset_us,
+    #                                                         source_to_detector_m=source_to_detector_m)
+    #         _live_location['y'] = list(self.y.reindex(_img_num_list))
+    #         # _live_location['y'] = list(self.y.loc[_img_num_list])
 
 # def a_new_decorator(a_func):
 #     @wraps(a_func)

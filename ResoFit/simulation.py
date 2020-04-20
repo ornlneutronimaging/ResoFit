@@ -99,7 +99,7 @@ class Simulation(object):
         # self.y_simu = np.array(self.o_reso.total_signal['attenuation'])
 
     def get_x(self, x_type, offset_us=None, source_to_detector_m=None, t_unit='us',
-              t_start_us=None, time_resolution_us=None):
+              t_start_us=None, time_resolution_us=None, num_offset=0):
         """
         Get x by specified type
 
@@ -120,7 +120,8 @@ class Simulation(object):
                                        source_to_detector_m=source_to_detector_m,
                                        t_unit=t_unit,
                                        t_start_us=t_start_us,
-                                       time_resolution_us=time_resolution_us)
+                                       time_resolution_us=time_resolution_us,
+                                       num_offset=num_offset)
         return x
 
     def get_y(self, y_type):
@@ -170,7 +171,7 @@ class Simulation(object):
 
     def peak_map(self, x_type, y_type, thres=0.15, min_dist=20, impr_reso=True,
                  offset_us=None, source_to_detector_m=None, t_unit='us',
-                 t_start_us=None, time_resolution_us=None
+                 t_start_us=None, time_resolution_us=None, num_offset=0,
                  ):
         """
         Get peak map for each element and/or isotope
@@ -195,27 +196,34 @@ class Simulation(object):
                         source_to_detector_m=source_to_detector_m,
                         t_unit=t_unit,
                         t_start_us=t_start_us,
-                        time_resolution_us=time_resolution_us
+                        time_resolution_us=time_resolution_us,
+                        num_offset=num_offset
                         )
-        peak_dict = {}
+        # _x = sorted(_x)
+        peak_map = {}
         for _ele in _layer_list:
             # Isotope
             for _iso in self.o_reso.stack[_ele][_ele]['isotopes']['list']:
-                peak_dict[_iso] = {}
-                _iso_y = _stack_signal[_ele][_ele][_iso][y_type]
+                peak_map[_iso] = {}
+                _iso_y = _stack_signal[_ele][_ele][_iso]['attenuation']
                 _peak_df = fit_util.find_peak(x=_x, y=_iso_y, x_name='x',
                                               thres=thres, min_dist=min_dist,
                                               imprv_reso=impr_reso)
-                peak_dict[_iso]['ideal'] = _peak_df
+                if y_type == 'transmission':
+                    _peak_df['y'] = 1 - _peak_df['y']
+                peak_map[_iso]['ideal'] = _peak_df
             # Element
-            peak_dict[_ele] = {}
-            _ele_y = _stack_signal[_ele][_ele][y_type]
+            peak_map[_ele] = {}
+            _ele_y = _stack_signal[_ele][_ele]['attenuation']
             _peak_df = fit_util.find_peak(x=_x, y=_ele_y, x_name='x',
                                           thres=thres, min_dist=min_dist,
                                           imprv_reso=impr_reso)
-            peak_dict[_ele]['ideal'] = _peak_df
-        peak_dict['x_type'] = x_type
-        peak_dict['y_type'] = y_type
+            if y_type == 'transmission':
+                _peak_df['y'] = 1 - _peak_df['y']
+            peak_map[_ele]['ideal'] = _peak_df
+        peak_dict = {'peak_map': peak_map,
+                     'x_type': x_type,
+                     'y_type': y_type}
         return peak_dict
 
     def plot(self, y_type='attenuation', x_type='energy',

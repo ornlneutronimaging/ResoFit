@@ -9,7 +9,7 @@ from ResoFit._utilities import Layer
 
 # Global parameters
 energy_min = 7
-energy_max = 1000
+energy_max = 300
 energy_step = 0.01
 
 layers = Layer()
@@ -19,16 +19,25 @@ layers.add_layer(layer='Gd', thickness_mm=0.015, density_gcm3=None)
 folder = 'data/IPTS_19558/reso_data_19558'
 data_file = 'spheres.csv'
 spectra_file = 'Image002_Spectra.txt'
-image_start = 200  # Can be omitted or =None
+database = 'ENDF_VIII'
+image_start = 300  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
 norm_to_file = None  # 'sphere_background_1.csv'
 # norm_to_file = 'sphere_background_1.csv'
 baseline = True
 each_step = False
+baseline_deg = 3
 
-norm_factor = 0.99
+norm_factor = 1
 source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
 offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
+
+# x_type = 'lambda'
+# x_type = 'energy'
+# x_type = 'number'
+x_type = 'time'
+# y_type = 'transmission'
+y_type = 'attenuation'
 
 # Calibrate the peak positions
 calibration = Calibration(data_file=data_file,
@@ -38,7 +47,14 @@ calibration = Calibration(data_file=data_file,
                           energy_max=energy_max,
                           energy_step=energy_step,
                           folder=folder,
-                          baseline=baseline)
+                          exp_source_to_detector_m=source_to_detector_m,
+                          exp_offset_us=offset_us,
+                          database=database,
+                          baseline=baseline,
+                          baseline_deg=baseline_deg,
+                          x_type=x_type,
+                          y_type=y_type
+                          )
 
 calibration.experiment.norm_to(file=norm_to_file, norm_factor=norm_factor)
 calibration.experiment.slice(start=image_start, end=image_end)
@@ -47,20 +63,19 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres_exp=0.12, min_dist_exp=15, min_dist_map=15, thres_map=0.12)
-calibration.analyze_peak(report=True)
+calibration.index_peak(thres_exp=0.12, min_dist_exp=15, min_dist_map=15, thres_map=0.12, rel_tol=0.01)
+# calibration.analyze_peak(report=True)
 
 # calibration.export(y_type='attenuation',
 #                  # y_type='transmission',
 #                  x_type='energy',)
-calibration.plot(y_type='attenuation',
-                 # y_type='transmission',
-                 x_type='number',
+calibration.plot(y_type=y_type,
+                 x_type=x_type,
                  # t_unit='ns',
                  # before=True,
                  # interp=True,
                  mixed=True,
-                 table=False,
+                 table=True,
                  peak_exp='all',
                  peak_height=True,
                  index_level='ele',

@@ -70,8 +70,8 @@ class Experiment(object):
         # store raw data (df)
         self.data_raw = self.data[:]
         self.spectra_raw = self.spectra[:]
-        self.t_start_us = fit_util.convert_s(self.spectra[0][0], t_unit='us')
-        self.time_resolution_us = fit_util.convert_s(self.spectra[0][2] - self.spectra[0][1], t_unit='us')
+        self.t_start_us = fit_util.convert_s_to(self.spectra[0][0], t_unit='us')
+        self.time_resolution_us = fit_util.convert_s_to(self.spectra[0][2] - self.spectra[0][1], t_unit='us')
         # raw image number saved
         self.img_num = self.data.index.values
         # Baseline_rmv
@@ -105,7 +105,9 @@ class Experiment(object):
         x_e = np.array(reso_util.s_to_ev(array=_x_exp_raw,
                                          offset_us=self.offset_us,
                                          source_to_detector_m=self.source_to_detector_m))
-        x_exp_raw = fit_util.convert_energy_to(x=x_e, x_type=x_type, offset_us=self.offset_us,
+        x_exp_raw = fit_util.convert_energy_to(x=x_e,
+                                               x_type=x_type,
+                                               offset_us=self.offset_us,
                                                source_to_detector_m=self.source_to_detector_m,
                                                t_unit=self.t_unit,
                                                num_offset=self.img_start)
@@ -184,8 +186,13 @@ class Experiment(object):
 
         y_interp_function = interp1d(x=x_exp_raw, y=y_exp_raw, kind='cubic')
         y_interp = y_interp_function(_x_interp)
-        x_interp = fit_util.convert_energy_to(x_type=x_type, x=_x_interp, t_unit=self.t_unit,
-                                              offset_us=self.offset_us, source_to_detector_m=self.source_to_detector_m)
+        x_interp = fit_util.convert_energy_to(x_type=x_type,
+                                              x=_x_interp,
+                                              t_unit=self.t_unit,
+                                              offset_us=self.offset_us,
+                                              source_to_detector_m=self.source_to_detector_m,
+                                              num_offset=self.img_start,
+                                              )
         return x_interp, y_interp
 
     def norm_to(self, file, norm_factor=1, reset_index=False):
@@ -291,8 +298,6 @@ class Experiment(object):
             raise ValueError("No peak has been detected.")
         if y_type == 'transmission':
             self.o_peak.peak_dict['df']['y'] = 1 - self.o_peak.peak_dict['df']['y']
-
-
         return self.o_peak.peak_dict
 
     def plot(self, x_type, y_type,

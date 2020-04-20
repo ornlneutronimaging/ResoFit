@@ -67,6 +67,7 @@ class Calibration(object):
                                      offset_us=exp_offset_us,
                                      baseline=baseline,
                                      baseline_deg=baseline_deg)
+        self.experiment.t_start_us = self.experiment.t_start_us + _exp_time_offset_us
         self.init_source_to_detector_m = exp_source_to_detector_m
         self.init_offset_us = exp_offset_us
         self.calibrated_offset_us = None
@@ -74,8 +75,7 @@ class Calibration(object):
         self.calibrate_result = None
         self.params_to_calibrate = None
 
-    def calibrate(self, x_type=None, y_type=None,
-                  source_to_detector_m=None, offset_us=None, vary='all',
+    def calibrate(self, source_to_detector_m=None, offset_us=None, vary='all',
                   each_step=False):
         """
         calibrate the instrumental parameters: source-to-detector-distance & detector delay
@@ -91,16 +91,12 @@ class Calibration(object):
             source_to_detector_m = self.init_source_to_detector_m
         if offset_us is None:
             offset_us = self.init_offset_us
-        if x_type is not None:
-            self.x_type = x_type
-        if y_type is not None:
-            self.y_type = y_type
 
         vary_type_list = ['source_to_detector', 'offset', 'all', 'none']
         if vary not in vary_type_list:
             raise ValueError("'vary=' can only be one of '{}'".format(vary_type_list))
-        simu_x = self.simulation.get_x(x_type=self.x_type)
-        simu_y = self.simulation.get_y(y_type=self.y_type)
+        simu_x = self.simulation.get_x(x_type='energy', offset_us=offset_us, source_to_detector_m=source_to_detector_m)
+        simu_y = self.simulation.get_y(y_type='attenuation')
         _run = True
         if vary == 'all':
             source_to_detector_vary_tag = True
@@ -133,7 +129,7 @@ class Calibration(object):
                                              method='leastsq',
                                              args=(simu_x, simu_y,
                                                    self.energy_min, self.energy_max, self.energy_step,
-                                                   self.experiment, self.x_type, self.y_type, each_step))
+                                                   self.experiment, 'energy', 'attenuation', each_step))
             # Print after
             print("\nParams after:")
             self.calibrate_result.__dict__['params'].pretty_print()
@@ -173,17 +169,21 @@ class Calibration(object):
     def index_peak(self, thres_exp, min_dist_exp, thres_map, min_dist_map, rel_tol, impr_reso=True):
         if self.experiment.o_peak is None:
             self.__find_peak(thres=thres_exp, min_dist=min_dist_exp)
-        pprint.pprint(self.experiment.o_peak.peak_dict)
         # find peak map using Simulation.peak_map()
-        _peak_map = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso,
-                                             x_type=self.x_type, y_type=self.y_type, offset_us=self.calibrated_offset_us,
-                                             source_to_detector_m=self.calibrated_source_to_detector_m, t_unit='us',
-                                             t_start_us=None, time_resolution_us=None)
+        _peak_dict = self.simulation.peak_map(thres=thres_map, min_dist=min_dist_map, impr_reso=impr_reso,
+                                              x_type=self.x_type, y_type=self.y_type,
+                                              offset_us=self.calibrated_offset_us,
+                                              source_to_detector_m=self.calibrated_source_to_detector_m,
+                                              t_unit=self.experiment.t_unit,
+                                              t_start_us=self.experiment.t_start_us,
+                                              time_resolution_us=self.experiment.time_resolution_us,
+                                              num_offset=self.experiment.img_start)
         # pass peak map to Peak()
-        self.experiment.o_peak.peak_map_full = _peak_map
-        pprint.pprint(self.experiment.o_peak.peak_map_full)
+        assert _peak_dict['x_type'] == self.experiment.o_peak.peak_dict['x_type']
+        assert _peak_dict['y_type'] == self.experiment.o_peak.peak_dict['y_type']
+        self.experiment.o_peak.peak_map_full = _peak_dict['peak_map']
         # index using Peak()
-        self.experiment.o_peak.index_peak(_peak_map, rel_tol=rel_tol)
+        self.experiment.o_peak.index_peak(_peak_dict['peak_map'], rel_tol=rel_tol)
         return self.experiment.o_peak.peak_map_indexed
 
     def analyze_peak(self, report=False, show_fit=False):
@@ -275,7 +275,7 @@ class Calibration(object):
     #
     #     return self.calibrate_result
 
-    def plot(self, x_type='energy', y_type='attenuation', t_unit='us',
+    def plot(self, x_type=None, y_type=None, t_unit='us',
              index_level='iso', peak_id='indexed', peak_exp='indexed',
              peak_height=True,
              before=False, interp=False, mixed=False,
@@ -284,6 +284,11 @@ class Calibration(object):
         fit_util.check_if_in_list(peak_id, fit_util.peak_type_list)
         fit_util.check_if_in_list(peak_exp, fit_util.peak_type_list)
         fit_util.check_if_in_list(index_level, fit_util.index_level_list)
+
+        if x_type is None:
+            x_type = self.x_type
+        if y_type is None:
+            y_type = self.y_type
 
         old_colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
         new_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728',
@@ -317,12 +322,12 @@ class Calibration(object):
                                        t_unit=t_unit,
                                        offset_us=self.calibrated_offset_us,
                                        source_to_detector_m=self.calibrated_source_to_detector_m,
-                                       t_start_us=self.experiment.t_start_us + _exp_time_offset_us,
+                                       t_start_us=self.experiment.t_start_us,
                                        time_resolution_us=self.experiment.time_resolution_us,
+                                       num_offset=self.experiment.slice_start
                                        )
             _y = self.simulation.get_y(y_type=y_type)
             ax1.plot(_x, _y, 'b-', label=simu_label, linewidth=1)
-
         """Plot options"""
         # 1.
         if before:
@@ -330,7 +335,8 @@ class Calibration(object):
             _x_init = self.experiment.get_x(x_type=x_type,
                                             t_unit=t_unit,
                                             offset_us=self.init_offset_us,
-                                            source_to_detector_m=self.init_source_to_detector_m)
+                                            source_to_detector_m=self.init_source_to_detector_m,
+                                            )
             _y_init = self.experiment.get_y(y_type=y_type)
             ax1.plot(_x_init,
                      _y_init,
@@ -366,15 +372,14 @@ class Calibration(object):
                      linestyle='-', linewidth=1,
                      marker='o', markersize=2,
                      color='r', label=exp_label)
-
-        x_tag = fit_util.get_peak_tag(x_type=x_type)
         if peak_exp == 'all':
             # _peak_x_exp = fit_util.convert_exp_peak_df(x_type=x_type, peak_df=_peak_df_scaled, t_unit=t_unit)
-            _peak_df_scaled = self.experiment.o_peak.peak_df_scaled
-            _peak_x_exp = _peak_df_scaled[x_tag]
-            if x_type == 'time':
-                _peak_x_exp = fit_util.convert_s(x=_peak_x_exp, t_unit=t_unit)
-            _peak_y_exp = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y'])
+            _peak_df_scaled = self.experiment.o_peak.peak_dict['df']
+            _peak_x_exp = _peak_df_scaled['x']
+            # if x_type == 'time':
+            #     _peak_x_exp = fit_util.convert_s(x=_peak_x_exp, t_unit=t_unit)
+            # _peak_y_exp = fit_util.convert_attenuation_to(y_type=y_type, y=_peak_df_scaled['y'])
+            _peak_y_exp = _peak_df_scaled['y']
             ax1.scatter(_peak_x_exp,
                         _peak_y_exp,
                         c='k',
@@ -412,21 +417,23 @@ class Calibration(object):
 
                 for _peak_name in _peak_name_list:
                     if len(_current_peak_map[_peak_name][_tag]) > 0:
-                        if x_tag in _current_peak_map[_peak_name][_tag].keys():  # peak_map_indexed
-                            _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
-                            if x_type == 'time':
-                                _peak_x = fit_util.convert_s(x=_peak_x, t_unit=t_unit)
-                        else:  # peak_map_full
-                            _peak_x = fit_util.convert_energy_to(x=_current_peak_map[_peak_name][_tag]['x'],
-                                                                 x_type=x_type,
-                                                                 offset_us=self.calibrated_offset_us,
-                                                                 source_to_detector_m=self.calibrated_source_to_detector_m,
-                                                                 t_unit=t_unit,
-                                                                 t_start_us=self.experiment.t_start_us,
-                                                                 time_resolution_us=self.experiment.time_resolution_us)
-
-                        _peak_y = fit_util.convert_attenuation_to(y_type=y_type,
-                                                                  y=_current_peak_map[_peak_name][_tag]['y'])
+                        # if x_tag in _current_peak_map[_peak_name][_tag].keys():  # peak_map_indexed
+                        #     _peak_x = _current_peak_map[_peak_name][_tag][x_tag]
+                        #     if x_type == 'time':
+                        #         _peak_x = fit_util.convert_s(x=_peak_x, t_unit=t_unit)
+                        # else:  # peak_map_full
+                        # _peak_x = fit_util.convert_energy_to(x=_current_peak_map[_peak_name][_tag]['x'],
+                        #                                      x_type=x_type,
+                        #                                      offset_us=self.calibrated_offset_us,
+                        #                                      source_to_detector_m=self.calibrated_source_to_detector_m,
+                        #                                      t_unit=t_unit,
+                        #                                      t_start_us=self.experiment.t_start_us,
+                        #                                      time_resolution_us=self.experiment.time_resolution_us,
+                        #                                      num_offset=self.experiment.img_start)
+                        # _peak_y = fit_util.convert_attenuation_to(y_type=y_type,
+                        #                                           y=_current_peak_map[_peak_name][_tag]['y'])
+                        _peak_x = _current_peak_map[_peak_name][_tag]['x']
+                        _peak_y = _current_peak_map[_peak_name][_tag]['y']
                         if peak_exp == 'indexed':
                             _legend_name = '_nolegend_'
                         else:
@@ -454,11 +461,8 @@ class Calibration(object):
                                        label='_nolegend_')
 
                         if peak_exp == 'indexed':
-                            _peak_x_exp = fit_util.convert_exp_peak_df(x_type=x_type,
-                                                                       peak_df=_peak_map_indexed[_peak_name]['exp'],
-                                                                       t_unit=t_unit)
-                            _peak_y_exp = fit_util.convert_attenuation_to(y_type=y_type,
-                                                                          y=_peak_map_indexed[_peak_name]['exp']['y'])
+                            _peak_x_exp = _peak_map_indexed[_peak_name]['exp']['x']
+                            _peak_y_exp = _peak_map_indexed[_peak_name]['exp']['y']
                             ax1.scatter(_peak_x_exp,
                                         _peak_y_exp,
                                         marker=_current_style,
