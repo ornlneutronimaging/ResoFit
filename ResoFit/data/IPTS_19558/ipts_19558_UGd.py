@@ -33,9 +33,9 @@ source_to_detector_m = 16.43  # 16#16.445359069030175#16.447496101100739
 offset_us = 2.7  # 0#2.7120797253959119#2.7355447625559037
 
 # x_type = 'lambda'
-# x_type = 'energy'
+x_type = 'energy'
 # x_type = 'number'
-x_type = 'time'
+# x_type = 'time'
 # y_type = 'transmission'
 y_type = 'attenuation'
 
@@ -64,7 +64,7 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          vary='all',
                                          each_step=each_step)
 calibration.index_peak(thres_exp=0.12, min_dist_exp=15, min_dist_map=15, thres_map=0.12, rel_tol=0.01)
-# calibration.analyze_peak(report=True)
+calibration.analyze_peak(report=False)
 
 # calibration.export(y_type='attenuation',
 #                  # y_type='transmission',
@@ -76,7 +76,7 @@ calibration.plot(y_type=y_type,
                  # interp=True,
                  mixed=True,
                  table=True,
-                 peak_exp='all',
+                 peak_exp='indexed',
                  peak_height=True,
                  index_level='ele',
                  # peak_id='all',

@@ -221,10 +221,10 @@ class Simulation(object):
             if y_type == 'transmission':
                 _peak_df['y'] = 1 - _peak_df['y']
             peak_map[_ele]['ideal'] = _peak_df
-        peak_dict = {'peak_map': peak_map,
-                     'x_type': x_type,
-                     'y_type': y_type}
-        return peak_dict
+        peak_map_dict = {'peak_map': peak_map,
+                         'x_type': x_type,
+                         'y_type': y_type}
+        return peak_map_dict
 
     def plot(self, y_type='attenuation', x_type='energy',
              logx=False, logy=False,

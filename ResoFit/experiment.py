@@ -230,7 +230,6 @@ class Experiment(object):
 
         :param start: start image
         :param end: end image
-        :param reset_index: True -> reset pd.Dataframe indexes after slicing
         :return: pd.Dataframe. sliced self.spectra and self.data
         """
         if start and end is not None:
@@ -292,12 +291,12 @@ class Experiment(object):
         _y = self.get_y(
             y_type='attenuation',
         )
-        self.o_peak = fit_util.ResoPeak(x=_x, y=_y, x_type=x_type, y_type=y_type)
+        self.o_peak = fit_util.ResoPeak(x=_x, y=_y, x_type=x_type, y_type=y_type, img_num=self.img_num)
         self.o_peak.find_peak(thres=thres, min_dist=min_dist, imprv_reso=imprv_reso)
         if len(self.o_peak.peak_dict['df']) < 1:
             raise ValueError("No peak has been detected.")
-        if y_type == 'transmission':
-            self.o_peak.peak_dict['df']['y'] = 1 - self.o_peak.peak_dict['df']['y']
+        # if y_type == 'transmission':
+        #     self.o_peak.peak_dict['df']['y'] = 1 - self.o_peak.peak_dict['df']['y']
         return self.o_peak.peak_dict
 
     def plot(self, x_type, y_type,
@@ -345,7 +344,7 @@ class Experiment(object):
 
         if self.o_peak is not None:
             if len(self.o_peak.peak_dict) != 0:
-                _x_tag = fit_util.get_peak_tag(x_type=x_type)
+                # _x_tag = fit_util.get_peak_tag(x_type=x_type)
                 ax_mpl.scatter(self.o_peak.peak_dict['x'],
                                self.o_peak.peak_dict['y'],
                                c='r',
