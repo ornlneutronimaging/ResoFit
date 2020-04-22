@@ -186,10 +186,10 @@ class Calibration(object):
         self.experiment.o_peak.index_peak(_peak_map_dict, rel_tol=rel_tol)
         # return self.experiment.o_peak.peak_map_indexed
 
-    def analyze_peak(self, report=False, show_fit=False):
+    def analyze_peak(self, fit_model, report=False, show_fit=False):
         if self.experiment.o_peak is None:
             raise AttributeError("Please run 'Calibration.index_peak()' before peak analysis.")
-        self.experiment.o_peak.analyze(report=report)
+        self.experiment.o_peak.analyze(report=report, fit_model=fit_model)
         if show_fit:
             self.experiment.o_peak.plot_fit()
 
