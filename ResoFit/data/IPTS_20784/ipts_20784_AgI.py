@@ -25,9 +25,9 @@ spectra_file = 'Ta_lead_10mm__0__040_Spectra.txt'
 data_file = 'AgI_pellets_all.csv'
 image_start = None  # Can be omitted or =None
 image_end = None  # Can be omitted or =None
-norm_to_file = 'blank_region.csv'
-# norm_to_file = 'blank_pellets_all.csv'
-baseline = False
+# norm_to_file = 'blank_region.csv'
+norm_to_file = 'blank_pellets_all.csv'
+baseline = True
 baseline_deg = 3
 each_step = False
 

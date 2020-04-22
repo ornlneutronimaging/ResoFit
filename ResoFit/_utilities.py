@@ -553,10 +553,10 @@ class ResoPeak(object):
                     _center = _peak_map_indexed[_ele]['exp']['x_num'][_ind]
                     pars.update(_model.make_params())
                     pars[_prefix + 'amplitude'].value = 1
-                    # pars[_prefix + 'center'].set(_center, min=_center - 10, max=_center + 10)
-                    pars[_prefix + 'center'].set(_center)
-                    # pars[_prefix + 'sigma'].set(2.0, min=0.5, max=50)
-                    pars[_prefix + 'sigma'].set(2.0)
+                    pars[_prefix + 'center'].set(_center, min=_center - 100, max=_center + 100)
+                    # pars[_prefix + 'center'].set(_center)
+                    pars[_prefix + 'sigma'].set(2.0, min=0.5, max=20)
+                    # pars[_prefix + 'sigma'].set(2.0)
                     model += _model
                     self.prefix_list.append(_prefix)
         _out = model.fit(_y, pars, x=_x)

@@ -63,12 +63,10 @@ calibrate_result = calibration.calibrate(source_to_detector_m=source_to_detector
                                          offset_us=offset_us,
                                          vary='all',
                                          each_step=each_step)
-calibration.index_peak(thres_exp=0.12, min_dist_exp=20, min_dist_map=15, thres_map=0.12, rel_tol=0.01)
+calibration.index_peak(thres_exp=0.15, min_dist_exp=20, min_dist_map=15, thres_map=0.12, rel_tol=0.01)
 calibration.analyze_peak(report=False, fit_model='Lorentzian')  # ['Gaussian', 'Lorentzian']
 
-# calibration.export(y_type='attenuation',
-#                  # y_type='transmission',
-#                  x_type='energy',)
+
 calibration.plot(y_type=y_type,
                  x_type=x_type,
                  # t_unit='ns',
